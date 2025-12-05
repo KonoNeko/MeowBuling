@@ -9,8 +9,9 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     define: {
-      // Expose API_KEY to the client-side code so process.env.API_KEY works
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Expose API_KEY to the client-side code.
+      // We check env.GEMINI_API_KEY first (your Vercel setting), then fallback to env.API_KEY.
+      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY || env.API_KEY)
     }
   }
 })
