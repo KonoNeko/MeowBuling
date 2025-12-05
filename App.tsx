@@ -298,66 +298,68 @@ const App = () => {
   // --- View Renderers ---
 
   const renderHome = () => (
-    <div className="flex flex-col items-center justify-center h-full space-y-12 animate-fade-in p-6 text-center relative z-10 pb-20 pt-20">
-      <div className="space-y-6 flex flex-col items-center">
-        {/* Magic Wizard Cat Design */}
-        <div className="relative w-40 h-40 flex items-center justify-center group">
-             {/* Hat (SVG) */}
-             <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-28 z-20 animate-float" style={{ animationDuration: '5s' }}>
-                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] filter">
-                    {/* Hat Cone */}
-                    <path d="M50 5 L85 75 H15 L50 5Z" fill="#6d28d9" />
-                    {/* Hat Brim */}
-                    <ellipse cx="50" cy="75" rx="45" ry="15" fill="#5b21b6" />
-                    {/* Gradient Overlay for 3D effect */}
-                    <path d="M50 5 L85 75 H15 L50 5Z" fill="url(#hatGradient)" fillOpacity="0.6" />
-                    <defs>
-                        <linearGradient id="hatGradient" x1="50" y1="0" x2="50" y2="100">
-                            <stop offset="0%" stopColor="#a78bfa" />
-                            <stop offset="100%" stopColor="#4c1d95" />
-                        </linearGradient>
-                    </defs>
-                    {/* Decorations */}
-                    <text x="35" y="50" fontSize="15" fill="#fbbf24">✨</text>
-                    <text x="55" y="30" fontSize="10" fill="#fcd34d">⭐</text>
-                </svg>
-             </div>
-             
-             {/* Cat Emoji */}
-             <div className="text-8xl z-10 animate-float filter drop-shadow-[0_0_20px_rgba(167,139,250,0.6)]" style={{ animationDelay: '1s' }}>
-                🐱
-             </div>
-             
-             {/* Magic Particles */}
-             <div className="absolute top-0 right-0 text-2xl animate-pulse-glow text-yellow-300">✨</div>
-             <div className="absolute bottom-0 left-0 text-xl animate-pulse text-purple-300" style={{ animationDelay: '0.5s' }}>🌟</div>
-             <div className="absolute top-10 -left-4 text-lg animate-float text-blue-300" style={{ animationDelay: '2s' }}>🔮</div>
+    <div className="h-full w-full overflow-y-auto custom-scrollbar relative z-10">
+      <div className="min-h-full flex flex-col items-center justify-center p-6 space-y-12 animate-fade-in text-center pb-24 pt-24">
+        <div className="space-y-6 flex flex-col items-center">
+          {/* Magic Wizard Cat Design */}
+          <div className="relative w-40 h-40 flex items-center justify-center group">
+              {/* Hat (SVG) */}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-28 z-20 animate-float" style={{ animationDuration: '5s' }}>
+                  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] filter">
+                      {/* Hat Cone */}
+                      <path d="M50 5 L85 75 H15 L50 5Z" fill="#6d28d9" />
+                      {/* Hat Brim */}
+                      <ellipse cx="50" cy="75" rx="45" ry="15" fill="#5b21b6" />
+                      {/* Gradient Overlay for 3D effect */}
+                      <path d="M50 5 L85 75 H15 L50 5Z" fill="url(#hatGradient)" fillOpacity="0.6" />
+                      <defs>
+                          <linearGradient id="hatGradient" x1="50" y1="0" x2="50" y2="100">
+                              <stop offset="0%" stopColor="#a78bfa" />
+                              <stop offset="100%" stopColor="#4c1d95" />
+                          </linearGradient>
+                      </defs>
+                      {/* Decorations */}
+                      <text x="35" y="50" fontSize="15" fill="#fbbf24">✨</text>
+                      <text x="55" y="30" fontSize="10" fill="#fcd34d">⭐</text>
+                  </svg>
+              </div>
+              
+              {/* Cat Emoji */}
+              <div className="text-8xl z-10 animate-float filter drop-shadow-[0_0_20px_rgba(167,139,250,0.6)]" style={{ animationDelay: '1s' }}>
+                  🐱
+              </div>
+              
+              {/* Magic Particles */}
+              <div className="absolute top-0 right-0 text-2xl animate-pulse-glow text-yellow-300">✨</div>
+              <div className="absolute bottom-0 left-0 text-xl animate-pulse text-purple-300" style={{ animationDelay: '0.5s' }}>🌟</div>
+              <div className="absolute top-10 -left-4 text-lg animate-float text-blue-300" style={{ animationDelay: '2s' }}>🔮</div>
+          </div>
+
+          <div className="space-y-2">
+              <h1 className="text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 tracking-wider">
+                喵卜灵
+              </h1>
+              <p className="text-indigo-200/80 text-xl font-light tracking-wide">
+                古老喵星智慧 · 心理投射 · 灵魂指引
+              </p>
+          </div>
         </div>
 
-        <div className="space-y-2">
-            <h1 className="text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 tracking-wider">
-              喵卜灵
-            </h1>
-            <p className="text-indigo-200/80 text-xl font-light tracking-wide">
-              古老喵星智慧 · 心理投射 · 灵魂指引
-            </p>
+        <div className="space-y-4 w-full max-w-xs">
+          <Button onClick={handleStart} className="w-full text-lg shadow-purple-500/40">
+            开启探索旅程
+          </Button>
+          <Button variant="ghost" onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }} className="w-full">
+            查看心灵足迹
+          </Button>
         </div>
-      </div>
-
-      <div className="space-y-4 w-full max-w-xs">
-        <Button onClick={handleStart} className="w-full text-lg shadow-purple-500/40">
-          开启探索旅程
-        </Button>
-        <Button variant="ghost" onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }} className="w-full">
-          查看心灵足迹
-        </Button>
       </div>
     </div>
   );
 
   const renderTopicSelect = () => (
-    <div className="max-w-4xl mx-auto h-full flex flex-col justify-center p-6 space-y-8 animate-fade-in pb-20 pt-20">
-      <div className="text-center space-y-2">
+    <div className="max-w-4xl mx-auto h-full flex flex-col justify-start p-6 space-y-8 animate-fade-in overflow-y-auto custom-scrollbar pt-24 pb-28">
+      <div className="text-center space-y-2 shrink-0">
         <h2 className="text-3xl font-mystic text-white">你想探索哪个领域？</h2>
         <p className="text-indigo-300">倾听内心的声音，选择此刻最强烈的感召</p>
       </div>
