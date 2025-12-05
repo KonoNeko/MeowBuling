@@ -34,14 +34,20 @@ export const getHistory = (): ReadingSession[] => {
 
 // --- AI Helpers ---
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
+// Moved initialization inside the function to prevent white-screen crash on load
 export const generateInterpretation = async (
   topicLabel: string,
   question: string,
   spreadId: string,
   cards: TarotCard[]
 ): Promise<AIInterpretation> => {
+  
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+      throw new Error("喵？能量连接中断（API Key 未配置）。请检查 Vercel 环境变量设置。");
+  }
+
+  const ai = new GoogleGenAI({ apiKey: apiKey });
   
   const spreadDef = SPREADS.find(s => s.id === spreadId);
   
