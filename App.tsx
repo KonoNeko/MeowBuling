@@ -1,0 +1,961 @@
+import React, { useState, useRef, useEffect } from 'react';
+import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
+import { TAROT_DECK, TOPICS, SPREADS } from './constants';
+import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav } from './components';
+import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
+
+// Helper for random ID
+const generateId = () => Math.random().toString(36).substr(2, 9);
+
+const App = () => {
+  // --- State ---
+  const [view, setView] = useState<AppView>(AppView.HOME);
+  const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
+  const [selectedSpread, setSelectedSpread] = useState<SpreadDefinition | null>(null);
+  const [question, setQuestion] = useState("");
+  const [filterTags, setFilterTags] = useState<string[]>([]); // New: Tags to filter spreads
+  
+  // Drawing State
+  const [deck, setDeck] = useState<TarotCard[]>([]);
+  const [drawnCards, setDrawnCards] = useState<TarotCard[]>([]);
+  const [drawStep, setDrawStep] = useState<'init' | 'shuffling' | 'picking'>('init');
+  
+  // Card Inspection State
+  const [inspectingCard, setInspectingCard] = useState<TarotCard | null>(null);
+  
+  // Ref for the scrollable card container
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  // Drag to scroll refs (Legacy mouse scrolling)
+  const isDown = useRef(false);
+  const startX = useRef(0);
+  const scrollLeftPos = useRef(0);
+  const isDragging = useRef(false);
+
+  // Reading & AI State
+  const [readingResult, setReadingResult] = useState<ReadingSession | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<ReadingSession[]>([]);
+  
+  // UI Feedback
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState("");
+
+  const triggerToast = (msg: string) => {
+    setToastMessage(msg);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  // --- Effects ---
+
+  // Enable Mouse Wheel horizontal scrolling for the deck
+  useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (el && view === AppView.DRAW && drawStep === 'picking') {
+      const onWheel = (e: WheelEvent) => {
+        // Only hijack if vertical scroll is dominant
+        if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+           e.preventDefault();
+           el.scrollLeft += e.deltaY;
+        }
+      };
+      // Use non-passive listener to allow preventDefault
+      el.addEventListener('wheel', onWheel, { passive: false });
+      return () => el.removeEventListener('wheel', onWheel);
+    }
+  }, [view, drawStep]);
+
+  // --- Actions ---
+
+  // Navigation Logic
+  const handleBack = () => {
+    switch (view) {
+      case AppView.TOPIC_SELECT:
+      case AppView.HISTORY:
+      case AppView.LIBRARY:
+      case AppView.SPREAD_LIBRARY:
+      case AppView.READING:
+        setView(AppView.HOME);
+        break;
+      case AppView.QUESTION_SELECT:
+        setView(AppView.TOPIC_SELECT);
+        break;
+      case AppView.SPREAD_SELECT:
+        setView(AppView.QUESTION_SELECT);
+        break;
+      case AppView.DRAW:
+        // If mid-drawing, maybe warn? For now just go back.
+        setView(AppView.SPREAD_SELECT);
+        break;
+      default:
+        setView(AppView.HOME);
+    }
+  };
+
+  const handleStart = () => {
+    setView(AppView.TOPIC_SELECT);
+  };
+
+  const handleTopicSelect = (topic: Topic) => {
+    setSelectedTopic(topic);
+    setView(AppView.QUESTION_SELECT);
+  };
+
+  const handleQuestionSelect = (q: string, tags?: string[]) => {
+    setQuestion(q);
+    setFilterTags(tags || []); // Set tags derived from the subcategory
+    setView(AppView.SPREAD_SELECT);
+  }
+
+  const handleCustomQuestionConfirm = () => {
+    if (!selectedTopic) return;
+    // Use default tags for the topic if available, otherwise empty (shows all)
+    setFilterTags(selectedTopic.defaultTags || []); 
+    setView(AppView.SPREAD_SELECT);
+  };
+
+  const handleSpreadSelect = (spread: SpreadDefinition) => {
+    setSelectedSpread(spread);
+    if (!question.trim()) {
+      setQuestion(`关于${selectedTopic?.label}的指引`);
+    }
+    setDrawStep('init'); 
+    setDrawnCards([]);
+    setView(AppView.DRAW);
+  };
+
+  const startShuffle = () => {
+    setDrawStep('shuffling');
+    
+    // 1. Prepare Deck
+    const rawDeck = [...TAROT_DECK];
+    
+    // Simulate shuffle duration
+    setTimeout(() => {
+        // 2. Fisher-Yates Shuffle Logic
+        for (let i = rawDeck.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [rawDeck[i], rawDeck[j]] = [rawDeck[j], rawDeck[i]];
+        }
+        
+        // 3. Assign Reversals
+        const shuffledWithReversals = rawDeck.map(card => ({
+            ...card,
+            isReversed: Math.random() > 0.7 
+        }));
+
+        setDeck(shuffledWithReversals);
+        setDrawStep('picking');
+    }, 2500); // 2.5 seconds of chaos
+  };
+  
+  // Drag handlers for the scroll container (Container Scroll)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    // Prevent interfering with DnD if the target is a card
+    if ((e.target as HTMLElement).closest('.draggable-card')) return;
+    
+    isDown.current = true;
+    isDragging.current = false;
+    if (scrollContainerRef.current) {
+      startX.current = e.pageX - scrollContainerRef.current.offsetLeft;
+      scrollLeftPos.current = scrollContainerRef.current.scrollLeft;
+    }
+  };
+
+  const handleMouseLeave = () => {
+    isDown.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDown.current = false;
+    setTimeout(() => {
+        isDragging.current = false;
+    }, 0);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDown.current) return;
+    e.preventDefault();
+    if (scrollContainerRef.current) {
+      const x = e.pageX - scrollContainerRef.current.offsetLeft;
+      const walk = (x - startX.current) * 2;
+      
+      if (Math.abs(x - startX.current) > 5) {
+          isDragging.current = true;
+      }
+      scrollContainerRef.current.scrollLeft = scrollLeftPos.current - walk;
+    }
+  };
+
+  // --- CARD INTERACTION LOGIC ---
+
+  const selectCard = (card: TarotCard, index?: number) => {
+    if (!selectedSpread) return;
+    
+    // Check if spread is full
+    if (drawnCards.length >= selectedSpread.cardCount) return;
+
+    // Fill the next available slot
+    // Construct new array with the card appended
+    const newDrawn = [...drawnCards, card];
+    setDrawnCards(newDrawn);
+
+    // Remove from selectable deck
+    const newDeck = deck.filter(c => c.id !== card.id);
+    setDeck(newDeck);
+
+    // If complete
+    if (newDrawn.length === selectedSpread.cardCount) {
+       setTimeout(() => {
+         generateResult(newDrawn);
+       }, 1200);
+    }
+  };
+
+  const handleCardClick = (card: TarotCard) => {
+      // If user was dragging scrolling container, ignore click
+      if (isDragging.current) return;
+      selectCard(card);
+  };
+
+  // DnD: Handle Drop from Deck to Spread Slot
+  const handleCardDrop = (cardId: number, slotIndex: number) => {
+      if (!selectedSpread) return;
+      
+      const card = deck.find(c => c.id === cardId);
+      if (!card) return;
+
+      // Logic: If user drops on a specific slot.
+      // Current behavior: We just append to drawnCards list in order, regardless of which slot was dropped on,
+      // to keep it simple, OR we force them to fill in order. 
+      // Better UX: Allow dropping on the *next available* slot, or any empty slot if we supported non-linear filling.
+      // For this app version, let's enforce order for simplicity in result generation.
+      // So if they drop on ANY slot, we just take the next one.
+      
+      // Actually, let's support "Next Slot" targeting.
+      // If `slotIndex` === `drawnCards.length`, it's the correct next slot.
+      if (slotIndex === drawnCards.length) {
+          selectCard(card);
+      } else {
+          triggerToast("请按顺序放置卡牌");
+      }
+  };
+
+  // DnD: Drag Start on Deck Card
+  const handleDragStart = (e: React.DragEvent, card: TarotCard) => {
+      e.dataTransfer.setData("cardId", card.id.toString());
+      e.dataTransfer.effectAllowed = "move";
+      // Optional: Set a custom drag image
+  };
+
+  const generateResult = async (cards: TarotCard[]) => {
+    if (!selectedTopic || !selectedSpread) return;
+    
+    setLoading(true);
+    setView(AppView.READING); // Move to reading view to show Skeleton
+
+    const finalQuestion = question.trim() || `关于${selectedTopic.label}的指引`;
+
+    try {
+      const interpretation = await generateInterpretation(
+        selectedTopic.label, 
+        finalQuestion, 
+        selectedSpread.id, 
+        cards
+      );
+
+      const newReading: ReadingSession = {
+        id: generateId(),
+        timestamp: Date.now(),
+        topicId: selectedTopic.id,
+        topicLabel: selectedTopic.label,
+        spreadId: selectedSpread.id,
+        spreadName: selectedSpread.name,
+        question: finalQuestion,
+        cards,
+        interpretation
+      };
+
+      saveReading(newReading);
+      setReadingResult(newReading);
+    } catch (error) {
+      console.error(error);
+      alert("喵？星象连接中断了，请重试。");
+      setView(AppView.HOME); 
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveJournal = (text: string) => {
+    if (readingResult) {
+      updateReadingReflection(readingResult.id, text);
+      triggerToast("灵魂笔记已保存");
+    }
+  };
+
+  // --- View Renderers ---
+
+  const renderHome = () => (
+    <div className="flex flex-col items-center justify-center h-full space-y-12 animate-fade-in p-6 text-center relative z-10 pb-20 pt-20">
+      <div className="space-y-6 flex flex-col items-center">
+        {/* Magic Wizard Cat Design */}
+        <div className="relative w-40 h-40 flex items-center justify-center group">
+             {/* Hat (SVG) */}
+             <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-28 z-20 animate-float" style={{ animationDuration: '5s' }}>
+                <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] filter">
+                    {/* Hat Cone */}
+                    <path d="M50 5 L85 75 H15 L50 5Z" fill="#6d28d9" />
+                    {/* Hat Brim */}
+                    <ellipse cx="50" cy="75" rx="45" ry="15" fill="#5b21b6" />
+                    {/* Gradient Overlay for 3D effect */}
+                    <path d="M50 5 L85 75 H15 L50 5Z" fill="url(#hatGradient)" fillOpacity="0.6" />
+                    <defs>
+                        <linearGradient id="hatGradient" x1="50" y1="0" x2="50" y2="100">
+                            <stop offset="0%" stopColor="#a78bfa" />
+                            <stop offset="100%" stopColor="#4c1d95" />
+                        </linearGradient>
+                    </defs>
+                    {/* Decorations */}
+                    <text x="35" y="50" fontSize="15" fill="#fbbf24">✨</text>
+                    <text x="55" y="30" fontSize="10" fill="#fcd34d">⭐</text>
+                </svg>
+             </div>
+             
+             {/* Cat Emoji */}
+             <div className="text-8xl z-10 animate-float filter drop-shadow-[0_0_20px_rgba(167,139,250,0.6)]" style={{ animationDelay: '1s' }}>
+                🐱
+             </div>
+             
+             {/* Magic Particles */}
+             <div className="absolute top-0 right-0 text-2xl animate-pulse-glow text-yellow-300">✨</div>
+             <div className="absolute bottom-0 left-0 text-xl animate-pulse text-purple-300" style={{ animationDelay: '0.5s' }}>🌟</div>
+             <div className="absolute top-10 -left-4 text-lg animate-float text-blue-300" style={{ animationDelay: '2s' }}>🔮</div>
+        </div>
+
+        <div className="space-y-2">
+            <h1 className="text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 tracking-wider">
+              喵卜灵
+            </h1>
+            <p className="text-indigo-200/80 text-xl font-light tracking-wide">
+              古老喵星智慧 · 心理投射 · 灵魂指引
+            </p>
+        </div>
+      </div>
+
+      <div className="space-y-4 w-full max-w-xs">
+        <Button onClick={handleStart} className="w-full text-lg shadow-purple-500/40">
+          开启探索旅程
+        </Button>
+        <Button variant="ghost" onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }} className="w-full">
+          查看心灵足迹
+        </Button>
+      </div>
+    </div>
+  );
+
+  const renderTopicSelect = () => (
+    <div className="max-w-4xl mx-auto h-full flex flex-col justify-center p-6 space-y-8 animate-fade-in pb-20 pt-20">
+      <div className="text-center space-y-2">
+        <h2 className="text-3xl font-mystic text-white">你想探索哪个领域？</h2>
+        <p className="text-indigo-300">倾听内心的声音，选择此刻最强烈的感召</p>
+      </div>
+      
+      {/* Updated to 3 columns grid to accommodate more topics (5 topics total now) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {TOPICS.map(topic => (
+          <GlassCard 
+            key={topic.id} 
+            onClick={() => handleTopicSelect(topic)}
+            className="flex items-center gap-4 hover:bg-purple-900/30 transition-all group cursor-pointer"
+          >
+            <span className="text-4xl group-hover:scale-110 transition-transform">{topic.icon}</span>
+            <div className="text-left">
+              <h3 className="text-xl font-bold text-white group-hover:text-purple-200">{topic.label}</h3>
+              <p className="text-sm text-indigo-300/70">{topic.description}</p>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderQuestionSelect = () => (
+    <div className="max-w-4xl mx-auto h-full flex flex-col justify-start pt-24 p-6 space-y-6 animate-fade-in overflow-y-auto custom-scrollbar pb-20">
+      <div className="text-center space-y-2">
+         <Badge className="mb-2 text-lg px-4 py-1">{selectedTopic?.icon} {selectedTopic?.label}</Badge>
+        <h2 className="text-3xl font-mystic text-white">你想问关于什么的具体问题？</h2>
+        <p className="text-indigo-300">问题越具体，星辰的回应越清晰</p>
+      </div>
+
+      <div className="grid gap-6">
+        {selectedTopic?.subCategories?.map((cat, idx) => (
+          <div key={idx} className="space-y-3">
+             <h3 className="text-purple-200 font-bold ml-2 text-sm uppercase tracking-widest opacity-80">{cat.title}</h3>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {cat.questions.map((q, qIdx) => (
+                   <button 
+                     key={qIdx}
+                     onClick={() => handleQuestionSelect(q, cat.spreadTags)}
+                     className="bg-white/5 hover:bg-purple-600/30 border border-white/10 text-indigo-100 text-left px-5 py-4 rounded-xl transition-all hover:scale-[1.01] hover:shadow-lg text-sm md:text-base flex justify-between items-center group"
+                   >
+                     <span>{q}</span>
+                     <span className="opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
+                   </button>
+                ))}
+             </div>
+          </div>
+        ))}
+        
+        {/* Custom Input Option */}
+        <div className="mt-4 border-t border-white/10 pt-6">
+           <h3 className="text-purple-200 font-bold ml-2 text-sm uppercase tracking-widest opacity-80 mb-3">或：自定义问题</h3>
+           <div className="flex flex-col md:flex-row gap-3">
+             <input 
+                type="text" 
+                placeholder="在此写下你独特的疑问..."
+                className="flex-1 bg-black/30 border border-purple-500/30 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-purple-400"
+                onChange={(e) => setQuestion(e.target.value)}
+                value={question}
+             />
+             <Button onClick={handleCustomQuestionConfirm} disabled={!question.trim()} className="md:w-auto w-full">
+               确认
+             </Button>
+           </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderSpreadSelect = () => {
+    // 1. Broad Category Filter
+    let filteredSpreads = selectedTopic 
+        ? SPREADS.filter(spread => selectedTopic.spreadCategories.includes(spread.category))
+        : SPREADS;
+
+    // 2. Granular Tag Filter
+    if (filterTags.length > 0) {
+        // If the spread has ANY of the required tags, we show it.
+        // Special case: 'general' tag is often included in subcategories to allow broad spreads.
+        filteredSpreads = filteredSpreads.filter(spread => {
+            return spread.tags.some(tag => filterTags.includes(tag));
+        });
+    }
+
+    return (
+        <div className="max-w-4xl mx-auto h-full flex flex-col justify-center p-6 space-y-8 animate-fade-in pt-20 pb-20">
+          <div className="text-center space-y-2">
+            <h2 className="text-3xl font-mystic text-white">选择你的牌阵</h2>
+            <p className="text-indigo-300">为您精选了最适合当前问题的牌阵</p>
+          </div>
+          
+          {/* Show Selected Question */}
+          <div className="w-full max-w-2xl mx-auto bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 text-center backdrop-blur-sm">
+             <p className="text-xs text-purple-300 uppercase tracking-widest mb-2">当前提问</p>
+             <div className="text-xl md:text-2xl font-serif text-white italic">
+               “ {question} ”
+             </div>
+             <button 
+               onClick={() => setView(AppView.QUESTION_SELECT)}
+               className="text-xs text-indigo-400 hover:text-white mt-3 underline decoration-indigo-500/50 hover:decoration-white"
+             >
+               修改问题
+             </button>
+          </div>
+    
+          {/* Spread Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-[60vh] custom-scrollbar pb-4">
+            {filteredSpreads.map(spread => (
+              <GlassCard 
+                key={spread.id} 
+                onClick={() => handleSpreadSelect(spread)}
+                className="flex flex-col items-center justify-between text-center gap-4 hover:bg-purple-900/30 border-purple-500/20 group cursor-pointer transition-all hover:scale-[1.02]"
+              >
+                <div className="w-full flex-1">
+                  <div className="flex justify-between items-center mb-2">
+                     <Badge className="text-[10px]">{spread.category}</Badge>
+                     <span className="text-xs text-purple-400 font-mono">{spread.cardCount} Cards</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-200">{spread.name}</h3>
+                  <p className="text-xs text-indigo-300/70 leading-relaxed min-h-[40px]">{spread.description}</p>
+                </div>
+                {/* Visual representation of spread layout geometry */}
+                <div className="mt-2 opacity-80 group-hover:opacity-100 transition-opacity transform group-hover:scale-105 duration-300">
+                    <SpreadPreview spread={spread} />
+                </div>
+              </GlassCard>
+            ))}
+          </div>
+        </div>
+      );
+  } 
+
+  // --- DRAWING VIEW LOGIC ---
+  const renderDraw = () => {
+    // 1. Initial State: The Deck on Table
+    if (drawStep === 'init') {
+      return (
+        <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in p-6 pt-20 pb-20">
+           <div className="relative w-48 h-72 cursor-pointer group" onClick={startShuffle}>
+              {/* Stack effect */}
+              <div className="absolute top-0 left-0 w-full h-full bg-indigo-900 rounded-xl border border-indigo-700 transform translate-x-4 translate-y-4 group-hover:translate-x-6 group-hover:translate-y-6 transition-transform"></div>
+              <div className="absolute top-0 left-0 w-full h-full bg-indigo-800 rounded-xl border border-indigo-600 transform translate-x-2 translate-y-2 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform"></div>
+              {/* Main Deck */}
+              <div className="absolute top-0 left-0 w-full h-full bg-indigo-950 rounded-xl border-2 border-purple-500 flex items-center justify-center shadow-2xl group-hover:-translate-y-2 transition-transform">
+                  <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                  <span className="absolute text-5xl filter drop-shadow-glow">🔮</span>
+              </div>
+           </div>
+           
+           <div className="text-center space-y-2">
+             <h2 className="text-3xl font-mystic text-white">准备好连接宇宙了吗？</h2>
+             <p className="text-indigo-300">点击牌堆，开始洗牌并注入你的能量</p>
+           </div>
+           
+           <Button onClick={startShuffle} className="px-12 py-4 text-xl shadow-purple-500/50 animate-pulse">
+             开始洗牌
+           </Button>
+        </div>
+      )
+    }
+
+    // 2. Shuffling Animation State (Improved)
+    if (drawStep === 'shuffling') {
+        return (
+            <div className="h-full flex flex-col items-center justify-center relative overflow-hidden bg-black/40 backdrop-blur-sm z-50">
+                <div className="relative w-full h-full flex items-center justify-center">
+                    {/* Orbiting Chaos Particles */}
+                    {Array.from({length: 12}).map((_, i) => {
+                        // Create random orbit ranges for more chaotic look
+                        const tx = (Math.random() - 0.5) * 500 + 'px';
+                        const ty = (Math.random() - 0.5) * 500 + 'px';
+                        return (
+                           <div 
+                              key={i}
+                              className="absolute w-24 h-40 bg-gradient-to-br from-indigo-950 to-purple-900 rounded-lg border border-purple-400/30 animate-shuffle-orbit shadow-2xl"
+                              style={{
+                                  '--tx': tx,
+                                  '--ty': ty,
+                                  animationDelay: `${i * 0.15}s`,
+                                  left: 'calc(50% - 3rem)',
+                                  top: 'calc(50% - 5rem)',
+                              } as React.CSSProperties}
+                           >
+                               <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                           </div>
+                        )
+                    })}
+                    <div className="absolute z-50 text-center pointer-events-none">
+                        <h2 className="text-5xl font-mystic text-white animate-pulse mb-4 tracking-widest drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]">洗牌中</h2>
+                        <p className="text-indigo-200 text-lg">请集中精神，默念你的问题</p>
+                        <p className="text-xl text-purple-300 font-serif italic mt-6 opacity-80">"{question}"</p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
+
+    // 3. Picking State (The Scrollable Fan + New Layout)
+    return (
+      <div className="h-full flex flex-col items-center justify-between p-4 pt-20 pb-20 animate-fade-in relative">
+        
+        {/* Top Area: The Spread Layout (Drop Targets) */}
+        <div className="w-full flex-1 flex flex-col items-center justify-center z-10 overflow-hidden relative pb-4">
+            <div className="text-center mb-4 pointer-events-auto shrink-0 z-20">
+                <h2 className="text-xl md:text-2xl font-mystic text-purple-200 flex items-center justify-center gap-3">
+                    {selectedSpread?.name} 
+                    <Badge className="text-lg px-3">{drawnCards.length} / {selectedSpread?.cardCount}</Badge>
+                </h2>
+                <p className="text-indigo-300 text-xs md:text-sm mt-1">
+                    {drawnCards.length === selectedSpread?.cardCount ? "正在揭示..." : "拖拽卡牌到闪烁的槽位，或直接点击抽取"}
+                </p>
+            </div>
+
+            {selectedSpread && (
+                <div className="w-full h-full overflow-y-auto custom-scrollbar flex items-center justify-center p-4">
+                     <SpreadLayout 
+                        spread={selectedSpread} 
+                        drawnCards={drawnCards} 
+                        onDrop={handleCardDrop}
+                        isRevealed={false} // Hides face when drawing
+                        // NOTE: No click handler here, cards are face down
+                     />
+                </div>
+            )}
+        </div>
+
+        {/* Bottom Area: The Scrollable Fan of Cards (Draggable Source) */}
+        {drawnCards.length < (selectedSpread?.cardCount || 0) && (
+            <div className="w-full h-[35vh] md:h-[40vh] flex items-center relative z-20 shrink-0">
+                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29]/90 to-transparent pointer-events-none z-0"></div>
+                
+                {/* Horizontal Scroll Container */}
+                <div 
+                    ref={scrollContainerRef}
+                    className="w-full h-full flex items-center overflow-x-auto px-[50vw] pb-4 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing relative z-10"
+                    onMouseDown={handleMouseDown}
+                    onMouseLeave={handleMouseLeave}
+                    onMouseUp={handleMouseUp}
+                    onMouseMove={handleMouseMove}
+                >
+                    <div className="flex items-center" style={{ width: 'max-content' }}>
+                        {deck.map((card, idx) => (
+                            <div 
+                                key={card.id}
+                                className="draggable-card relative w-20 h-36 md:w-28 md:h-48 -ml-12 md:-ml-16 cursor-pointer transition-all duration-300 hover:-translate-y-12 hover:scale-110 hover:z-50 group hover:mx-4 select-none"
+                                onClick={() => handleCardClick(card)}
+                                draggable={true} // Enable HTML5 Drag
+                                onDragStart={(e) => handleDragStart(e, card)}
+                                style={{
+                                    transformOrigin: 'bottom center',
+                                }}
+                            >
+                                <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/30 shadow-xl overflow-hidden relative transform transition-transform group-hover:rotate-0">
+                                    <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                                    <div className="absolute inset-1 border border-dashed border-white/10 rounded"></div>
+                                    {/* Shine effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+                
+                {/* Instruction Overlay */}
+                <div className="absolute bottom-6 left-0 w-full text-center pointer-events-none text-white/30 text-xs animate-pulse z-30">
+                    ← 滑动下方浏览 • 拖拽上方放入 →
+                </div>
+            </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderReading = () => {
+    // 1. Loading State
+    if (loading) {
+        return (
+            <div className="h-full max-w-4xl mx-auto p-6 pt-24 pb-20 flex flex-col items-center justify-center space-y-8 animate-pulse">
+                <div className="text-6xl animate-bounce">🐈‍⬛</div>
+                <h2 className="text-2xl font-mystic text-purple-200">喵卜灵正在连接星界意识...</h2>
+                <LoadingSkeleton />
+            </div>
+        )
+    }
+
+    if (!readingResult || !readingResult.interpretation) return null;
+    const { interpretation } = readingResult;
+
+    // 2. Result State
+    return (
+      <div className="h-full overflow-y-auto pb-32 p-4 pt-20 custom-scrollbar">
+        <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
+          
+          {/* Header Area */}
+          <div className="text-center py-6 border-b border-white/5">
+            <Badge className="mb-4">{readingResult.topicLabel} • {readingResult.spreadName}</Badge>
+            <h1 className="text-3xl md:text-4xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-100 to-pink-100 mb-2">
+              {interpretation.mainTheme}
+            </h1>
+            <p className="text-indigo-300 italic">“ {readingResult.question} ”</p>
+          </div>
+
+          {/* The Spread Display (Using the Layout Engine now!) */}
+          <div className="w-full overflow-x-auto py-8 flex justify-center">
+             {selectedSpread && (
+                <div className="scale-75 md:scale-100 origin-top">
+                    <SpreadLayout 
+                        spread={selectedSpread} 
+                        drawnCards={readingResult.cards} 
+                        // No onDrop here, read-only mode
+                        isRevealed={true} // Force reveal in result view
+                        onCardClick={(card) => setInspectingCard(card)}
+                    />
+                    <div className="text-center mt-4">
+                        <span className="text-xs text-indigo-400 bg-white/5 px-3 py-1 rounded-full animate-pulse">👆 点击卡牌查看详情与科普</span>
+                    </div>
+                </div>
+             )}
+          </div>
+
+          {/* Fable Section (New) */}
+          <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-2xl p-8 border border-white/10 relative overflow-hidden group hover:bg-white/5 transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-20 text-6xl rotate-12 pointer-events-none">📖</div>
+              <h3 className="text-xl font-bold text-purple-200 mb-4 flex items-center gap-2">
+                  <span>📜</span> 命运寓言
+              </h3>
+              <p className="text-lg text-indigo-100 italic font-serif leading-relaxed opacity-90">
+                  "{interpretation.fable}"
+              </p>
+          </div>
+
+          {/* AI Interpretation Sections */}
+          <div className="grid gap-6">
+            {interpretation.detailedAnalysis.map((section, idx) => (
+              <GlassCard key={idx} className="space-y-3 border-l-4 border-l-purple-500/50">
+                <h3 className="text-xl font-bold text-purple-200">{section.title}</h3>
+                <p className="text-indigo-100/90 leading-relaxed whitespace-pre-line">
+                    {section.content}
+                </p>
+              </GlassCard>
+            ))}
+          </div>
+
+          {/* Advice Section */}
+          <div className="bg-gradient-to-br from-indigo-900/60 to-purple-900/60 rounded-2xl p-6 border border-white/10 shadow-xl">
+             <div className="flex items-center gap-3 mb-4">
+                <span className="text-3xl">🐾</span>
+                <h3 className="text-xl font-bold text-white">猫咪先知的行动指引</h3>
+             </div>
+             <p className="text-lg text-white/90 font-medium whitespace-pre-line">
+                {interpretation.advice}
+             </p>
+          </div>
+
+          {/* Journal Section */}
+          <div className="pt-8">
+            <h3 className="text-indigo-300 text-sm uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span>✨</span> 灵魂笔记
+            </h3>
+            <div className="bg-black/20 rounded-xl p-6 border border-white/5 space-y-4">
+                <div className="space-y-2">
+                    <p className="text-sm text-purple-300 font-medium">反思指引：</p>
+                    <ul className="list-disc list-inside text-sm text-indigo-300/80 space-y-1">
+                        {interpretation.reflectionQuestions.map((q, i) => <li key={i}>{q}</li>)}
+                    </ul>
+                </div>
+                <textarea 
+                    className="w-full h-32 bg-black/30 rounded-lg p-4 text-white focus:outline-none focus:ring-1 focus:ring-purple-500/50 border border-white/10 placeholder-white/20 transition-all"
+                    placeholder="此刻，你的内心有什么感觉？写下来..."
+                    defaultValue={readingResult.userReflection || ""}
+                    onBlur={(e) => handleSaveJournal(e.target.value)}
+                />
+                <div className="flex justify-between items-center text-xs text-indigo-500">
+                    <span>写完后点击外部即可自动保存</span>
+                </div>
+            </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="flex justify-center gap-4 pt-8 pb-12">
+            <Button variant="ghost" onClick={() => setView(AppView.HOME)}>返回首页</Button>
+            <Button onClick={() => {
+                setView(AppView.TOPIC_SELECT);
+                setReadingResult(null);
+            }}>再次占卜</Button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderHistory = () => (
+    <div className="h-full overflow-y-auto p-6 pt-24 custom-scrollbar animate-fade-in pb-20">
+      <div className="max-w-4xl mx-auto">
+        <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0f0c29]/90 backdrop-blur z-20 py-4 border-b border-white/10">
+          <h2 className="text-3xl font-mystic text-white">时光卷轴</h2>
+        </div>
+
+        {history.length === 0 ? (
+          <div className="text-center py-32 space-y-4 opacity-50">
+            <div className="text-6xl grayscale">🕸️</div>
+            <p className="text-indigo-300">过去像一张白纸，等待你去书写。</p>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {history.map(reading => (
+              <GlassCard key={reading.id} className="group hover:bg-white/10 transition-colors cursor-default">
+                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
+                  <div>
+                    <div className="flex items-center gap-2 text-xs text-purple-400 font-mono mb-1">
+                      <span>{new Date(reading.timestamp).toLocaleDateString()}</span>
+                      <span>•</span>
+                      <span>{new Date(reading.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                    </div>
+                    <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition-colors">
+                        {reading.question}
+                    </h3>
+                  </div>
+                  <Badge>{TOPICS.find(t => t.id === reading.topicId)?.icon} {reading.topicLabel}</Badge>
+                </div>
+                
+                {/* Mini Card Preview */}
+                <div className="flex gap-2 mb-4 overflow-x-auto pb-2 opacity-80">
+                  {reading.cards.map((c, i) => (
+                    <div 
+                        key={i} 
+                        className="shrink-0 text-xs bg-black/40 px-3 py-2 rounded border border-white/5 text-indigo-200 cursor-pointer hover:bg-white/20 hover:border-white/20 transition-all"
+                        onClick={() => setInspectingCard(c)}
+                    >
+                      <span className="mr-1">{c.isReversed ? '🔃' : '⬆️'}</span>
+                      {c.name_cn}
+                    </div>
+                  ))}
+                </div>
+
+                {reading.interpretation && (
+                  <div className="space-y-2">
+                    <p className="text-sm text-indigo-200/80 line-clamp-2 pl-3 border-l-2 border-purple-500/30">
+                      {reading.interpretation.mainTheme}
+                    </p>
+                    {reading.interpretation.fable && (
+                        <p className="text-xs text-indigo-400 italic line-clamp-1">
+                            寓言: {reading.interpretation.fable}
+                        </p>
+                    )}
+                  </div>
+                )}
+                
+                {reading.userReflection && (
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <p className="text-xs text-indigo-400 uppercase mb-1">你的记录</p>
+                    <p className="text-sm text-white/70 italic font-serif">"{reading.userReflection}"</p>
+                  </div>
+                )}
+              </GlassCard>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderLibrary = () => {
+      // Group cards by suit/arcana
+      const major = TAROT_DECK.filter(c => c.id < 22);
+      const wands = TAROT_DECK.filter(c => c.id >= 22 && c.id < 36);
+      const cups = TAROT_DECK.filter(c => c.id >= 36 && c.id < 50);
+      const swords = TAROT_DECK.filter(c => c.id >= 50 && c.id < 64);
+      const pentacles = TAROT_DECK.filter(c => c.id >= 64);
+
+      const renderSection = (title: string, cards: TarotCard[]) => (
+          <div className="mb-8">
+              <h3 className="text-xl font-mystic text-purple-200 mb-4 pl-4 border-l-4 border-purple-500">{title}</h3>
+              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4 px-2">
+                  {cards.map(card => (
+                      <div key={card.id} className="flex justify-center">
+                         <CardDisplay 
+                            card={card} 
+                            revealed={true} 
+                            size="xs" 
+                            label={card.name_cn}
+                            onClick={() => setInspectingCard(card)}
+                         />
+                      </div>
+                  ))}
+              </div>
+          </div>
+      );
+
+      return (
+        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-20">
+            <div className="max-w-7xl mx-auto">
+                <div className="text-center mb-10 space-y-2">
+                    <h2 className="text-3xl font-mystic text-white">塔罗牌库</h2>
+                    <p className="text-indigo-300">78张智慧图腾的完整收录</p>
+                </div>
+
+                {renderSection("大阿卡纳 (Major Arcana)", major)}
+                {renderSection("权杖 (Wands)", wands)}
+                {renderSection("圣杯 (Cups)", cups)}
+                {renderSection("宝剑 (Swords)", swords)}
+                {renderSection("星币 (Pentacles)", pentacles)}
+            </div>
+        </div>
+      );
+  }
+
+  const renderSpreadLibrary = () => {
+      // Group spreads by category
+      const categories = Array.from(new Set(SPREADS.map(s => s.category)));
+
+      return (
+        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-20">
+            <div className="max-w-6xl mx-auto">
+                <div className="text-center mb-10 space-y-2">
+                    <h2 className="text-3xl font-mystic text-white">牌阵宝典</h2>
+                    <p className="text-indigo-300">探索古老与现代的占卜几何学</p>
+                </div>
+
+                {categories.map(cat => (
+                    <div key={cat} className="mb-10">
+                        <h3 className="text-xl font-mystic text-purple-200 mb-6 pl-4 border-l-4 border-indigo-500">{cat}</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {SPREADS.filter(s => s.category === cat).map(spread => (
+                                <GlassCard key={spread.id} className="flex flex-col gap-4 group hover:bg-white/10 cursor-default">
+                                    <div className="flex justify-between items-start">
+                                        <h4 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">{spread.name}</h4>
+                                        <Badge className="text-[10px]">{spread.cardCount} 张</Badge>
+                                    </div>
+                                    <div className="flex justify-center py-4 bg-black/20 rounded-xl">
+                                        <div className="scale-75">
+                                           <SpreadPreview spread={spread} />
+                                        </div>
+                                    </div>
+                                    <p className="text-sm text-indigo-200/80">{spread.description}</p>
+                                    <div className="space-y-1 mt-2">
+                                        {spread.positions.map(p => (
+                                            <div key={p.id} className="text-xs text-indigo-400 flex gap-2">
+                                                <span className="font-mono text-purple-400 opacity-70">{p.id}.</span>
+                                                <span>{p.name}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </GlassCard>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </div>
+      );
+  }
+
+  return (
+    <div className="w-full h-full relative overflow-hidden bg-[#0f0c29]">
+      {/* Toast Notification */}
+      <Toast message={toastMessage} show={showToast} />
+      
+      {/* Card Detail Modal */}
+      <CardDetailModal card={inspectingCard} onClose={() => setInspectingCard(null)} />
+
+      {/* Header (Simplified) */}
+      <Header 
+        onBack={handleBack}
+        title={view === AppView.HOME ? "" : (selectedTopic?.label || "喵卜灵")}
+        showBack={view !== AppView.HOME && view !== AppView.HISTORY && view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY}
+      />
+
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-purple-900/30 rounded-full mix-blend-screen filter blur-[120px] animate-float"></div>
+         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-900/30 rounded-full mix-blend-screen filter blur-[120px] animate-float" style={{animationDelay: '3s'}}></div>
+         <div className="absolute top-[40%] left-[30%] w-[30%] h-[30%] bg-pink-900/20 rounded-full mix-blend-screen filter blur-[100px] animate-pulse-glow"></div>
+      </div>
+
+      <div className="relative z-10 w-full h-full">
+        {view === AppView.HOME && renderHome()}
+        {view === AppView.TOPIC_SELECT && renderTopicSelect()}
+        {view === AppView.QUESTION_SELECT && renderQuestionSelect()}
+        {view === AppView.SPREAD_SELECT && renderSpreadSelect()}
+        {view === AppView.DRAW && renderDraw()}
+        {view === AppView.READING && renderReading()}
+        {view === AppView.HISTORY && renderHistory()}
+        {view === AppView.LIBRARY && renderLibrary()}
+        {view === AppView.SPREAD_LIBRARY && renderSpreadLibrary()}
+      </div>
+
+      {/* Bottom Navigation */}
+      <BottomNav 
+        activeView={view} 
+        onNavigate={(v) => {
+            if (v === AppView.HISTORY) setHistory(getHistory());
+            setView(v);
+        }} 
+      />
+    </div>
+  );
+};
+
+export default App;

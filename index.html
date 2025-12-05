@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MeowBuling 喵卜灵</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Quicksand:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+      body {
+        font-family: 'Quicksand', sans-serif;
+        background-color: #0f0c29;
+        color: #e2e8f0;
+      }
+      h1, h2, h3, h4, .font-mystic {
+        font-family: 'Cinzel', serif;
+      }
+      .glass-panel {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+      }
+      .animate-float {
+        animation: float 6s ease-in-out infinite;
+      }
+      @keyframes float {
+        0% { transform: translateY(0px); }
+        50% { transform: translateY(-20px); }
+        100% { transform: translateY(0px); }
+      }
+      .animate-pulse-glow {
+        animation: pulse-glow 3s infinite;
+      }
+      @keyframes pulse-glow {
+        0% { box-shadow: 0 0 10px rgba(167, 139, 250, 0.5); }
+        50% { box-shadow: 0 0 25px rgba(167, 139, 250, 0.8); }
+        100% { box-shadow: 0 0 10px rgba(167, 139, 250, 0.5); }
+      }
+      
+      /* New Animations for Shuffling and Dealing */
+      @keyframes shuffle-orbit {
+        0% { transform: translate(0,0) scale(1) rotate(0deg); opacity: 0.5; }
+        25% { transform: translate(var(--tx), var(--ty)) scale(1.1) rotate(90deg); opacity: 1; }
+        50% { transform: translate(0,0) scale(0.8) rotate(180deg); opacity: 0.8; }
+        75% { transform: translate(calc(var(--tx) * -1), calc(var(--ty) * -1)) scale(1.1) rotate(270deg); opacity: 1; }
+        100% { transform: translate(0,0) scale(1) rotate(360deg); opacity: 0.5; }
+      }
+      .animate-shuffle-orbit {
+        animation: shuffle-orbit 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+
+      @keyframes fly-in {
+        0% { transform: translateY(100px) scale(0.5) rotateX(45deg); opacity: 0; }
+        100% { transform: translateY(0) scale(1) rotateX(0); opacity: 1; }
+      }
+      .animate-fly-in {
+        animation: fly-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      }
+
+      /* Custom Scrollbar Hiding */
+      .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+      }
+      .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f0c29; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #4c1d95; 
+        border-radius: 4px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #6d28d9; 
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
+  }
+}
+</script>
+</head>
+  <body class="overflow-hidden h-screen w-screen">
+    <div id="root" class="h-full w-full"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
