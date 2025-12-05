@@ -53,6 +53,162 @@ export const LoadingSkeleton = () => (
   </div>
 );
 
+interface Particle {
+    id: number;
+    x: number;
+    y: number;
+    tx: number;
+    ty: number;
+    color: string;
+    size: number;
+    icon?: string;
+}
+
+export const EnergyLoading = () => {
+    const [energy, setEnergy] = React.useState(0);
+    const [isOvercharged, setIsOvercharged] = React.useState(false);
+    const [particles, setParticles] = React.useState<Particle[]>([]);
+
+    // Auto increment progress slowly to simulate connection
+    React.useEffect(() => {
+        const timer = setInterval(() => {
+            setEnergy(prev => {
+                if (prev >= 95) return prev; 
+                return prev + 0.2;
+            });
+        }, 100);
+        return () => clearInterval(timer);
+    }, []);
+
+    const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
+        // Boost energy on click
+        setEnergy(prev => Math.min(prev + 5, 100));
+
+        // Get coordinates
+        let clientX, clientY;
+        if ('touches' in e) {
+             clientX = e.touches[0].clientX;
+             clientY = e.touches[0].clientY;
+        } else {
+             clientX = (e as React.MouseEvent).clientX;
+             clientY = (e as React.MouseEvent).clientY;
+        }
+        
+        // Trigger overcharge animation if full
+        if (energy >= 95) {
+            setIsOvercharged(true);
+            setTimeout(() => setIsOvercharged(false), 200);
+        }
+
+        // Generate Explosion Particles
+        const newParticles: Particle[] = [];
+        const colors = ['#fcd34d', '#a78bfa', '#ffffff', '#f472b6', '#60a5fa']; 
+        const starIcons = ['✨', '⭐', '✦', '·', '⭑'];
+        const particleCount = 12 + Math.random() * 8; // Random count between 12-20
+
+        for (let i = 0; i < particleCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 60 + Math.random() * 120; // Explosion radius
+            const tx = Math.cos(angle) * speed;
+            const ty = Math.sin(angle) * speed;
+            const isIcon = Math.random() > 0.7; // 30% chance to be a star icon instead of dot
+            
+            newParticles.push({
+                id: Date.now() + Math.random(),
+                x: clientX,
+                y: clientY,
+                tx,
+                ty,
+                color: colors[Math.floor(Math.random() * colors.length)],
+                size: isIcon ? 12 + Math.random() * 10 : 4 + Math.random() * 6,
+                icon: isIcon ? starIcons[Math.floor(Math.random() * starIcons.length)] : undefined
+            });
+        }
+        
+        setParticles(prev => [...prev, ...newParticles]);
+
+        // Cleanup this batch of particles after animation
+        setTimeout(() => {
+            setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
+        }, 1000);
+    };
+
+    return (
+        <div 
+            className="fixed inset-0 z-[100] bg-[#0f0c29] flex flex-col items-center justify-center overflow-hidden touch-manipulation select-none"
+            onClick={handleClick}
+            onTouchStart={handleClick}
+        >
+             {/* Background Stars/Particles */}
+             <div className="absolute inset-0 pointer-events-none opacity-50">
+                 <div className="absolute top-[20%] left-[20%] w-1 h-1 bg-white rounded-full animate-pulse"></div>
+                 <div className="absolute top-[60%] right-[20%] w-1.5 h-1.5 bg-purple-300 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
+                 <div className="absolute bottom-[30%] left-[40%] w-1 h-1 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                 <div className="absolute top-[10%] right-[40%] w-0.5 h-0.5 bg-yellow-200 rounded-full animate-pulse" style={{animationDelay: '2s'}}></div>
+                 <div className="absolute bottom-[20%] right-[10%] w-1 h-1 bg-pink-300 rounded-full animate-pulse" style={{animationDelay: '1.5s'}}></div>
+             </div>
+
+            {/* Central Interactive Element */}
+            <div className={`relative cursor-pointer transition-transform duration-100 mt-[-10vh] ${isOvercharged ? 'animate-shake' : 'active:scale-95'}`}>
+                {/* Glow Effect */}
+                <div 
+                    className="absolute inset-0 bg-purple-600 rounded-full blur-[60px] transition-all duration-300"
+                    style={{ 
+                        opacity: 0.3 + (energy / 150),
+                        transform: `scale(${1 + energy/100})`
+                    }}
+                ></div>
+                
+                {/* Icon */}
+                <div className="relative z-10 text-8xl md:text-9xl animate-float filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                    🔮
+                </div>
+            </div>
+
+            {/* Text & Progress */}
+            <div className="mt-16 text-center space-y-6 relative z-10 px-8 w-full max-w-md pointer-events-none">
+                 <h2 className="text-2xl md:text-3xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200 animate-pulse tracking-wide">
+                    正在连接星界...
+                </h2>
+                <div className="space-y-3">
+                    <p className="text-indigo-300 text-sm md:text-base font-medium animate-bounce">
+                        {energy < 100 ? "👆 点击屏幕注入灵力" : "⚡ 能量充盈！正在破译..."}
+                    </p>
+                    <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden border border-white/5 shadow-inner">
+                        <div 
+                            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-200 ease-out shadow-[0_0_10px_rgba(168,85,247,0.8)]"
+                            style={{ width: `${Math.min(energy, 100)}%` }}
+                        ></div>
+                    </div>
+                    <p className="text-xs text-indigo-400/60 font-mono">{Math.floor(Math.min(energy, 100))}% 能量汇聚中</p>
+                </div>
+            </div>
+
+            {/* Particle Explosions */}
+            {particles.map(p => (
+                <div 
+                    key={p.id}
+                    className="absolute rounded-full animate-particle-explode pointer-events-none flex items-center justify-center font-bold"
+                    style={{
+                        left: p.x,
+                        top: p.y,
+                        backgroundColor: p.icon ? 'transparent' : p.color,
+                        color: p.color,
+                        width: p.size,
+                        height: p.size,
+                        fontSize: p.size,
+                        '--tx': `${p.tx}px`,
+                        '--ty': `${p.ty}px`,
+                        boxShadow: p.icon ? 'none' : `0 0 ${p.size}px ${p.color}`
+                    } as React.CSSProperties}
+                >
+                    {p.icon}
+                </div>
+            ))}
+        </div>
+    )
+}
+
 export const Toast = ({ message, show }: { message: string, show: boolean }) => (
     <div className={`fixed top-20 left-1/2 -translate-x-1/2 z-[200] transition-all duration-300 transform ${show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'}`}>
         <div className="bg-indigo-600/90 text-white px-6 py-3 rounded-full shadow-[0_0_20px_rgba(79,70,229,0.5)] border border-white/20 backdrop-blur-md flex items-center gap-2">
@@ -224,76 +380,85 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     const education = getCardEducation(card.id);
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-fade-in">
-            {/* Backdrop */}
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-md" onClick={onClose}></div>
+        // Changed to allow scrolling the entire modal container
+        <div className="fixed inset-0 z-[100] overflow-y-auto custom-scrollbar animate-fade-in">
+            {/* Fixed Backdrop */}
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-md" />
             
-            {/* Modal Content */}
-            <div className="relative z-10 w-full max-w-4xl bg-indigo-950/80 border border-purple-500/30 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden max-h-[85vh] md:max-h-[90vh]">
-                 {/* Left: Big Image */}
-                 <div className="w-full md:w-1/2 bg-black/50 p-6 md:p-12 flex items-center justify-center relative shrink-0">
-                     <div className={`relative w-48 h-72 md:w-80 md:h-[500px] rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${card.isReversed ? 'rotate-180' : ''}`}>
-                         <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
-                     </div>
-                     {/* Reversed Indicator Overlay if reversed */}
-                     {card.isReversed && (
-                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 px-4 py-2 rounded-full border border-red-500/50 backdrop-blur-sm rotate-180">
-                             <span className="text-red-300 font-bold tracking-widest">逆位 REVERSED</span>
-                         </div>
-                     )}
-                 </div>
+            {/* Layout Container - Click here to close */}
+            <div 
+                className="min-h-full flex items-center justify-center p-4 md:p-8 relative" 
+                onClick={onClose}
+            >
+                {/* Modal Card - Stop propagation */}
+                <div 
+                    className="relative w-full max-w-4xl bg-indigo-950/90 border border-purple-500/30 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden"
+                    onClick={(e) => e.stopPropagation()}
+                >
+                     {/* Close Button - Floats top right */}
+                     <button onClick={onClose} className="absolute top-4 right-4 z-50 text-white/70 hover:text-white bg-black/30 hover:bg-black/50 p-2 rounded-full transition-all backdrop-blur-sm">
+                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                         </svg>
+                     </button>
 
-                 {/* Right: Info */}
-                 <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col overflow-y-auto custom-scrollbar bg-gradient-to-br from-transparent to-purple-900/20">
-                     <div className="flex justify-between items-start mb-6">
-                         <div>
-                            <h2 className="text-3xl md:text-4xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200">
-                                {card.name_cn}
-                            </h2>
-                            <p className="text-indigo-400 font-serif italic text-lg">{card.name}</p>
+                     {/* Left: Big Image */}
+                     <div className="w-full md:w-1/2 bg-black/40 p-8 flex items-center justify-center relative shrink-0">
+                         <div className={`relative w-48 h-72 md:w-80 md:h-[500px] rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${card.isReversed ? 'rotate-180' : ''}`}>
+                             <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
                          </div>
-                         <button onClick={onClose} className="text-indigo-400 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors">
-                             <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                             </svg>
-                         </button>
-                     </div>
-
-                     <div className="space-y-6 flex-1">
-                         {/* Educational Badges */}
-                         <div className="flex flex-wrap gap-2">
-                             <Badge className="bg-indigo-600/30 text-indigo-200 border-indigo-400/30 px-3 py-1">
-                                 {education.archetype}
-                             </Badge>
-                             <Badge className="bg-amber-600/30 text-amber-200 border-amber-400/30 px-3 py-1">
-                                 {education.element}
-                             </Badge>
-                         </div>
-                         
-                         {/* Keywords - Only show if meaning is relevant (i.e. we are not in Library view, or show both) */}
-                         {/* In Library view, card might not have isReversed property set, so we show both generic meanings */}
-                         <div className="grid grid-cols-2 gap-4">
-                             <div className={`p-4 rounded-xl border ${card.isReversed === true ? 'bg-white/5 border-white/10 opacity-50' : 'bg-emerald-900/30 border-emerald-500/30'}`}>
-                                 <h4 className="text-xs uppercase tracking-widest mb-1 text-emerald-300">正位含义</h4>
-                                 <p className="text-emerald-100 font-bold">{card.meaningUpright}</p>
+                         {/* Reversed Indicator */}
+                         {card.isReversed && (
+                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 px-4 py-2 rounded-full border border-red-500/50 backdrop-blur-sm rotate-180">
+                                 <span className="text-red-300 font-bold tracking-widest">逆位 REVERSED</span>
                              </div>
-                             <div className={`p-4 rounded-xl border ${card.isReversed === false ? 'bg-white/5 border-white/10 opacity-50' : 'bg-red-900/30 border-red-500/30'}`}>
-                                 <h4 className="text-xs uppercase tracking-widest mb-1 text-red-300">逆位含义</h4>
-                                 <p className="text-red-100 font-bold">{card.meaningReversed}</p>
-                             </div>
+                         )}
+                     </div>
+
+                     {/* Right: Info - No internal scroll, flows naturally */}
+                     <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col bg-gradient-to-br from-transparent to-purple-900/20">
+                         <div className="mb-6 pt-2">
+                             <h2 className="text-3xl md:text-4xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200">
+                                 {card.name_cn}
+                             </h2>
+                             <p className="text-indigo-400 font-serif italic text-lg">{card.name}</p>
                          </div>
 
-                         {/* Description */}
-                         <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                             <h3 className="text-lg font-bold text-purple-200 mb-2 flex items-center gap-2">
-                                 <span>📖</span> 牌面科普
-                             </h3>
-                             <p className="text-indigo-100/90 leading-relaxed text-sm md:text-base">
-                                 {education.description}
-                             </p>
+                         <div className="space-y-6">
+                             {/* Educational Badges */}
+                             <div className="flex flex-wrap gap-2">
+                                 <Badge className="bg-indigo-600/30 text-indigo-200 border-indigo-400/30 px-3 py-1">
+                                     {education.archetype}
+                                 </Badge>
+                                 <Badge className="bg-amber-600/30 text-amber-200 border-amber-400/30 px-3 py-1">
+                                     {education.element}
+                                 </Badge>
+                             </div>
+                             
+                             {/* Meanings */}
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <div className={`p-4 rounded-xl border ${card.isReversed === true ? 'bg-white/5 border-white/10 opacity-50' : 'bg-emerald-900/30 border-emerald-500/30'}`}>
+                                     <h4 className="text-xs uppercase tracking-widest mb-1 text-emerald-300">正位含义</h4>
+                                     <p className="text-emerald-100 font-bold text-sm md:text-base">{card.meaningUpright}</p>
+                                 </div>
+                                 <div className={`p-4 rounded-xl border ${card.isReversed === false ? 'bg-white/5 border-white/10 opacity-50' : 'bg-red-900/30 border-red-500/30'}`}>
+                                     <h4 className="text-xs uppercase tracking-widest mb-1 text-red-300">逆位含义</h4>
+                                     <p className="text-red-100 font-bold text-sm md:text-base">{card.meaningReversed}</p>
+                                 </div>
+                             </div>
+
+                             {/* Description */}
+                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                                 <h3 className="text-lg font-bold text-purple-200 mb-2 flex items-center gap-2">
+                                     <span>📖</span> 牌面科普
+                                 </h3>
+                                 <p className="text-indigo-100/90 leading-relaxed text-sm md:text-base">
+                                     {education.description}
+                                 </p>
+                             </div>
                          </div>
                      </div>
-                 </div>
+                </div>
             </div>
         </div>
     );
@@ -640,7 +805,7 @@ export const SpreadLayout = ({
 
     // Default: Linear Flex Row
     return (
-        <div className="flex flex-wrap justify-center gap-4 md:gap-8 max-w-5xl mx-auto">
+        <div className="flex flex-wrap justify-center gap-2 md:gap-8 max-w-5xl mx-auto">
             {spread.positions.map((_, i) => renderSlot(i))}
         </div>
     );

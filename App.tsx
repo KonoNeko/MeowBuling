@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS } from './constants';
-import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav } from './components';
+import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 
 // Helper for random ID
@@ -558,56 +558,60 @@ const App = () => {
         )
     }
 
-    // 3. Picking State (The Scrollable Fan + New Layout)
+    // 3. Picking State (Refined Layout for Mobile)
     return (
-      <div className="h-full flex flex-col items-center justify-between p-4 pt-20 pb-20 animate-fade-in relative">
+      <div className="h-full flex flex-col items-center justify-between animate-fade-in relative overflow-hidden">
         
-        {/* Top Area: The Spread Layout (Drop Targets) */}
-        <div className="w-full flex-1 flex flex-col items-center justify-center z-10 overflow-hidden relative pb-4">
-            <div className="text-center mb-4 pointer-events-auto shrink-0 z-20">
-                <h2 className="text-xl md:text-2xl font-mystic text-purple-200 flex items-center justify-center gap-3">
+        {/* Top Area: Spread */}
+        {/* Use pt-16 to clear fixed Header */}
+        <div className="w-full flex-1 flex flex-col items-center pt-16 overflow-hidden relative">
+            
+            {/* Title - Compact */}
+            <div className="text-center py-2 pointer-events-auto shrink-0 z-20">
+                <h2 className="text-lg font-mystic text-purple-200 flex items-center justify-center gap-2">
                     {selectedSpread?.name} 
-                    <Badge className="text-lg px-3">{drawnCards.length} / {selectedSpread?.cardCount}</Badge>
+                    <Badge className="text-sm px-2">{drawnCards.length} / {selectedSpread?.cardCount}</Badge>
                 </h2>
-                <p className="text-indigo-300 text-xs md:text-sm mt-1">
-                    {drawnCards.length === selectedSpread?.cardCount ? "正在揭示..." : "拖拽卡牌到闪烁的槽位，或直接点击抽取"}
+                <p className="text-indigo-400 text-[10px] opacity-80">
+                    {drawnCards.length === selectedSpread?.cardCount ? "正在揭示..." : "拖拽卡牌到上方槽位"}
                 </p>
             </div>
 
             {selectedSpread && (
-                <div className="w-full h-full overflow-y-auto custom-scrollbar flex items-center justify-center p-4">
-                     <SpreadLayout 
-                        spread={selectedSpread} 
-                        drawnCards={drawnCards} 
-                        onDrop={handleCardDrop}
-                        isRevealed={false} // Hides face when drawing
-                        // NOTE: No click handler here, cards are face down
-                     />
+                <div className="w-full flex-1 overflow-y-auto scrollbar-hide flex items-center justify-center p-2 pb-4">
+                     {/* Scale down slightly on mobile to ensure fit */}
+                     <div className="transform scale-90 md:scale-100 origin-center transition-transform">
+                         <SpreadLayout 
+                            spread={selectedSpread} 
+                            drawnCards={drawnCards} 
+                            onDrop={handleCardDrop}
+                            isRevealed={false} 
+                         />
+                     </div>
                 </div>
             )}
         </div>
 
-        {/* Bottom Area: The Scrollable Fan of Cards (Draggable Source) */}
+        {/* Bottom Area: Deck */}
+        {/* Increased height (h-72) and changed alignment to items-end to prevent clipping at top */}
         {drawnCards.length < (selectedSpread?.cardCount || 0) && (
-            <div className="w-full h-[35vh] md:h-[40vh] flex items-center relative z-20 shrink-0">
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29]/90 to-transparent pointer-events-none z-0"></div>
-                
-                {/* Horizontal Scroll Container */}
-                <div 
+            <div className="w-full h-72 md:h-80 flex items-end relative z-20 shrink-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29] to-transparent pb-24 pointer-events-none">
+                 {/* Inner container with pointer-events-auto */}
+                 <div 
                     ref={scrollContainerRef}
-                    className="w-full h-full flex items-center overflow-x-auto px-[50vw] pb-4 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing relative z-10"
+                    className="w-full h-full flex items-end overflow-x-auto px-[50vw] pb-4 pt-16 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing relative z-10 pointer-events-auto"
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
                 >
-                    <div className="flex items-center" style={{ width: 'max-content' }}>
+                    <div className="flex items-end" style={{ width: 'max-content' }}>
                         {deck.map((card, idx) => (
                             <div 
                                 key={card.id}
-                                className="draggable-card relative w-20 h-36 md:w-28 md:h-48 -ml-12 md:-ml-16 cursor-pointer transition-all duration-300 hover:-translate-y-12 hover:scale-110 hover:z-50 group hover:mx-4 select-none"
+                                className="draggable-card relative w-20 h-36 md:w-28 md:h-48 -ml-12 md:-ml-16 cursor-pointer transition-all duration-300 hover:-translate-y-10 hover:scale-110 hover:z-50 group hover:mx-2 select-none"
                                 onClick={() => handleCardClick(card)}
-                                draggable={true} // Enable HTML5 Drag
+                                draggable={true} 
                                 onDragStart={(e) => handleDragStart(e, card)}
                                 style={{
                                     transformOrigin: 'bottom center',
@@ -616,17 +620,15 @@ const App = () => {
                                 <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/30 shadow-xl overflow-hidden relative transform transition-transform group-hover:rotate-0">
                                     <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
                                     <div className="absolute inset-1 border border-dashed border-white/10 rounded"></div>
-                                    {/* Shine effect */}
                                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
-                
                 {/* Instruction Overlay */}
-                <div className="absolute bottom-6 left-0 w-full text-center pointer-events-none text-white/30 text-xs animate-pulse z-30">
-                    ← 滑动下方浏览 • 拖拽上方放入 →
+                <div className="absolute bottom-20 left-0 w-full text-center pointer-events-none text-white/30 text-[10px] animate-pulse z-30">
+                    ← 滑动选牌 • 拖拽上方 →
                 </div>
             </div>
         )}
@@ -635,15 +637,9 @@ const App = () => {
   };
 
   const renderReading = () => {
-    // 1. Loading State
+    // 1. Loading State (Now Interactive)
     if (loading) {
-        return (
-            <div className="h-full max-w-4xl mx-auto p-6 pt-24 pb-20 flex flex-col items-center justify-center space-y-8 animate-pulse">
-                <div className="text-6xl animate-bounce">🐈‍⬛</div>
-                <h2 className="text-2xl font-mystic text-purple-200">喵卜灵正在连接星界意识...</h2>
-                <LoadingSkeleton />
-            </div>
-        )
+        return <EnergyLoading />;
     }
 
     if (!readingResult || !readingResult.interpretation) return null;

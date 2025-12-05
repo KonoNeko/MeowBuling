@@ -60,6 +60,25 @@
         animation: fly-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
       }
 
+      /* Particle Explosion Animation */
+      @keyframes particle-explode {
+        0% { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; }
+        100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+      }
+      .animate-particle-explode {
+        animation: particle-explode 0.8s ease-out forwards;
+      }
+
+      /* Shake animation for overcharge */
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px) rotate(-5deg); }
+        75% { transform: translateX(5px) rotate(5deg); }
+      }
+      .animate-shake {
+        animation: shake 0.2s ease-in-out;
+      }
+
       /* Custom Scrollbar Hiding */
       .scrollbar-hide::-webkit-scrollbar {
           display: none;
