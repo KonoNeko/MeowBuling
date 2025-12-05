@@ -1,4 +1,5 @@
 
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
@@ -46,7 +47,8 @@ export enum AppView {
   READING = 'READING',
   HISTORY = 'HISTORY',
   LIBRARY = 'LIBRARY',
-  SPREAD_LIBRARY = 'SPREAD_LIBRARY'
+  SPREAD_LIBRARY = 'SPREAD_LIBRARY',
+  CHAT = 'CHAT'
 }
 
 export interface AIInterpretation {

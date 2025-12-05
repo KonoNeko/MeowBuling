@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { SpreadDefinition, TarotCard, AppView } from './types';
-import { getCardEducation } from './constants';
+import React, { useState, useEffect, useRef } from 'react';
+import { SpreadDefinition, TarotCard, AppView, ReadingSession } from './types';
+import { getCardEducation, SYSTEM_INSTRUCTION } from './constants';
+import { GoogleGenAI, LiveServerMessage, Modality } from "@google/genai";
+import { base64ToUint8Array, arrayBufferToBase64, decodeAudioData, float32ToInt16 } from './utils';
 
 // --- Base Components ---
 
@@ -52,6 +54,295 @@ export const LoadingSkeleton = () => (
     </div>
   </div>
 );
+
+// --- Digital Avatar (Live API) ---
+
+export const DigitalAvatar = ({ context, onClose, minimized = false }: { context?: string, onClose?: () => void, minimized?: boolean }) => {
+    const [connected, setConnected] = useState(false);
+    const [speaking, setSpeaking] = useState(false); // Model is speaking
+    const [listening, setListening] = useState(false); // Mic is active
+    const [error, setError] = useState<string | null>(null);
+    const [volume, setVolume] = useState(0);
+
+    // Audio Context Refs
+    const inputContextRef = useRef<AudioContext | null>(null);
+    const outputContextRef = useRef<AudioContext | null>(null);
+    const inputSourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+    const processorRef = useRef<ScriptProcessorNode | null>(null);
+    const outputNodeRef = useRef<GainNode | null>(null);
+    const sessionPromiseRef = useRef<Promise<any> | null>(null);
+    const nextStartTimeRef = useRef<number>(0);
+    const sourcesRef = useRef<Set<AudioBufferSourceNode>>(new Set());
+
+    // Clean up function
+    const cleanup = () => {
+        if (processorRef.current) {
+            processorRef.current.disconnect();
+            processorRef.current.onaudioprocess = null;
+        }
+        if (inputSourceRef.current) inputSourceRef.current.disconnect();
+        if (inputContextRef.current) inputContextRef.current.close();
+        if (outputContextRef.current) outputContextRef.current.close();
+        
+        sourcesRef.current.forEach(source => source.stop());
+        sourcesRef.current.clear();
+        
+        sessionPromiseRef.current = null;
+        setConnected(false);
+        setSpeaking(false);
+        setListening(false);
+    };
+
+    useEffect(() => {
+        return () => cleanup();
+    }, []);
+
+    const connect = async () => {
+        setError(null);
+        try {
+            const apiKey = process.env.API_KEY;
+            if (!apiKey) throw new Error("API Key Missing");
+
+            const ai = new GoogleGenAI({ apiKey });
+            
+            // 1. Setup Audio
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            
+            // Input (16kHz required by model recommendation usually, but we handle via resampling logic)
+            // Note: Standard context is 44.1 or 48kHz. We'll downsample in processor.
+            inputContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 16000 });
+            inputSourceRef.current = inputContextRef.current.createMediaStreamSource(stream);
+            
+            // Output (24kHz)
+            outputContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({ sampleRate: 24000 });
+            outputNodeRef.current = outputContextRef.current.createGain();
+            outputNodeRef.current.connect(outputContextRef.current.destination);
+
+            // 2. Establish Live Connection
+            const config = {
+                model: 'gemini-2.5-flash-native-audio-preview-09-2025',
+                config: {
+                    responseModalities: [Modality.AUDIO],
+                    speechConfig: {
+                        voiceConfig: { prebuiltVoiceConfig: { voiceName: 'Kore' } }, // Kore is usually good for mystical
+                    },
+                    systemInstruction: `${SYSTEM_INSTRUCTION} \n\n (Special Instruction: You are currently chatting via voice. Keep responses concise, mysterious but friendly. Use short sentences. If there is context provided, use it: ${context || "User just started the chat."})`,
+                },
+            };
+
+            const sessionPromise = ai.live.connect({
+                ...config,
+                callbacks: {
+                    onopen: () => {
+                        setConnected(true);
+                        setListening(true);
+                        
+                        // Setup Audio Processor to stream data
+                        if (!inputContextRef.current || !inputSourceRef.current) return;
+                        
+                        // Buffer size 4096 is good balance
+                        const processor = inputContextRef.current.createScriptProcessor(4096, 1, 1);
+                        processor.onaudioprocess = (e) => {
+                            const inputData = e.inputBuffer.getChannelData(0);
+                            
+                            // Visual Volume Feedback
+                            let sum = 0;
+                            for(let i=0; i<inputData.length; i++) sum += Math.abs(inputData[i]);
+                            const avg = sum / inputData.length;
+                            setVolume(avg * 100);
+
+                            // Convert to 16-bit PCM for API
+                            const pcmInt16 = float32ToInt16(inputData);
+                            const base64Data = arrayBufferToBase64(pcmInt16.buffer);
+
+                            sessionPromise.then(session => {
+                                session.sendRealtimeInput({
+                                    media: {
+                                        mimeType: 'audio/pcm;rate=16000',
+                                        data: base64Data
+                                    }
+                                });
+                            });
+                        };
+
+                        inputSourceRef.current.connect(processor);
+                        processor.connect(inputContextRef.current.destination); // destination is mute for script processor usually
+                        processorRef.current = processor;
+                    },
+                    onmessage: async (msg: LiveServerMessage) => {
+                        const base64Audio = msg.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+                        if (base64Audio && outputContextRef.current && outputNodeRef.current) {
+                            setSpeaking(true);
+                            // Set visual volume for model speaking (simulated)
+                            setVolume(Math.random() * 50 + 30);
+
+                            const audioData = base64ToUint8Array(base64Audio);
+                            const audioBuffer = await decodeAudioData(audioData, outputContextRef.current, 24000);
+                            
+                            // Scheduling
+                            const ctx = outputContextRef.current;
+                            nextStartTimeRef.current = Math.max(nextStartTimeRef.current, ctx.currentTime);
+                            
+                            const source = ctx.createBufferSource();
+                            source.buffer = audioBuffer;
+                            source.connect(outputNodeRef.current);
+                            source.start(nextStartTimeRef.current);
+                            
+                            nextStartTimeRef.current += audioBuffer.duration;
+                            sourcesRef.current.add(source);
+
+                            source.onended = () => {
+                                sourcesRef.current.delete(source);
+                                if (sourcesRef.current.size === 0) {
+                                    setSpeaking(false);
+                                    setVolume(0);
+                                }
+                            };
+                        }
+                    },
+                    onclose: () => {
+                        setConnected(false);
+                        cleanup();
+                    },
+                    onerror: (err) => {
+                        console.error(err);
+                        setError("连接中断");
+                        cleanup();
+                    }
+                }
+            });
+            sessionPromiseRef.current = sessionPromise;
+
+        } catch (e) {
+            console.error(e);
+            setError("麦克风或网络错误");
+        }
+    };
+
+    // --- Render Logic ---
+
+    // Minimized Floating Button Mode (For Result Page)
+    if (minimized) {
+        return (
+            <div className="fixed bottom-20 right-4 z-50">
+                 {/* The Avatar Bubble */}
+                 <button 
+                    onClick={() => connected ? cleanup() : connect()}
+                    className={`relative w-16 h-16 rounded-full shadow-2xl transition-all duration-300 flex items-center justify-center border-2 
+                        ${connected 
+                            ? (speaking ? 'bg-purple-600 border-pink-400 scale-110' : 'bg-indigo-600 border-green-400 animate-pulse-glow') 
+                            : 'bg-gray-800 border-white/20 hover:scale-105'
+                        }`}
+                 >
+                     <span className={`text-3xl filter drop-shadow-md ${speaking ? 'animate-bounce' : ''}`}>🐱</span>
+                     
+                     {/* Status Badge */}
+                     <span className="absolute -top-1 -right-1 flex h-4 w-4">
+                        {connected && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>}
+                        <span className={`relative inline-flex rounded-full h-4 w-4 ${connected ? 'bg-green-500' : 'bg-gray-500'}`}></span>
+                     </span>
+
+                     {/* Visual Ring based on volume */}
+                     {connected && (
+                         <div 
+                            className="absolute inset-0 rounded-full border-2 border-white/50 opacity-50 pointer-events-none"
+                            style={{ transform: `scale(${1 + volume/50})` }}
+                         />
+                     )}
+                 </button>
+                 
+                 {/* Error Tooltip */}
+                 {error && (
+                     <div className="absolute bottom-20 right-0 bg-red-500/90 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                         {error}
+                     </div>
+                 )}
+                 
+                 {/* Label */}
+                 {!connected && (
+                     <div className="absolute bottom-full mb-2 right-1/2 translate-x-1/2 bg-black/60 text-white text-[10px] px-2 py-1 rounded whitespace-nowrap backdrop-blur-sm pointer-events-none">
+                         喵卜灵在线
+                     </div>
+                 )}
+            </div>
+        )
+    }
+
+    // Full Screen Mode
+    return (
+        <div className="flex flex-col items-center justify-center h-full p-6 space-y-12 animate-fade-in relative z-20">
+            <div className="text-center space-y-2">
+                <h2 className="text-3xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200">
+                    星界通话
+                </h2>
+                <p className="text-indigo-300">与喵卜灵直接对话，倾听命运的回响</p>
+            </div>
+
+            {/* Avatar Circle */}
+            <div className="relative group">
+                 {/* Magic Glow */}
+                 <div className={`absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 blur-3xl transition-opacity duration-500 ${connected ? 'opacity-40' : 'opacity-10'}`}></div>
+                 
+                 <div 
+                    className={`relative w-64 h-64 rounded-full bg-gradient-to-b from-indigo-900 to-black border-4 flex items-center justify-center shadow-[0_0_50px_rgba(139,92,246,0.3)] transition-all duration-300
+                        ${connected 
+                            ? (speaking ? 'border-pink-500 scale-105' : 'border-green-400') 
+                            : 'border-white/10'
+                        }`}
+                 >
+                     {/* Ripples when user speaks */}
+                     {listening && !speaking && volume > 5 && (
+                         <>
+                            <div className="absolute inset-0 rounded-full border border-green-500/30 animate-ping" style={{ animationDuration: '2s' }}></div>
+                            <div className="absolute inset-0 rounded-full border border-green-500/20 animate-ping" style={{ animationDuration: '2s', animationDelay: '0.5s' }}></div>
+                         </>
+                     )}
+
+                     {/* The Cat */}
+                     <div className={`text-9xl transition-transform duration-200 filter drop-shadow-[0_0_20px_rgba(255,255,255,0.3)] ${speaking ? 'animate-bounce' : ''}`}
+                          style={{ transform: `scale(${1 + Math.min(volume/100, 0.2)})` }}
+                     >
+                         🐱
+                     </div>
+                 </div>
+            </div>
+
+            {/* Status Text */}
+            <div className="h-8 text-center">
+                {error ? (
+                    <span className="text-red-400 font-bold bg-red-900/30 px-4 py-1 rounded-full">{error}</span>
+                ) : connected ? (
+                    speaking ? (
+                        <span className="text-pink-300 animate-pulse font-mystic tracking-widest">喵卜灵正在诉说...</span>
+                    ) : (
+                        <span className="text-green-300 animate-pulse font-mystic tracking-widest">正在倾听你的心声...</span>
+                    )
+                ) : (
+                    <span className="text-white/40">点击下方按钮建立连接</span>
+                )}
+            </div>
+
+            {/* Controls */}
+            <div className="flex gap-6">
+                {!connected ? (
+                    <Button onClick={connect} className="w-48 text-lg py-4 shadow-[0_0_30px_rgba(147,51,234,0.4)]">
+                        🔮 呼唤喵卜灵
+                    </Button>
+                ) : (
+                    <Button onClick={cleanup} variant="secondary" className="w-48 border-red-500/50 text-red-300 hover:bg-red-900/20">
+                        断开连接
+                    </Button>
+                )}
+            </div>
+            
+            {onClose && (
+                <button onClick={onClose} className="text-white/40 hover:text-white mt-8 text-sm underline">
+                    返回
+                </button>
+            )}
+        </div>
+    );
+}
 
 interface Particle {
     id: number;
@@ -603,7 +894,7 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
     const size = isLargeSpread ? 'xs' : 'sm'; 
 
     return (
-        <div className="relative w-full aspect-square md:aspect-[4/3] max-w-2xl mx-auto rounded-full border-2 border-dashed border-white/5 bg-white/5">
+        <div className="relative w-full aspect-square md:aspect-[4/3] max-w-2xl mx-auto rounded-3xl border-2 border-dashed border-white/5 bg-white/5">
             {spread.positions.map((pos: any, index: number) => {
                 const card = drawnCards[index];
                 const style = getPositionStyle(spread.layout_type || 'linear', index, spread.cardCount);

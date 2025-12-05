@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS } from './constants';
-import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
+import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading, DigitalAvatar } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 
 // Helper for random ID
@@ -76,6 +76,7 @@ const App = () => {
       case AppView.LIBRARY:
       case AppView.SPREAD_LIBRARY:
       case AppView.READING:
+      case AppView.CHAT:
         setView(AppView.HOME);
         break;
       case AppView.QUESTION_SELECT:
@@ -580,7 +581,7 @@ const App = () => {
             {selectedSpread && (
                 <div className="w-full flex-1 overflow-y-auto scrollbar-hide flex items-center justify-center p-2 pb-4">
                      {/* Scale down slightly on mobile to ensure fit */}
-                     <div className="transform scale-90 md:scale-100 origin-center transition-transform">
+                     <div className="w-full max-w-2xl transform scale-90 md:scale-100 origin-center transition-transform">
                          <SpreadLayout 
                             spread={selectedSpread} 
                             drawnCards={drawnCards} 
@@ -648,6 +649,14 @@ const App = () => {
     // 2. Result State
     return (
       <div className="h-full overflow-y-auto pb-32 p-4 pt-20 custom-scrollbar">
+        {/* Floating Chat Avatar */}
+        <DigitalAvatar 
+            context={`User just received a reading about: "${readingResult.question}". 
+            Cards drawn: ${readingResult.cards.map(c => c.name_cn + (c.isReversed?'(逆位)':'')).join(', ')}. 
+            Main theme: ${interpretation.mainTheme}.`}
+            minimized={true}
+        />
+
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
           
           {/* Header Area */}
@@ -662,7 +671,7 @@ const App = () => {
           {/* The Spread Display (Using the Layout Engine now!) */}
           <div className="w-full overflow-x-auto py-8 flex justify-center">
              {selectedSpread && (
-                <div className="scale-75 md:scale-100 origin-top">
+                <div className="w-full max-w-2xl scale-75 md:scale-100 origin-top">
                     <SpreadLayout 
                         spread={selectedSpread} 
                         drawnCards={readingResult.cards} 
@@ -910,6 +919,10 @@ const App = () => {
       );
   }
 
+  const renderChat = () => (
+      <DigitalAvatar onClose={() => setView(AppView.HOME)} />
+  );
+
   return (
     <div className="w-full h-full relative overflow-hidden bg-[#0f0c29]">
       {/* Toast Notification */}
@@ -922,7 +935,7 @@ const App = () => {
       <Header 
         onBack={handleBack}
         title={view === AppView.HOME ? "" : (selectedTopic?.label || "喵卜灵")}
-        showBack={view !== AppView.HOME && view !== AppView.HISTORY && view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY}
+        showBack={view !== AppView.HOME && view !== AppView.HISTORY && view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY && view !== AppView.CHAT}
       />
 
       {/* Dynamic Background Elements */}
@@ -942,6 +955,7 @@ const App = () => {
         {view === AppView.HISTORY && renderHistory()}
         {view === AppView.LIBRARY && renderLibrary()}
         {view === AppView.SPREAD_LIBRARY && renderSpreadLibrary()}
+        {view === AppView.CHAT && renderChat()}
       </div>
 
       {/* Bottom Navigation */}
