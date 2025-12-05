@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { SpreadDefinition, TarotCard, AppView } from './types';
 import { getCardEducation } from './constants';
 
@@ -224,7 +224,7 @@ export const Header = ({
     showBack
 }: { 
     onBack?: () => void, 
-    title?: string,
+    title?: string, 
     showBack: boolean
 }) => {
     return (
@@ -375,9 +375,32 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
 };
 
 export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onClose: () => void }) => {
+    // Determine initial tab based on card state
+    const [activeTab, setActiveTab] = useState<'upright' | 'reversed'>('upright');
+
+    useEffect(() => {
+        if (card) {
+            setActiveTab(card.isReversed ? 'reversed' : 'upright');
+        }
+    }, [card]);
+
     if (!card) return null;
 
     const education = getCardEducation(card.id);
+    const detail = activeTab === 'upright' ? card.upright : card.reversed;
+    const isUpright = activeTab === 'upright';
+
+    // Helper to render a card section
+    const DetailSection = ({ icon, title, content, colorClass }: any) => (
+        <div className={`p-4 rounded-xl border bg-white/5 border-white/10 hover:bg-white/10 transition-colors`}>
+            <h4 className={`text-xs uppercase tracking-widest mb-2 flex items-center gap-2 ${colorClass}`}>
+                <span>{icon}</span> {title}
+            </h4>
+            <p className="text-indigo-100/90 text-sm leading-relaxed whitespace-pre-wrap">
+                {content || "暂无详细解读，请参考综合指引。"}
+            </p>
+        </div>
+    );
 
     return (
         // Changed to allow scrolling the entire modal container
@@ -392,7 +415,7 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
             >
                 {/* Modal Card - Stop propagation */}
                 <div 
-                    className="relative w-full max-w-4xl bg-indigo-950/90 border border-purple-500/30 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden"
+                    className="relative w-full max-w-5xl bg-indigo-950/90 border border-purple-500/30 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden"
                     onClick={(e) => e.stopPropagation()}
                 >
                      {/* Close Button - Floats top right */}
@@ -403,58 +426,91 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                      </button>
 
                      {/* Left: Big Image */}
-                     <div className="w-full md:w-1/2 bg-black/40 p-8 flex items-center justify-center relative shrink-0">
-                         <div className={`relative w-48 h-72 md:w-80 md:h-[500px] rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${card.isReversed ? 'rotate-180' : ''}`}>
+                     <div className="w-full md:w-2/5 bg-black/40 p-8 flex items-center justify-center relative shrink-0">
+                         <div className={`relative w-48 h-72 md:w-64 md:h-96 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${isUpright ? '' : 'rotate-180'}`}>
                              <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
                          </div>
-                         {/* Reversed Indicator */}
-                         {card.isReversed && (
-                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/70 px-4 py-2 rounded-full border border-red-500/50 backdrop-blur-sm rotate-180">
-                                 <span className="text-red-300 font-bold tracking-widest">逆位 REVERSED</span>
-                             </div>
-                         )}
                      </div>
 
-                     {/* Right: Info - No internal scroll, flows naturally */}
-                     <div className="w-full md:w-1/2 p-6 md:p-10 flex flex-col bg-gradient-to-br from-transparent to-purple-900/20">
-                         <div className="mb-6 pt-2">
+                     {/* Right: Info */}
+                     <div className="w-full md:w-3/5 p-6 md:p-8 flex flex-col bg-gradient-to-br from-transparent to-purple-900/20 max-h-[85vh] md:max-h-auto overflow-y-auto custom-scrollbar">
+                         {/* Header */}
+                         <div className="mb-4 pt-2">
                              <h2 className="text-3xl md:text-4xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200">
                                  {card.name_cn}
                              </h2>
                              <p className="text-indigo-400 font-serif italic text-lg">{card.name}</p>
                          </div>
 
-                         <div className="space-y-6">
-                             {/* Educational Badges */}
+                         {/* Badges */}
+                         <div className="flex flex-wrap gap-2 mb-6">
+                             <Badge className="bg-indigo-600/30 text-indigo-200 border-indigo-400/30 px-3 py-1">
+                                 {education.archetype}
+                             </Badge>
+                             <Badge className="bg-amber-600/30 text-amber-200 border-amber-400/30 px-3 py-1">
+                                 {education.element}
+                             </Badge>
+                         </div>
+
+                         {/* Educational Description (Moved Up) */}
+                         <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/20 mb-6">
+                             <h3 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2">
+                                 <span>📖</span> 牌面科普
+                             </h3>
+                             <p className="text-indigo-100/80 leading-relaxed text-xs">
+                                 {education.description}
+                             </p>
+                         </div>
+
+                         {/* Tab Switcher - Removed sticky */}
+                         <div className="flex p-1 bg-white/5 rounded-lg border border-white/10 mb-6">
+                            <button 
+                                onClick={() => setActiveTab('upright')}
+                                className={`flex-1 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === 'upright' ? 'bg-emerald-600 text-white shadow-lg' : 'text-indigo-300 hover:bg-white/5'}`}
+                            >
+                                正位 (Upright)
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('reversed')}
+                                className={`flex-1 py-2 rounded-md text-sm font-bold transition-all duration-300 ${activeTab === 'reversed' ? 'bg-red-600 text-white shadow-lg' : 'text-indigo-300 hover:bg-white/5'}`}
+                            >
+                                逆位 (Reversed)
+                            </button>
+                         </div>
+
+                         {/* Dynamic Content Based on Tab */}
+                         <div className="space-y-6 animate-fade-in pb-10">
+                             {/* Keywords */}
                              <div className="flex flex-wrap gap-2">
-                                 <Badge className="bg-indigo-600/30 text-indigo-200 border-indigo-400/30 px-3 py-1">
-                                     {education.archetype}
-                                 </Badge>
-                                 <Badge className="bg-amber-600/30 text-amber-200 border-amber-400/30 px-3 py-1">
-                                     {education.element}
-                                 </Badge>
-                             </div>
-                             
-                             {/* Meanings */}
-                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                                 <div className={`p-4 rounded-xl border ${card.isReversed === true ? 'bg-white/5 border-white/10 opacity-50' : 'bg-emerald-900/30 border-emerald-500/30'}`}>
-                                     <h4 className="text-xs uppercase tracking-widest mb-1 text-emerald-300">正位含义</h4>
-                                     <p className="text-emerald-100 font-bold text-sm md:text-base">{card.meaningUpright}</p>
-                                 </div>
-                                 <div className={`p-4 rounded-xl border ${card.isReversed === false ? 'bg-white/5 border-white/10 opacity-50' : 'bg-red-900/30 border-red-500/30'}`}>
-                                     <h4 className="text-xs uppercase tracking-widest mb-1 text-red-300">逆位含义</h4>
-                                     <p className="text-red-100 font-bold text-sm md:text-base">{card.meaningReversed}</p>
-                                 </div>
+                                {detail.keywords.map((kw, i) => (
+                                    <span key={i} className={`text-xs px-2 py-1 rounded border ${isUpright ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-200' : 'bg-red-900/30 border-red-500/30 text-red-200'}`}>
+                                        {kw}
+                                    </span>
+                                ))}
                              </div>
 
-                             {/* Description */}
-                             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-                                 <h3 className="text-lg font-bold text-purple-200 mb-2 flex items-center gap-2">
-                                     <span>📖</span> 牌面科普
-                                 </h3>
-                                 <p className="text-indigo-100/90 leading-relaxed text-sm md:text-base">
-                                     {education.description}
+                             {/* Main Sections */}
+                             <div className={`p-5 rounded-xl border ${isUpright ? 'bg-emerald-900/10 border-emerald-500/20' : 'bg-red-900/10 border-red-500/20'}`}>
+                                 <h4 className={`text-sm font-bold uppercase tracking-widest mb-2 flex items-center gap-2 ${isUpright ? 'text-emerald-300' : 'text-red-300'}`}>
+                                     <span>🔮</span> 综合指引
+                                 </h4>
+                                 <p className={`font-medium leading-relaxed ${isUpright ? 'text-emerald-100' : 'text-red-100'}`}>
+                                     {detail.general}
                                  </p>
+                             </div>
+
+                             {/* Specific Dimensions Grid */}
+                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                 <DetailSection icon="❤️" title="情感与关系" content={detail.love} colorClass="text-pink-300" />
+                                 <DetailSection icon="💼" title="事业与财富" content={detail.career} colorClass="text-blue-300" />
+                                 <DetailSection icon="🎓" title="学业与成长" content={detail.study} colorClass="text-cyan-300" />
+                                 <DetailSection icon="🤝" title="人际与社交" content={detail.social} colorClass="text-orange-300" />
+                                 <DetailSection icon="🏠" title="家庭与居住" content={detail.family} colorClass="text-yellow-300" />
+                                 <DetailSection icon="🌿" title="健康与身心" content={detail.health} colorClass="text-green-300" />
+                                 <DetailSection icon="🧘" title="内在与自我" content={detail.self} colorClass="text-purple-300" />
+                                 <DetailSection icon="🌌" title="灵性与命运" content={detail.spirit} colorClass="text-indigo-300" />
+                                 <DetailSection icon="⚔️" title="决策与行动" content={detail.action} colorClass="text-red-300" />
+                                 <DetailSection icon="⏳" title="时间与趋势" content={detail.trend} colorClass="text-gray-300" />
                              </div>
                          </div>
                      </div>
@@ -464,349 +520,160 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     );
 };
 
-// --- Spread Visuals ---
-
-// Mini Card style for preview
-const MiniCard = ({ style }: { style: React.CSSProperties }) => (
-    <div className="absolute w-2 h-3 bg-purple-400/80 rounded-[1px] shadow-sm shadow-purple-500/50" style={style}></div>
-);
-
-// Container for preview
-const Container = ({ children }: { children?: React.ReactNode }) => (
-    <div className="relative w-16 h-16 bg-white/5 rounded-lg border border-white/10 flex items-center justify-center shrink-0">
-        {children}
-    </div>
-);
-
-export const SpreadPreview = ({ spread }: { spread: SpreadDefinition }) => {
-    const { layout_type, cardCount } = spread;
-
-    // 1. Single
-    if (layout_type === 'single' || cardCount === 1) {
-        return (
-            <Container>
-                <MiniCard style={{ }} />
-            </Container>
-        )
-    }
-
-    // 2. Triangle / Pyramid
-    if (layout_type === 'triangle') {
-        return (
-            <Container>
-                <MiniCard style={{ top: '60%', left: '30%' }} />
-                <MiniCard style={{ top: '60%', right: '30%' }} />
-                <MiniCard style={{ top: '25%', left: '50%', transform: 'translateX(-50%)' }} />
-            </Container>
-        )
-    }
-
-    // 3. Square / Quadrant
-    if (layout_type === 'square' || layout_type === 'quadrant') {
-        return (
-            <Container>
-                 <MiniCard style={{ top: '25%', left: '25%' }} />
-                 <MiniCard style={{ top: '25%', right: '25%' }} />
-                 <MiniCard style={{ bottom: '25%', left: '25%' }} />
-                 <MiniCard style={{ bottom: '25%', right: '25%' }} />
-            </Container>
-        )
-    }
-
-    // 4. Cross (5 cards)
-    if (layout_type === 'cross' && cardCount === 5) {
-        return (
-             <Container>
-                 <MiniCard style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', zIndex: 10 }} />
-                 <MiniCard style={{ top: '50%', left: '15%', transform: 'translateY(-50%)' }} />
-                 <MiniCard style={{ top: '50%', right: '15%', transform: 'translateY(-50%)' }} />
-                 <MiniCard style={{ top: '15%', left: '50%', transform: 'translateX(-50%)' }} />
-                 <MiniCard style={{ bottom: '15%', left: '50%', transform: 'translateX(-50%)' }} />
-             </Container>
-        )
-    }
-
-    // 5. Diamond (4 cards)
-    if (layout_type === 'diamond') {
-        return (
-             <Container>
-                 <MiniCard style={{ top: '15%', left: '50%', transform: 'translateX(-50%)' }} />
-                 <MiniCard style={{ top: '50%', left: '15%', transform: 'translateY(-50%)' }} />
-                 <MiniCard style={{ top: '50%', right: '15%', transform: 'translateY(-50%)' }} />
-                 <MiniCard style={{ bottom: '15%', left: '50%', transform: 'translateX(-50%)' }} />
-             </Container>
-        )
-    }
-
-    // 6. Celtic Cross
-    if (layout_type === 'celtic_cross') {
-         return (
-             <Container>
-                 {/* Cross */}
-                 <div className="absolute left-[20%] top-1/2 -translate-y-1/2 w-8 h-8">
-                    <MiniCard style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }} />
-                    <div className="absolute w-3 h-0.5 bg-purple-300 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rotate-90"></div>
-                    <MiniCard style={{ top: '0', left: '50%', transform: 'translateX(-50%)' }} />
-                    <MiniCard style={{ bottom: '0', left: '50%', transform: 'translateX(-50%)' }} />
-                    <MiniCard style={{ top: '50%', left: '0', transform: 'translateY(-50%)' }} />
-                    <MiniCard style={{ top: '50%', right: '0', transform: 'translateY(-50%)' }} />
-                 </div>
-                 {/* Staff */}
-                 <div className="absolute right-[15%] top-1/2 -translate-y-1/2 h-10 w-2 flex flex-col justify-between">
-                     <div className="w-1.5 h-0.5 bg-purple-400/50"></div>
-                     <div className="w-1.5 h-0.5 bg-purple-400/50"></div>
-                     <div className="w-1.5 h-0.5 bg-purple-400/50"></div>
-                     <div className="w-1.5 h-0.5 bg-purple-400/50"></div>
-                 </div>
-             </Container>
-         )
-    }
+// ... existing Spread layouts ...
+const getPositionStyle = (layout: string, index: number, total: number): React.CSSProperties => {
+    // Default center
+    let style: React.CSSProperties = { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
     
-    // 7. Hexagram
-    if (layout_type === 'hexagram') {
-         return (
-             <Container>
-                 <MiniCard style={{ top: '5%', left: '50%', transform: 'translateX(-50%)' }} />
-                 <MiniCard style={{ bottom: '5%', left: '50%', transform: 'translateX(-50%)' }} />
-                 <MiniCard style={{ top: '25%', left: '10%' }} />
-                 <MiniCard style={{ top: '25%', right: '10%' }} />
-                 <MiniCard style={{ bottom: '25%', left: '10%' }} />
-                 <MiniCard style={{ bottom: '25%', right: '10%' }} />
-             </Container>
-         )
+    const getLinear = () => {
+         const step = 100 / (total + 1);
+         return { left: `${step * (index + 1)}%`, top: '50%', transform: 'translate(-50%, -50%)' };
+    };
+
+    switch (layout) {
+        case 'single': return style;
+        case 'linear': return getLinear();
+
+        case 'triangle':
+            if (index === 0) return { left: '50%', top: '30%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '30%', top: '70%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '70%', top: '70%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+
+        case 'square':
+            if (index === 0) return { left: '35%', top: '35%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '65%', top: '35%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '35%', top: '65%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '65%', top: '65%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+
+        case 'diamond':
+            if (index === 0) return { left: '50%', top: '20%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '20%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '80%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '50%', top: '80%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+
+        case 'cross':
+            if (index === 0) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '50%', top: '20%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '20%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '80%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 4) return { left: '50%', top: '80%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+
+        case 'hexagram':
+             const angle = (index * 60 - 30) * (Math.PI / 180);
+             const radius = 35; 
+             const x = 50 + radius * Math.cos(angle);
+             const y = 50 + radius * Math.sin(angle);
+             return { left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' };
+
+        case 'two_columns':
+             const col = index % 2;
+             const row = Math.floor(index / 2);
+             const rows = Math.ceil(total / 2);
+             const rowStep = 80 / rows;
+             return { 
+                 left: col === 0 ? '35%' : '65%', 
+                 top: `${15 + row * rowStep + (rowStep/2)}%`, 
+                 transform: 'translate(-50%, -50%)' 
+             };
+
+        case 'celtic_cross':
+            if (index === 0) return { left: '35%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '35%', top: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' };
+            if (index === 2) return { left: '35%', top: '80%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '15%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 4) return { left: '35%', top: '20%', transform: 'translate(-50%, -50%)' };
+            if (index === 5) return { left: '55%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 6) return { left: '80%', top: '85%', transform: 'translate(-50%, -50%)' };
+            if (index === 7) return { left: '80%', top: '65%', transform: 'translate(-50%, -50%)' };
+            if (index === 8) return { left: '80%', top: '45%', transform: 'translate(-50%, -50%)' };
+            if (index === 9) return { left: '80%', top: '25%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+
+        default:
+            return getLinear();
     }
-
-    // Default Linear or unknown
-    return (
-        <Container>
-            <div className="flex gap-0.5 justify-center flex-wrap px-2">
-                 {Array.from({length: Math.min(cardCount, 5)}).map((_,i) => (
-                     <div key={i} className="w-1.5 h-2.5 bg-purple-400/60 rounded-[1px]"></div>
-                 ))}
-                 {cardCount > 5 && <span className="text-[6px] text-white">..</span>}
-            </div>
-        </Container>
-    )
-
 }
 
-// --- Drag & Drop Spread Components ---
-
-export const SpreadSlot = ({ 
-    index, 
-    positionName, 
-    card, 
-    onDrop, 
-    isNext,
-    isRevealed = true, // Default to true if not specified
-    onCardClick
-}: { 
-    index: number, 
-    positionName: string, 
-    card?: TarotCard, 
-    onDrop: (cardId: number, index: number) => void,
-    isNext: boolean,
-    isRevealed?: boolean,
-    onCardClick?: (card: TarotCard) => void
-}) => {
-    const handleDragOver = (e: React.DragEvent) => {
-        if (!card) {
-            e.preventDefault(); // Allow drop only if empty
-        }
-    };
-
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        const cardId = parseInt(e.dataTransfer.getData("cardId"));
-        if (!isNaN(cardId)) {
-            onDrop(cardId, index);
-        }
-    };
-    
-    // Only allow clicking if there is a card and it is revealed
-    const handleClick = () => {
-        if (card && isRevealed && onCardClick) {
-            onCardClick(card);
-        }
-    }
+export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCardClick }: any) => {
+    const isLargeSpread = spread.cardCount > 6;
+    const size = isLargeSpread ? 'xs' : 'sm'; 
 
     return (
-        <div 
-            className={`relative flex flex-col items-center gap-2 transition-all duration-300 ${isNext && !card ? 'scale-105' : ''}`}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-        >
-            {card ? (
-                <div className="animate-fly-in">
-                    <CardDisplay card={card} revealed={isRevealed} size="sm" label={positionName} onClick={handleClick} />
-                </div>
-            ) : (
-                <div className={`
-                    w-20 h-32 md:w-24 md:h-40 rounded-xl border-2 border-dashed flex items-center justify-center text-center p-2 transition-all
-                    ${isNext ? 'border-purple-400 bg-purple-500/10 shadow-[0_0_15px_rgba(168,85,247,0.3)] animate-pulse' : 'border-white/10 bg-white/5 opacity-50'}
-                `}>
-                    <span className="text-xs md:text-sm text-indigo-300/70">{positionName}</span>
-                </div>
-            )}
+        <div className="relative w-full aspect-square md:aspect-[4/3] max-w-2xl mx-auto rounded-full border-2 border-dashed border-white/5 bg-white/5">
+            {spread.positions.map((pos: any, index: number) => {
+                const card = drawnCards[index];
+                const style = getPositionStyle(spread.layout_type || 'linear', index, spread.cardCount);
+                
+                return (
+                    <div 
+                        key={pos.id}
+                        className="absolute transition-all duration-500"
+                        style={style}
+                        onClick={() => !card && onDrop && onDrop(null, index)}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                            e.preventDefault();
+                            const cardId = e.dataTransfer.getData("cardId");
+                            if (cardId && onDrop && !card) {
+                                onDrop(parseInt(cardId), index);
+                            }
+                        }}
+                    >
+                        {!card && (
+                            <div className={`
+                                ${isLargeSpread ? 'w-16 h-24' : 'w-20 h-32 md:w-24 md:h-40'} 
+                                rounded-lg border-2 border-dashed border-white/20 bg-white/5 
+                                flex flex-col items-center justify-center text-center p-1
+                                hover:border-purple-400/50 transition-colors
+                            `}>
+                                <span className="text-white/30 font-bold mb-1">{index + 1}</span>
+                                <span className="text-[8px] text-white/30 leading-tight">{pos.name}</span>
+                            </div>
+                        )}
+
+                        {card && (
+                            <div className="animate-fade-in-up">
+                                <CardDisplay 
+                                    card={card} 
+                                    revealed={isRevealed} 
+                                    size={size}
+                                    label={isRevealed ? undefined : `${index + 1}. ${pos.name}`}
+                                    onClick={() => onCardClick && onCardClick(card)}
+                                />
+                                {isRevealed && (
+                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/50 px-2 rounded text-[10px] text-white z-50">
+                                        {pos.name}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )
+            })}
         </div>
     );
 };
 
-export const SpreadLayout = ({ 
-    spread, 
-    drawnCards, 
-    onDrop,
-    isRevealed = true,
-    onCardClick
-}: { 
-    spread: SpreadDefinition, 
-    drawnCards: TarotCard[], 
-    onDrop?: (cardId: number, index: number) => void,
-    isRevealed?: boolean,
-    onCardClick?: (card: TarotCard) => void
-}) => {
-    
-    // Safety check function for onDrop
-    const handleDrop = (cardId: number, index: number) => {
-        if (onDrop) onDrop(cardId, index);
-    };
-
-    // Helper to render a specific slot
-    const renderSlot = (idx: number) => (
-        <React.Fragment key={idx}>
-            <SpreadSlot 
-                index={idx}
-                positionName={spread.positions[idx]?.name || `Pos ${idx+1}`}
-                card={drawnCards[idx]}
-                onDrop={handleDrop}
-                isNext={drawnCards.length === idx} // Highlight the next available slot
-                isRevealed={isRevealed}
-                onCardClick={onCardClick}
-            />
-        </React.Fragment>
-    );
-
-    // --- Layout Geometries ---
-
-    // 1. Celtic Cross (10 Cards)
-    if (spread.layout_type === 'celtic_cross' && spread.cardCount === 10) {
-        return (
-            <div className="flex flex-col md:flex-row gap-8 items-center justify-center scale-90 md:scale-100">
-                {/* Cross Section (Left) */}
-                <div className="relative w-[300px] h-[300px] md:w-[350px] md:h-[400px]">
-                    {/* 1. Center & 2. Crossing */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">{renderSlot(0)}</div>
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-20 rotate-90 opacity-90 pointer-events-none">{drawnCards[1] ? <CardDisplay card={drawnCards[1]} revealed={isRevealed} size="sm" /> : null}</div>
-                    {/* Invisible Drop Target for Pos 2 needs to be handled carefully or just auto-filled. 
-                        For simplicity in DnD, we might list Pos 2 slightly offset if empty, or just rely on the center slot logic.
-                        Actually, let's place Pos 2 visually offset slightly if empty so it can be dropped onto. 
-                    */}
-                    {!drawnCards[1] && <div className="absolute top-1/2 left-1/2 translate-x-4 translate-y-4 z-20">{renderSlot(1)}</div>}
-
-                    {/* 3. Bottom */}
-                    <div className="absolute bottom-0 left-1/2 -translate-x-1/2">{renderSlot(2)}</div>
-                    {/* 4. Left */}
-                    <div className="absolute top-1/2 left-0 -translate-y-1/2">{renderSlot(3)}</div>
-                    {/* 5. Top */}
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2">{renderSlot(4)}</div>
-                    {/* 6. Right */}
-                    <div className="absolute top-1/2 right-0 -translate-y-1/2">{renderSlot(5)}</div>
-                </div>
-
-                {/* Staff Section (Right) */}
-                <div className="flex flex-col-reverse gap-2 md:gap-4">
-                    {renderSlot(6)}
-                    {renderSlot(7)}
-                    {renderSlot(8)}
-                    {renderSlot(9)}
-                </div>
-            </div>
-        );
-    }
-
-    // 2. Hexagram (6 Cards)
-    if (spread.layout_type === 'hexagram') {
-        return (
-            <div className="relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] mx-auto scale-90 md:scale-100">
-                <div className="absolute top-0 left-1/2 -translate-x-1/2">{renderSlot(0)}</div>
-                <div className="absolute bottom-0 right-0">{renderSlot(1)}</div>
-                <div className="absolute top-[25%] left-0">{renderSlot(2)}</div>
-                <div className="absolute bottom-0 left-0">{renderSlot(3)}</div>
-                <div className="absolute top-[25%] right-0">{renderSlot(4)}</div>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2">{renderSlot(5)}</div>
-                {/* Center visual connector lines could go here */}
-            </div>
-        );
-    }
-
-    // 3. Cross (5 Cards) - Used for Core Issue, etc.
-    if (spread.layout_type === 'cross') {
-        return (
-            <div className="relative w-[300px] h-[300px] md:w-[400px] md:h-[400px] mx-auto">
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10">{renderSlot(0)}</div>
-                 <div className="absolute top-1/2 left-0 -translate-y-1/2">{renderSlot(1)}</div>
-                 <div className="absolute top-0 left-1/2 -translate-x-1/2">{renderSlot(2)}</div>
-                 <div className="absolute top-1/2 right-0 -translate-y-1/2">{renderSlot(3)}</div>
-                 <div className="absolute bottom-0 left-1/2 -translate-x-1/2">{renderSlot(4)}</div>
-            </div>
-        );
-    }
-    
-    // 4. Triangle (3 Cards) - Pyramid Style
-    if (spread.layout_type === 'triangle') {
-        return (
-            <div className="flex flex-col items-center gap-4">
-                <div className="flex gap-8 md:gap-16">
-                    {renderSlot(0)}
-                    {renderSlot(1)}
-                </div>
-                <div>
-                    {renderSlot(2)}
-                </div>
-            </div>
-        )
-    }
-
-    // 5. Square / Quadrant (4 Cards)
-    if (spread.layout_type === 'square' || spread.layout_type === 'quadrant') {
-        return (
-            <div className="grid grid-cols-2 gap-8 md:gap-12 mx-auto max-w-md">
-                {spread.positions.map((_, i) => renderSlot(i))}
-            </div>
-        );
-    }
-
-    // 6. Two Columns
-    if (spread.layout_type === 'two_columns') {
-        return (
-            <div className="flex justify-center gap-12 md:gap-24">
-                <div className="flex flex-col gap-4">
-                     {/* Assume even split */}
-                     {spread.positions.filter((_,i) => i % 2 === 0).map((_, i) => renderSlot(i*2))}
-                </div>
-                <div className="flex flex-col gap-4 mt-8">
-                     {spread.positions.filter((_,i) => i % 2 !== 0).map((_, i) => renderSlot(i*2+1))}
-                </div>
-            </div>
-        )
-    }
-    
-    // 7. Diamond (4 Cards)
-    if (spread.layout_type === 'diamond') {
-        return (
-            <div className="relative w-[300px] h-[400px] mx-auto">
-                <div className="absolute top-1/2 left-0 -translate-y-1/2">{renderSlot(0)}</div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2">{renderSlot(1)}</div>
-                <div className="absolute top-1/2 right-0 -translate-y-1/2">{renderSlot(2)}</div>
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2">{renderSlot(3)}</div>
-            </div>
-        )
-    }
-
-    // Default: Linear Flex Row
+export const SpreadPreview = ({ spread }: any) => {
     return (
-        <div className="flex flex-wrap justify-center gap-2 md:gap-8 max-w-5xl mx-auto">
-            {spread.positions.map((_, i) => renderSlot(i))}
+        <div className="relative w-24 h-24 bg-white/5 rounded-lg border border-white/10 mx-auto">
+             {spread.positions.map((pos: any, index: number) => {
+                 const style = getPositionStyle(spread.layout_type || 'linear', index, spread.cardCount);
+                 return (
+                     <div 
+                        key={index}
+                        className="absolute w-4 h-6 bg-purple-500/30 border border-purple-400/50 rounded-sm"
+                        style={{
+                            ...style,
+                            transform: style.transform?.toString().replace('rotate(90deg)', '') + ' scale(0.8)',
+                        }}
+                     />
+                 )
+             })}
         </div>
-    );
-};
+    )
+}

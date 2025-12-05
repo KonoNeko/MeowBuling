@@ -1,8 +1,25 @@
+
 export interface ChatMessage {
   id: string;
   role: 'user' | 'model';
   content: string;
   timestamp: number;
+}
+
+export interface TarotMeaningDetail {
+  keywords: string[];
+  general: string;
+  love: string;
+  career: string;
+  // New Dimensions
+  study: string;   // 学业与成长
+  social: string;  // 人际与社交
+  family: string;  // 家庭与居住
+  health: string;  // 健康与身心
+  self: string;    // 内在状态
+  spirit: string;  // 灵性与命运
+  action: string;  // 决策与行动
+  trend: string;   // 时间与趋势
 }
 
 export interface TarotCard {
@@ -11,9 +28,13 @@ export interface TarotCard {
   name_cn: string;
   image: string; // URL for the real card image
   emoji?: string; // Fallback or icon
-  meaningUpright: string;
-  meaningReversed: string;
+  meaningUpright: string; // Short Summary
+  meaningReversed: string; // Short Summary
   isReversed?: boolean; // State for a drawn card
+  
+  // Detailed Interpretations
+  upright: TarotMeaningDetail;
+  reversed: TarotMeaningDetail;
 }
 
 export enum AppView {
@@ -25,7 +46,7 @@ export enum AppView {
   READING = 'READING',
   HISTORY = 'HISTORY',
   LIBRARY = 'LIBRARY',
-  SPREAD_LIBRARY = 'SPREAD_LIBRARY' // New: Spread Library
+  SPREAD_LIBRARY = 'SPREAD_LIBRARY'
 }
 
 export interface AIInterpretation {

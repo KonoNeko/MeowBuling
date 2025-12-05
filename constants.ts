@@ -1,5 +1,6 @@
 import { TarotCard, Topic, SpreadDefinition } from './types';
 
+// ... (Existing TOPICS and SPREADS are preserved) ...
 export const TOPICS: Topic[] = [
   { 
     id: 'love', 
@@ -7,43 +8,26 @@ export const TOPICS: Topic[] = [
     icon: '💕', 
     description: '暧昧、伴侣、复合与桃花',
     spreadCategories: ['Love & Relationship', 'Manifestation', 'General Insight'],
-    defaultTags: ['love_status', 'love_future'], // Default spreads for custom questions
+    defaultTags: ['love_status', 'love_future'],
     subCategories: [
       {
         title: "❤️ 现状与想法",
-        questions: [
-          "他/她现在对我的真实想法是什么？",
-          "我们现在关系的核心问题是什么？",
-          "他/她有没有隐藏的情绪或顾虑？"
-        ],
-        // Removed 'general', refined to show only relationship specific spreads
+        questions: ["他/她现在对我的真实想法是什么？", "我们现在关系的核心问题是什么？", "他/她有没有隐藏的情绪或顾虑？"],
         spreadTags: ['love_status'] 
       },
       {
         title: "🔮 未来发展",
-        questions: [
-          "我们未来三个月的关系会如何发展？",
-          "这段关系值得继续投入吗？",
-          "我们还有复合的可能性吗？"
-        ],
+        questions: ["我们未来三个月的关系会如何发展？", "这段关系值得继续投入吗？", "我们还有复合的可能性吗？"],
         spreadTags: ['love_future', 'love_outcome']
       },
       {
         title: "🌹 新恋情/暗恋",
-        questions: [
-          "我的下一段恋情什么时候出现？",
-          "暗恋对象对我是什么感觉？",
-          "我该主动吗？还是等待？"
-        ],
+        questions: ["我的下一段恋情什么时候出现？", "暗恋对象对我是什么感觉？", "我该主动吗？还是等待？"],
         spreadTags: ['love_single']
       },
       {
         title: "💔 冲突与断联",
-        questions: [
-          "为什么他/她不理我/断联了？",
-          "我们能解决目前的冲突吗？",
-          "我该放下这段感情吗？"
-        ],
+        questions: ["为什么他/她不理我/断联了？", "我们能解决目前的冲突吗？", "我该放下这段感情吗？"],
         spreadTags: ['love_problem']
       }
     ]
@@ -58,38 +42,22 @@ export const TOPICS: Topic[] = [
     subCategories: [
       {
         title: "💼 职场发展",
-        questions: [
-          "我适合什么样的工作方向？",
-          "我在目前工作中的瓶颈是什么？",
-          "老板或同事对我的真实评价如何？"
-        ],
-        // Specifically targeting career analysis
+        questions: ["我适合什么样的工作方向？", "我在目前工作中的瓶颈是什么？", "老板或同事对我的真实评价如何？"],
         spreadTags: ['career_general'] 
       },
       {
         title: "🔀 跳槽与机会",
-        questions: [
-          "现在换工作/跳槽合适吗？",
-          "这个工作机会值得去吗？"
-        ],
-        // Specifically targeting decision making in career
+        questions: ["现在换工作/跳槽合适吗？", "这个工作机会值得去吗？"],
         spreadTags: ['career_choice'] 
       },
       {
         title: "💰 财富与投资",
-        questions: [
-          "我近期的财运趋势如何？",
-          "做这项副业/投资会成功吗？",
-          "近期的大额消费是否值得？"
-        ],
+        questions: ["我近期的财运趋势如何？", "做这项副业/投资会成功吗？", "近期的大额消费是否值得？"],
         spreadTags: ['money', 'manifest']
       },
       {
         title: "🎓 学业考试",
-        questions: [
-          "我的考试/面试运势如何？",
-          "在这个项目/学业中我需要注意什么？"
-        ],
+        questions: ["我的考试/面试运势如何？", "在这个项目/学业中我需要注意什么？"],
         spreadTags: ['study']
       }
     ]
@@ -104,20 +72,12 @@ export const TOPICS: Topic[] = [
     subCategories: [
       {
         title: "🛤️ 二选一/多选一",
-        questions: [
-          "选择A（保持现状）还是选择B（改变）？",
-          "在两个选项中我该如何抉择？"
-        ],
+        questions: ["选择A（保持现状）还是选择B（改变）？", "在两个选项中我该如何抉择？"],
         spreadTags: ['choice_ab', 'choice_multi']
       },
       {
         title: "🛑 行动建议",
-        questions: [
-          "我要不要做这件事（去/不去）？",
-          "这件事成功的关键点在哪里？",
-          "我现在最大的盲点是什么？"
-        ],
-        // Keep generic analysis/action spreads here
+        questions: ["我要不要做这件事（去/不去）？", "这件事成功的关键点在哪里？", "我现在最大的盲点是什么？"],
         spreadTags: ['action'] 
       }
     ]
@@ -132,20 +92,12 @@ export const TOPICS: Topic[] = [
     subCategories: [
       {
         title: "🌌 内在探索",
-        questions: [
-          "我当前人生最重要的课题是什么？",
-          "我失去动力的真正原因是什么？",
-          "我该如何疗愈当下的情绪低谷？"
-        ],
+        questions: ["我当前人生最重要的课题是什么？", "我失去动力的真正原因是什么？", "我该如何疗愈当下的情绪低谷？"],
         spreadTags: ['healing', 'self', 'deep_analysis']
       },
       {
         title: "✨ 显化与能量",
-        questions: [
-          "我近期的身心能量状态如何？",
-          "我需要释放什么负面信念？",
-          "我该如何显化我的愿望？"
-        ],
+        questions: ["我近期的身心能量状态如何？", "我需要释放什么负面信念？", "我该如何显化我的愿望？"],
         spreadTags: ['manifest', 'healing']
       }
     ]
@@ -160,30 +112,22 @@ export const TOPICS: Topic[] = [
     subCategories: [
       {
         title: "🗓️ 周期运势",
-        questions: [
-          "我未来一周的整体运势如何？",
-          "我下个月需要注意什么？",
-          "2024年我的年度核心主题是什么？"
-        ],
+        questions: ["我未来一周的整体运势如何？", "我下个月需要注意什么？", "2024年我的年度核心主题是什么？"],
         spreadTags: ['forecast']
       },
       {
         title: "☀️ 每日指引",
-        questions: [
-          "宇宙今天要给我的指引是什么？",
-          "今天我需要注意什么挑战？"
-        ],
+        questions: ["宇宙今天要给我的指引是什么？", "今天我需要注意什么挑战？"],
         spreadTags: ['daily_simple'] 
       }
     ]
   }
 ];
 
-// Helper to convert simple string positions to SpreadPosition objects
 const mapPos = (positions: string[]) => positions.map((p, i) => ({ id: i + 1, name: p, description: p }));
 
 export const SPREADS: SpreadDefinition[] = [
-    // --- General Insight ---
+    // ... [Reuse existing spreads definition to save space, assuming they are unchanged] ...
     {
       id: "ppf_3",
       name: "过去-现在-未来",
@@ -194,491 +138,53 @@ export const SPREADS: SpreadDefinition[] = [
       tags: ['general', 'time', 'forecast'],
       positions: mapPos(["过去影响", "当前状况", "未来走向"])
     },
-    {
-      id: "mao_3",
-      name: "心态-行动-结果",
-      description: "聚焦“我能做什么”的实用建议牌阵。",
-      cardCount: 3,
-      category: "General Insight",
-      layout_type: "linear",
-      tags: ['general', 'action'],
-      positions: mapPos(["你的心态", "建议采取的行动", "可能的结果"])
-    },
-    {
-      id: "truth_reveal_4",
-      name: "真相剖析",
-      description: "用于看事情表象背后真正的动力与真相。",
-      cardCount: 4,
-      category: "General Insight",
-      layout_type: "square",
-      tags: ['general', 'deep_analysis', 'analysis'],
-      positions: mapPos(["表面看到的情况", "隐藏的真相", "对你真正的影响", "你需要知道的重点"])
-    },
-    {
-      id: "core_issue_5",
-      name: "问题核心",
-      description: "帮助用户看清问题真正的核心而不是表面现象。",
-      cardCount: 5,
-      category: "General Insight",
-      layout_type: "cross",
-      tags: ['general', 'deep_analysis', 'healing', 'analysis'],
-      positions: mapPos(["当前问题", "深层核心", "你现在的应对方式", "外部影响", "转机与突破口"])
-    },
-    {
-      id: "swa_3",
-      name: "优势-劣势-建议",
-      description: "快速评估自己在某件事上的优势与短板。",
-      cardCount: 3,
-      category: "General Insight",
-      layout_type: "linear",
-      tags: ['general', 'career_general', 'study', 'analysis'],
-      positions: mapPos(["你的优势", "目前的劣势或限制", "综合建议"])
-    },
-    {
-      id: "celtic_10",
-      name: "凯尔特十字",
-      description: "经典深度牌阵，用于复杂事件与人生重大课题。",
-      cardCount: 10,
-      category: "General Insight",
-      layout_type: "celtic_cross",
-      tags: ['deep_analysis', 'complex'], // Removed 'general' so it doesn't show up for simple questions
-      positions: mapPos(["现状", "挑战", "显意识", "潜意识", "最近的过去", "不远的未来", "你自己", "外部环境", "希望与恐惧", "最终结果"])
-    },
-    {
-      id: "hex_6",
-      name: "六芒星",
-      description: "以六个面向立体分析问题，适合中等复杂度的议题。",
-      cardCount: 6,
-      category: "General Insight",
-      layout_type: "hexagram",
-      tags: ['general', 'deep_analysis'],
-      positions: mapPos(["现状", "挑战", "内在动力", "外在环境", "可采取的方向", "结果倾向"])
-    },
-    {
-      id: "life_quadrants_4",
-      name: "四象限人生",
-      description: "从四大维度扫描当前人生状态。",
-      cardCount: 4,
-      category: "General Insight",
-      layout_type: "square",
-      tags: ['general', 'self', 'analysis'],
-      positions: mapPos(["自我与内在", "人际与关系", "工作与物质", "成长与未来"])
-    },
-    {
-      id: "path_of_fate_5",
-      name: "命运之路",
-      description: "从命运视角看一条发展路线与要学习的课题。",
-      cardCount: 5,
-      category: "General Insight",
-      layout_type: "linear",
-      tags: ['general', 'self', 'forecast'],
-      positions: mapPos(["起点", "必经的课题", "可能的转折点", "需要放下的东西", "命运道路的整体方向"])
-    },
-
-    // --- Love & Relationship ---
-    {
-      id: "rel_triangle",
-      name: "关系三角",
-      description: "用三张牌看双方想法与关系走势，是恋爱类最高频牌阵之一。",
-      cardCount: 3,
-      category: "Love & Relationship",
-      layout_type: "triangle",
-      tags: ['love_status'],
-      positions: mapPos(["你对这段关系的态度", "对方的态度", "关系走向"])
-    },
-    {
-      id: "how_they_feel_4",
-      name: "对方想法",
-      description: "专注于对方视角，适合“他在想什么”类提问。",
-      cardCount: 4,
-      category: "Love & Relationship",
-      layout_type: "linear",
-      tags: ['love_status'],
-      positions: mapPos(["对方当前的情绪", "对你的真实看法", "对这段关系的期待", "对方可能的行动"])
-    },
-    {
-      id: "love_future_3",
-      name: "恋爱前景",
-      description: "适合单身或刚开始接触对象时，评估恋爱前景。",
-      cardCount: 3,
-      category: "Love & Relationship",
-      layout_type: "linear",
-      tags: ['love_single', 'love_future'],
-      positions: mapPos(["目前感情状态", "影响恋爱的关键因素", "短期恋爱前景"])
-    },
-    {
-      id: "reunion_4",
-      name: "复合可能性",
-      description: "分手后想知道是否有机会重新开始时使用。",
-      cardCount: 4,
-      category: "Love & Relationship",
-      layout_type: "diamond",
-      tags: ['love_outcome', 'love_problem'],
-      positions: mapPos(["对方现在对你的想法", "对过去关系的看法", "复合的主要阻碍", "未来复合的可能性"])
-    },
-    {
-      id: "situationship_5",
-      name: "暧昧发展",
-      description: "专门给不确定关系、暧昧、互相试探阶段使用。",
-      cardCount: 5,
-      category: "Love & Relationship",
-      layout_type: "cross",
-      tags: ['love_status', 'love_single'],
-      positions: mapPos(["你真实的期待", "对方真实的期待", "关系目前的本质", "潜在风险", "未来发展趋势"])
-    },
-    {
-      id: "soulmate_6",
-      name: "灵魂伴侣",
-      description: "从更深的灵魂层面看感情需求与连结。",
-      cardCount: 6,
-      category: "Love & Relationship",
-      layout_type: "hexagram",
-      tags: ['love_single', 'self'],
-      positions: mapPos(["你现在的灵魂状态", "你需要的伴侣特质", "阻碍你遇见/接受灵魂伴侣的原因", "你可以做的准备", "你们连接的课题", "灵魂层面的走向"])
-    },
-    {
-      id: "no_contact_5",
-      name: "断联原因分析",
-      description: "针对不回消息、突然冷淡、长期断联的情况。",
-      cardCount: 5,
-      category: "Love & Relationship",
-      layout_type: "cross",
-      tags: ['love_problem'],
-      positions: mapPos(["表面断联原因", "深层真正原因", "对方当前状态", "你在这段关系中的课题", "接下来建议的态度"])
-    },
-    {
-      id: "rel_block_5",
-      name: "关系阻碍拆解",
-      description: "用来分析一段关系为什么卡住、进展缓慢或反复争吵。",
-      cardCount: 5,
-      category: "Love & Relationship",
-      layout_type: "cross",
-      tags: ['love_problem', 'love_status'],
-      positions: mapPos(["目前关系状态", "主要阻碍来自你", "主要阻碍来自对方", "外部阻碍", "可以突破的方式"])
-    },
-    {
-      id: "love_hex",
-      name: "爱情六芒星",
-      description: "对一段正在进行中的感情做全面体检。",
-      cardCount: 6,
-      category: "Love & Relationship",
-      layout_type: "hexagram",
-      tags: ['love_status', 'deep_analysis'],
-      positions: mapPos(["你在感情中的状态", "对方在感情中的状态", "关系潜在动力", "外部环境与他人影响", "这段感情要学习的课题", "未来走向倾向"])
-    },
-    {
-      id: "marriage_5",
-      name: "婚姻前景",
-      description: "用于评估一段关系是否适合走向婚姻或长期同居。",
-      cardCount: 5,
-      category: "Love & Relationship",
-      layout_type: "linear",
-      tags: ['love_future', 'love_outcome'],
-      positions: mapPos(["这段关系目前基础", "稳定性与现实条件", "价值观与长期目标", "潜在风险", "迈向婚姻的可能性"])
-    },
-    {
-      id: "breakup_analysis_5",
-      name: "分手原因解析",
-      description: "帮助理解分手背后的模式与成长课题。",
-      cardCount: 5,
-      category: "Love & Relationship",
-      layout_type: "cross",
-      tags: ['love_problem', 'healing'],
-      positions: mapPos(["表面分手原因", "真实内在原因", "你在关系中的模式", "对方在关系中的模式", "从这段关系带走的成长"])
-    },
-    {
-      id: "long_term_rel_6",
-      name: "长期关系发展",
-      description: "用于评估已经在一起一段时间的长期伴侣关系。",
-      cardCount: 6,
-      category: "Love & Relationship",
-      layout_type: "two_columns",
-      tags: ['love_future', 'love_status'],
-      positions: mapPos(["目前关系状态", "你对长期关系的期待", "对方对长期关系的期待", "关系中的稳定因素", "关系中的不稳定因素", "长期发展前景"])
-    },
-
-    // --- Career & Study ---
-    {
-      id: "career_5",
-      name: "事业发展路线",
-      description: "用来规划中长期事业或学业方向。",
-      cardCount: 5,
-      category: "Career & Study",
-      layout_type: "linear",
-      tags: ['career_general', 'forecast'],
-      positions: mapPos(["当前事业/学业状况", "你的优势", "当前挑战", "可把握的机会", "未来发展趋势"])
-    },
-    {
-      id: "job_opportunity_4",
-      name: "工作机会分析",
-      description: "针对具体工作机会（offer/岗位）做评估。",
-      cardCount: 4,
-      category: "Career & Study",
-      layout_type: "square",
-      tags: ['career_choice'],
-      positions: mapPos(["这份工作的真实情况", "对你带来的机会", "潜在压力与风险", "整体适配度与建议"])
-    },
-    {
-      id: "interview_3",
-      name: "面试结果倾向",
-      description: "面试前用来调整心态和策略，而不是绝对预测结果。",
-      cardCount: 3,
-      category: "Career & Study",
-      layout_type: "triangle",
-      tags: ['career_choice', 'study'],
-      positions: mapPos(["你目前的准备状态", "面试方可能的观感", "结果倾向与建议"])
-    },
-    {
-      id: "study_insight_4",
-      name: "学习状态分析",
-      description: "特别适合学生、考证、长期学习项目。",
-      cardCount: 4,
-      category: "Career & Study",
-      layout_type: "square",
-      tags: ['study'],
-      positions: mapPos(["当前学习状态", "学习中的阻碍", "可利用的资源/优势", "提高成效的建议"])
-    },
-    {
-      id: "exam_outcome_3",
-      name: "考试通过可能性",
-      description: "以倾向和建议为重点，而不是绝对分数预测。",
-      cardCount: 3,
-      category: "Career & Study",
-      layout_type: "linear",
-      tags: ['study', 'forecast'],
-      positions: mapPos(["当前准备程度", "影响成绩的关键因素", "通过可能性与建议"])
-    },
-    {
-      id: "career_change_5",
-      name: "转行/跳槽决策",
-      description: "用于权衡留下或离开的职业决策。",
-      cardCount: 5,
-      category: "Career & Study",
-      layout_type: "two_columns",
-      tags: ['career_choice', 'decision'],
-      positions: mapPos(["当前工作状况", "留下来的发展可能", "离开的发展可能", "你真正的需求", "整体建议"])
-    },
-
-    // --- Decision-Making ---
-    {
-      id: "decision_ab",
-      name: "二选一抉择",
-      description: "手机端最常用的二选一决策结构。",
-      cardCount: 3,
-      category: "Decision-Making",
-      layout_type: "triangle",
-      tags: ['choice_ab', 'decision'],
-      positions: mapPos(["选项 A 的可能结果", "选项 B 的可能结果", "综合建议与提醒"])
-    },
-    {
-      id: "multi_option_4",
-      name: "多选项决策",
-      description: "适合有多个方向但资源有限的情况。",
-      cardCount: 4,
-      category: "Decision-Making",
-      layout_type: "square",
-      tags: ['choice_multi', 'decision'],
-      positions: mapPos(["选项 A 的核心特征", "选项 B 的核心特征", "选项 C 的核心特征", "最符合你当下需求的方向"])
-    },
-    {
-      id: "go_or_not_4",
-      name: "去或不去",
-      description: "针对“要不要去”的场景，如旅行、见面、赴约、换城市。",
-      cardCount: 4,
-      category: "Decision-Making",
-      layout_type: "square",
-      tags: ['action', 'decision'],
-      positions: mapPos(["如果去的结果倾向", "如果不去的结果倾向", "你内心真正的倾向", "整体建议"])
-    },
-    {
-      id: "continue_or_end_4",
-      name: "该不该继续",
-      description: "用于权衡一段关系、一份工作或一个项目是否值得继续投入。",
-      cardCount: 4,
-      category: "Decision-Making",
-      layout_type: "square",
-      tags: ['action', 'decision'],
-      positions: mapPos(["目前状况", "继续下去的可能发展", "现在停止的可能发展", "综合建议"])
-    },
-    {
-      id: "risk_reward_3",
-      name: "风险-收益-结果",
-      description: "帮助用户对一项冒险行为进行理性权衡。",
-      cardCount: 3,
-      category: "Decision-Making",
-      layout_type: "linear",
-      tags: ['action', 'analysis'],
-      positions: mapPos(["潜在风险", "潜在收益", "整体结果倾向"])
-    },
-
-    // --- Healing ---
-    {
-      id: "root_5",
-      name: "问题根源剖析",
-      description: "心理向的牌阵，用于深度理解一个长期困扰。",
-      cardCount: 5,
-      category: "Healing",
-      layout_type: "cross",
-      tags: ['healing', 'deep_analysis'],
-      positions: mapPos(["问题表面现象", "深层根源", "你目前的应对方式", "外部环境影响", "转机与疗愈方向"])
-    },
-    {
-      id: "emotional_healing_5",
-      name: "情绪疗愈",
-      description: "聚焦于情绪理解与自我安放。",
-      cardCount: 5,
-      category: "Healing",
-      layout_type: "linear",
-      tags: ['healing'],
-      positions: mapPos(["当下主要情绪", "情绪来源", "这份情绪想告诉你的", "你可以如何照顾自己", "疗愈过程中需要注意的事"])
-    },
-    {
-      id: "anxiety_4",
-      name: "焦虑原因",
-      description: "专门面向焦虑与过度担心的状态。",
-      cardCount: 4,
-      category: "Healing",
-      layout_type: "square",
-      tags: ['healing', 'analysis'],
-      positions: mapPos(["你在焦虑什么", "焦虑背后的恐惧", "现实中真正需要担心的部分", "帮助你缓解焦虑的方向"])
-    },
-    {
-      id: "self_discovery_5",
-      name: "自我认知",
-      description: "帮助用户从多个角度重新理解自己。",
-      cardCount: 5,
-      category: "Healing",
-      layout_type: "cross",
-      tags: ['self', 'deep_analysis'],
-      positions: mapPos(["你看见的自己", "别人眼中的你", "你隐藏的部分", "你正在成为的样子", "当下最重要的自我提醒"])
-    },
-    {
-      id: "shadow_work_6",
-      name: "阴影整合",
-      description: "高级心理与灵性向牌阵，面向阴影与自我整合。",
-      cardCount: 6,
-      category: "Healing",
-      layout_type: "hexagram",
-      tags: ['self', 'deep_analysis'],
-      positions: mapPos(["你的阴影主题", "它如何表现出来", "它保护你的方式", "它伤害你的方式", "你可以如何拥抱它", "整合后的改变"])
-    },
-
-    // --- Future Forecast ---
-    {
-      id: "week_3",
-      name: "未来一周运势",
-      description: "适合作为每周固定更新内容的周运势。",
-      cardCount: 3,
-      category: "Future Forecast",
-      layout_type: "linear",
-      tags: ['forecast', 'time'],
-      positions: mapPos(["本周主题", "本周重点能量/事件", "本周建议与注意事项"])
-    },
-    {
-      id: "month_4",
-      name: "未来一月运势",
-      description: "用于做月度盘点或新月/满月仪式。",
-      cardCount: 4,
-      category: "Future Forecast",
-      layout_type: "square",
-      tags: ['forecast', 'time'],
-      positions: mapPos(["本月整体氛围", "需要重点关注的领域", "可能的挑战", "应对挑战的关键建议"])
-    },
-    {
-      id: "year_ahead_6",
-      name: "未来一年运势",
-      description: "新年或生日时常用的年度总结/展望牌阵。",
-      cardCount: 6,
-      category: "Future Forecast",
-      layout_type: "hexagram",
-      tags: ['forecast', 'time', 'deep_analysis'],
-      positions: mapPos(["整体年度主题", "事业与学业", "感情与关系", "金钱与物质", "内在成长", "需要特别记住的一句话"])
-    },
-    {
-      id: "timeline_5",
-      name: "时间线发展",
-      description: "用多节点时间线方式看一件事的发展方向。",
-      cardCount: 5,
-      category: "Future Forecast",
-      layout_type: "linear",
-      tags: ['forecast', 'time'],
-      positions: mapPos(["现在", "最近一阶段的发展", "中期发展", "远期发展", "需要你主动做出的选择"])
-    },
-
-    // --- Daily Guidance ---
-    {
-      id: "daily_1",
-      name: "每日指引/单张抽",
-      description: "最直接、快速的单张牌指引，适用于任何问题。",
-      cardCount: 1,
-      category: "Daily Guidance",
-      layout_type: "single",
-      // Include ALL relevant tags so it appears in Love, Career, Decision, etc.
-      tags: ['daily_simple', 'love_status', 'love_single', 'love_problem', 'love_future', 'love_outcome', 'career_general', 'career_choice', 'study', 'money', 'choice_ab', 'choice_multi', 'action', 'healing', 'self', 'manifest', 'forecast', 'analysis'],
-      positions: mapPos(["指引"])
-    },
-    {
-      id: "today_challenge_3",
-      name: "今日-挑战-建议",
-      description: "比单张牌更具体，适合有安排的一天。",
-      cardCount: 3,
-      category: "Daily Guidance",
-      layout_type: "linear",
-      tags: ['daily_complex'], 
-      positions: mapPos(["今日整体能量", "今日可能的挑战", "应对挑战的建议"])
-    },
-    {
-      id: "daily_love_3",
-      name: "今日恋爱运",
-      description: "专门聚焦每天的感情互动氛围。",
-      cardCount: 3,
-      category: "Daily Guidance",
-      layout_type: "triangle",
-      tags: ['daily_complex', 'love_status'],
-      positions: mapPos(["今日感情能量", "与他/她互动的提示", "需要避免的行为"])
-    },
-
-    // --- Manifestation ---
-    {
-      id: "manifest_4",
-      name: "心愿实现",
-      description: "通用显化牌阵，适用于任何希望达成的目标。",
-      cardCount: 4,
-      category: "Manifestation",
-      layout_type: "diamond",
-      tags: ['manifest'],
-      positions: mapPos(["你的心愿本质", "当前主要阻碍", "可以采取的行动", "心愿可能的实现方式/结果"])
-    },
-    {
-      id: "money_manifest_4",
-      name: "财富显化",
-      description: "帮助调整对金钱与丰盛的态度与行为。",
-      cardCount: 4,
-      category: "Manifestation",
-      layout_type: "square",
-      tags: ['manifest', 'money'],
-      positions: mapPos(["你当前对金钱的信念", "阻碍财富流动的模式", "可以调整的行动与观念", "财富流动的未来倾向"])
-    },
-    {
-      id: "love_manifest_4",
-      name: "爱情显化",
-      description: "用于主动创造更健康、更匹配的亲密关系。",
-      cardCount: 4,
-      category: "Manifestation",
-      layout_type: "diamond",
-      tags: ['manifest', 'love_single'],
-      positions: mapPos(["你真正渴望的亲密关系样子", "阻碍你收获爱/接受爱的因素", "你可以开始做的改变", "爱情显化的倾向与提醒"])
-    },
-    {
-      id: "career_manifest_4",
-      name: "事业成功显化",
-      description: "帮助用户聚焦事业与自我实现目标。",
-      cardCount: 4,
-      category: "Manifestation",
-      layout_type: "square",
-      tags: ['manifest', 'career_choice'],
-      positions: mapPos(["你对事业成功的定义", "阻碍你展开行动的关键因素", "可以集中精力的方向", "成功显化的路径与提醒"])
-    }
+    { id: "mao_3", name: "心态-行动-结果", description: "聚焦“我能做什么”的实用建议牌阵。", cardCount: 3, category: "General Insight", layout_type: "linear", tags: ['general', 'action'], positions: mapPos(["你的心态", "建议采取的行动", "可能的结果"]) },
+    { id: "truth_reveal_4", name: "真相剖析", description: "用于看事情表象背后真正的动力与真相。", cardCount: 4, category: "General Insight", layout_type: "square", tags: ['general', 'deep_analysis', 'analysis'], positions: mapPos(["表面看到的情况", "隐藏的真相", "对你真正的影响", "你需要知道的重点"]) },
+    { id: "core_issue_5", name: "问题核心", description: "帮助用户看清问题真正的核心而不是表面现象。", cardCount: 5, category: "General Insight", layout_type: "cross", tags: ['general', 'deep_analysis', 'healing', 'analysis'], positions: mapPos(["当前问题", "深层核心", "你现在的应对方式", "外部影响", "转机与突破口"]) },
+    { id: "swa_3", name: "优势-劣势-建议", description: "快速评估自己在某件事上的优势与短板。", cardCount: 3, category: "General Insight", layout_type: "linear", tags: ['general', 'career_general', 'study', 'analysis'], positions: mapPos(["你的优势", "目前的劣势或限制", "综合建议"]) },
+    { id: "celtic_10", name: "凯尔特十字", description: "经典深度牌阵，用于复杂事件与人生重大课题。", cardCount: 10, category: "General Insight", layout_type: "celtic_cross", tags: ['deep_analysis', 'complex'], positions: mapPos(["现状", "挑战", "显意识", "潜意识", "最近的过去", "不远的未来", "你自己", "外部环境", "希望与恐惧", "最终结果"]) },
+    { id: "hex_6", name: "六芒星", description: "以六个面向立体分析问题，适合中等复杂度的议题。", cardCount: 6, category: "General Insight", layout_type: "hexagram", tags: ['general', 'deep_analysis'], positions: mapPos(["现状", "挑战", "内在动力", "外在环境", "可采取的方向", "结果倾向"]) },
+    { id: "life_quadrants_4", name: "四象限人生", description: "从四大维度扫描当前人生状态。", cardCount: 4, category: "General Insight", layout_type: "square", tags: ['general', 'self', 'analysis'], positions: mapPos(["自我与内在", "人际与关系", "工作与物质", "成长与未来"]) },
+    { id: "path_of_fate_5", name: "命运之路", description: "从命运视角看一条发展路线与要学习的课题。", cardCount: 5, category: "General Insight", layout_type: "linear", tags: ['general', 'self', 'forecast'], positions: mapPos(["起点", "必经的课题", "可能的转折点", "需要放下的东西", "命运道路的整体方向"]) },
+    { id: "rel_triangle", name: "关系三角", description: "用三张牌看双方想法与关系走势，是恋爱类最高频牌阵之一。", cardCount: 3, category: "Love & Relationship", layout_type: "triangle", tags: ['love_status'], positions: mapPos(["你对这段关系的态度", "对方的态度", "关系走向"]) },
+    { id: "how_they_feel_4", name: "对方想法", description: "专注于对方视角，适合“他在想什么”类提问。", cardCount: 4, category: "Love & Relationship", layout_type: "linear", tags: ['love_status'], positions: mapPos(["对方当前的情绪", "对你的真实看法", "对这段关系的期待", "对方可能的行动"]) },
+    { id: "love_future_3", name: "恋爱前景", description: "适合单身或刚开始接触对象时，评估恋爱前景。", cardCount: 3, category: "Love & Relationship", layout_type: "linear", tags: ['love_single', 'love_future'], positions: mapPos(["目前感情状态", "影响恋爱的关键因素", "短期恋爱前景"]) },
+    { id: "reunion_4", name: "复合可能性", description: "分手后想知道是否有机会重新开始时使用。", cardCount: 4, category: "Love & Relationship", layout_type: "diamond", tags: ['love_outcome', 'love_problem'], positions: mapPos(["对方现在对你的想法", "对过去关系的看法", "复合的主要阻碍", "未来复合的可能性"]) },
+    { id: "situationship_5", name: "暧昧发展", description: "专门给不确定关系、暧昧、互相试探阶段使用。", cardCount: 5, category: "Love & Relationship", layout_type: "cross", tags: ['love_status', 'love_single'], positions: mapPos(["你真实的期待", "对方真实的期待", "关系目前的本质", "潜在风险", "未来发展趋势"]) },
+    { id: "soulmate_6", name: "灵魂伴侣", description: "从更深的灵魂层面看感情需求与连结。", cardCount: 6, category: "Love & Relationship", layout_type: "hexagram", tags: ['love_single', 'self'], positions: mapPos(["你现在的灵魂状态", "你需要的伴侣特质", "阻碍你遇见/接受灵魂伴侣的原因", "你可以做的准备", "你们连接的课题", "灵魂层面的走向"]) },
+    { id: "no_contact_5", name: "断联原因分析", description: "针对不回消息、突然冷淡、长期断联的情况。", cardCount: 5, category: "Love & Relationship", layout_type: "cross", tags: ['love_problem'], positions: mapPos(["表面断联原因", "深层真正原因", "对方当前状态", "你在这段关系中的课题", "接下来建议的态度"]) },
+    { id: "rel_block_5", name: "关系阻碍拆解", description: "用来分析一段关系为什么卡住、进展缓慢或反复争吵。", cardCount: 5, category: "Love & Relationship", layout_type: "cross", tags: ['love_problem', 'love_status'], positions: mapPos(["目前关系状态", "主要阻碍来自你", "主要阻碍来自对方", "外部阻碍", "可以突破的方式"]) },
+    { id: "love_hex", name: "爱情六芒星", description: "对一段正在进行中的感情做全面体检。", cardCount: 6, category: "Love & Relationship", layout_type: "hexagram", tags: ['love_status', 'deep_analysis'], positions: mapPos(["你在感情中的状态", "对方在感情中的状态", "关系潜在动力", "外部环境与他人影响", "这段感情要学习的课题", "未来走向倾向"]) },
+    { id: "marriage_5", name: "婚姻前景", description: "用于评估一段关系是否适合走向婚姻或长期同居。", cardCount: 5, category: "Love & Relationship", layout_type: "linear", tags: ['love_future', 'love_outcome'], positions: mapPos(["这段关系目前基础", "稳定性与现实条件", "价值观与长期目标", "潜在风险", "迈向婚姻的可能性"]) },
+    { id: "breakup_analysis_5", name: "分手原因解析", description: "帮助理解分手背后的模式与成长课题。", cardCount: 5, category: "Love & Relationship", layout_type: "cross", tags: ['love_problem', 'healing'], positions: mapPos(["表面分手原因", "真实内在原因", "你在关系中的模式", "对方在关系中的模式", "从这段关系带走的成长"]) },
+    { id: "long_term_rel_6", name: "长期关系发展", description: "用于评估已经在一起一段时间的长期伴侣关系。", cardCount: 6, category: "Love & Relationship", layout_type: "two_columns", tags: ['love_future', 'love_status'], positions: mapPos(["目前关系状态", "你对长期关系的期待", "对方对长期关系的期待", "关系中的稳定因素", "关系中的不稳定因素", "长期发展前景"]) },
+    { id: "career_5", name: "事业发展路线", description: "用来规划中长期事业或学业方向。", cardCount: 5, category: "Career & Study", layout_type: "linear", tags: ['career_general', 'forecast'], positions: mapPos(["当前事业/学业状况", "你的优势", "当前挑战", "可把握的机会", "未来发展趋势"]) },
+    { id: "job_opportunity_4", name: "工作机会分析", description: "针对具体工作机会（offer/岗位）做评估。", cardCount: 4, category: "Career & Study", layout_type: "square", tags: ['career_choice'], positions: mapPos(["这份工作的真实情况", "对你带来的机会", "潜在压力与风险", "整体适配度与建议"]) },
+    { id: "interview_3", name: "面试结果倾向", description: "面试前用来调整心态和策略，而不是绝对预测结果。", cardCount: 3, category: "Career & Study", layout_type: "triangle", tags: ['career_choice', 'study'], positions: mapPos(["你目前的准备状态", "面试方可能的观感", "结果倾向与建议"]) },
+    { id: "study_insight_4", name: "学习状态分析", description: "特别适合学生、考证、长期学习项目。", cardCount: 4, category: "Career & Study", layout_type: "square", tags: ['study'], positions: mapPos(["当前学习状态", "学习中的阻碍", "可利用的资源/优势", "提高成效的建议"]) },
+    { id: "exam_outcome_3", name: "考试通过可能性", description: "以倾向和建议为重点，而不是绝对分数预测。", cardCount: 3, category: "Career & Study", layout_type: "linear", tags: ['study', 'forecast'], positions: mapPos(["当前准备程度", "影响成绩的关键因素", "通过可能性与建议"]) },
+    { id: "career_change_5", name: "转行/跳槽决策", description: "用于权衡留下或离开的职业决策。", cardCount: 5, category: "Career & Study", layout_type: "two_columns", tags: ['career_choice', 'decision'], positions: mapPos(["当前工作状况", "留下来的发展可能", "离开的发展可能", "你真正的需求", "整体建议"]) },
+    { id: "decision_ab", name: "二选一抉择", description: "手机端最常用的二选一决策结构。", cardCount: 3, category: "Decision-Making", layout_type: "triangle", tags: ['choice_ab', 'decision'], positions: mapPos(["选项 A 的可能结果", "选项 B 的可能结果", "综合建议与提醒"]) },
+    { id: "multi_option_4", name: "多选项决策", description: "适合有多个方向但资源有限的情况。", cardCount: 4, category: "Decision-Making", layout_type: "square", tags: ['choice_multi', 'decision'], positions: mapPos(["选项 A 的核心特征", "选项 B 的核心特征", "选项 C 的核心特征", "最符合你当下需求的方向"]) },
+    { id: "go_or_not_4", name: "去或不去", description: "针对“要不要去”的场景，如旅行、见面、赴约、换城市。", cardCount: 4, category: "Decision-Making", layout_type: "square", tags: ['action', 'decision'], positions: mapPos(["如果去的结果倾向", "如果不去的结果倾向", "你内心真正的倾向", "整体建议"]) },
+    { id: "continue_or_end_4", name: "该不该继续", description: "用于权衡一段关系、一份工作或一个项目是否值得继续投入。", cardCount: 4, category: "Decision-Making", layout_type: "square", tags: ['action', 'decision'], positions: mapPos(["目前状况", "继续下去的可能发展", "现在停止的可能发展", "综合建议"]) },
+    { id: "risk_reward_3", name: "风险-收益-结果", description: "帮助用户对一项冒险行为进行理性权衡。", cardCount: 3, category: "Decision-Making", layout_type: "linear", tags: ['action', 'analysis'], positions: mapPos(["潜在风险", "潜在收益", "整体结果倾向"]) },
+    { id: "root_5", name: "问题根源剖析", description: "心理向的牌阵，用于深度理解一个长期困扰。", cardCount: 5, category: "Healing", layout_type: "cross", tags: ['healing', 'deep_analysis'], positions: mapPos(["问题表面现象", "深层根源", "你目前的应对方式", "外部环境影响", "转机与疗愈方向"]) },
+    { id: "emotional_healing_5", name: "情绪疗愈", description: "聚焦于情绪理解与自我安放。", cardCount: 5, category: "Healing", layout_type: "linear", tags: ['healing'], positions: mapPos(["当下主要情绪", "情绪来源", "这份情绪想告诉你的", "你可以如何照顾自己", "疗愈过程中需要注意的事"]) },
+    { id: "anxiety_4", name: "焦虑原因", description: "专门面向焦虑与过度担心的状态。", cardCount: 4, category: "Healing", layout_type: "square", tags: ['healing', 'analysis'], positions: mapPos(["你在焦虑什么", "焦虑背后的恐惧", "现实中真正需要担心的部分", "帮助你缓解焦虑的方向"]) },
+    { id: "self_discovery_5", name: "自我认知", description: "帮助用户从多个角度重新理解自己。", cardCount: 5, category: "Healing", layout_type: "cross", tags: ['self', 'deep_analysis'], positions: mapPos(["你看见的自己", "别人眼中的你", "你隐藏的部分", "你正在成为的样子", "当下最重要的自我提醒"]) },
+    { id: "shadow_work_6", name: "阴影整合", description: "高级心理与灵性向牌阵，面向阴影与自我整合。", cardCount: 6, category: "Healing", layout_type: "hexagram", tags: ['self', 'deep_analysis'], positions: mapPos(["你的阴影主题", "它如何表现出来", "它保护你的方式", "它伤害你的方式", "你可以如何拥抱它", "整合后的改变"]) },
+    { id: "week_3", name: "未来一周运势", description: "适合作为每周固定更新内容的周运势。", cardCount: 3, category: "Future Forecast", layout_type: "linear", tags: ['forecast', 'time'], positions: mapPos(["本周主题", "本周重点能量/事件", "本周建议与注意事项"]) },
+    { id: "month_4", name: "未来一月运势", description: "用于做月度盘点或新月/满月仪式。", cardCount: 4, category: "Future Forecast", layout_type: "square", tags: ['forecast', 'time'], positions: mapPos(["本月整体氛围", "需要重点关注的领域", "可能的挑战", "应对挑战的关键建议"]) },
+    { id: "year_ahead_6", name: "未来一年运势", description: "新年或生日时常用的年度总结/展望牌阵。", cardCount: 6, category: "Future Forecast", layout_type: "hexagram", tags: ['forecast', 'time', 'deep_analysis'], positions: mapPos(["整体年度主题", "事业与学业", "感情与关系", "金钱与物质", "内在成长", "需要特别记住的一句话"]) },
+    { id: "timeline_5", name: "时间线发展", description: "用多节点时间线方式看一件事的发展方向。", cardCount: 5, category: "Future Forecast", layout_type: "linear", tags: ['forecast', 'time'], positions: mapPos(["现在", "最近一阶段的发展", "中期发展", "远期发展", "需要你主动做出的选择"]) },
+    { id: "daily_1", name: "每日指引/单张抽", description: "最直接、快速的单张牌指引，适用于任何问题。", cardCount: 1, category: "Daily Guidance", layout_type: "single", tags: ['daily_simple', 'love_status', 'love_single', 'love_problem', 'love_future', 'love_outcome', 'career_general', 'career_choice', 'study', 'money', 'choice_ab', 'choice_multi', 'action', 'healing', 'self', 'manifest', 'forecast', 'analysis'], positions: mapPos(["指引"]) },
+    { id: "today_challenge_3", name: "今日-挑战-建议", description: "比单张牌更具体，适合有安排的一天。", cardCount: 3, category: "Daily Guidance", layout_type: "linear", tags: ['daily_complex'], positions: mapPos(["今日整体能量", "今日可能的挑战", "应对挑战的建议"]) },
+    { id: "daily_love_3", name: "今日恋爱运", description: "专门聚焦每天的感情互动氛围。", cardCount: 3, category: "Daily Guidance", layout_type: "triangle", tags: ['daily_complex', 'love_status'], positions: mapPos(["今日感情能量", "与他/她互动的提示", "需要避免的行为"]) },
+    { id: "manifest_4", name: "心愿实现", description: "通用显化牌阵，适用于任何希望达成的目标。", cardCount: 4, category: "Manifestation", layout_type: "diamond", tags: ['manifest'], positions: mapPos(["你的心愿本质", "当前主要阻碍", "可以采取的行动", "心愿可能的实现方式/结果"]) },
+    { id: "money_manifest_4", name: "财富显化", description: "帮助调整对金钱与丰盛的态度与行为。", cardCount: 4, category: "Manifestation", layout_type: "square", tags: ['manifest', 'money'], positions: mapPos(["你当前对金钱的信念", "阻碍财富流动的模式", "可以调整的行动与观念", "财富流动的未来倾向"]) },
+    { id: "love_manifest_4", name: "爱情显化", description: "用于主动创造更健康、更匹配的亲密关系。", cardCount: 4, category: "Manifestation", layout_type: "diamond", tags: ['manifest', 'love_single'], positions: mapPos(["你真正渴望的亲密关系样子", "阻碍你收获爱/接受爱的因素", "你可以开始做的改变", "爱情显化的倾向与提醒"]) },
+    { id: "career_manifest_4", name: "事业成功显化", description: "帮助用户聚焦事业与自我实现目标。", cardCount: 4, category: "Manifestation", layout_type: "square", tags: ['manifest', 'career_choice'], positions: mapPos(["你对事业成功的定义", "阻碍你展开行动的关键因素", "可以集中精力的方向", "成功显化的路径与提醒"]) }
 ];
 
 export const SYSTEM_INSTRUCTION = `
@@ -698,39 +204,27 @@ export const SYSTEM_INSTRUCTION = `
 4. **必须使用中文回答**。
 `;
 
-// Helper to generate RWS card URLs from a stable source
 const getCardImage = (id: number): string => {
   const baseUrl = "https://www.sacred-texts.com/tarot/pkt/img";
   const pad = (n: number) => n.toString().padStart(2, '0');
-
-  // Major Arcana (0-21)
   if (id < 22) return `${baseUrl}/ar${pad(id)}.jpg`;
-
   const suits = ['wa', 'cu', 'sw', 'pe'];
   let suitIndex = 0;
-  let cardVal = 0; // 0-13
-
+  let cardVal = 0; 
   if (id < 36) { suitIndex = 0; cardVal = id - 22; }
   else if (id < 50) { suitIndex = 1; cardVal = id - 36; }
   else if (id < 64) { suitIndex = 2; cardVal = id - 50; }
   else { suitIndex = 3; cardVal = id - 64; }
-
   const prefix = suits[suitIndex];
-  
-  // Ace
   if (cardVal === 0) return `${baseUrl}/${prefix}ac.jpg`;
-  // 2-10
   if (cardVal >= 1 && cardVal <= 9) return `${baseUrl}/${prefix}${pad(cardVal + 1)}.jpg`;
-  // Court Cards
-  if (cardVal === 10) return `${baseUrl}/${prefix}pa.jpg`; // Page
-  if (cardVal === 11) return `${baseUrl}/${prefix}kn.jpg`; // Knight
-  if (cardVal === 12) return `${baseUrl}/${prefix}qu.jpg`; // Queen
-  if (cardVal === 13) return `${baseUrl}/${prefix}ki.jpg`; // King
-  
+  if (cardVal === 10) return `${baseUrl}/${prefix}pa.jpg`; 
+  if (cardVal === 11) return `${baseUrl}/${prefix}kn.jpg`; 
+  if (cardVal === 12) return `${baseUrl}/${prefix}qu.jpg`; 
+  if (cardVal === 13) return `${baseUrl}/${prefix}ki.jpg`; 
   return "";
 };
 
-// Helper to get card educational info
 export const getCardEducation = (id: number): { archetype: string, element: string, description: string } => {
     if (id < 22) {
         return {
@@ -765,98 +259,232 @@ export const getCardEducation = (id: number): { archetype: string, element: stri
     }
 }
 
-// Full 78 Cards Deck Data
+// Helper to create card data more concisely with 13 fields per side
+// up/rev arrays: [Short, Keywords, General, Love, Career, Study, Social, Family, Health, Self, Spirit, Action, Trend]
+const mkCard = (
+  id: number, 
+  name: string, 
+  name_cn: string, 
+  emoji: string, 
+  up: string[],
+  rev: string[]
+) => {
+  const getField = (arr: string[], index: number, fallback: string) => arr[index] || fallback;
+  
+  // Smart Defaults using Keywords if specific text isn't provided
+  const kUps = up[1].split(',');
+  const kRevs = rev[1].split(',');
+  const kwUp = kUps[0] || '正向能量';
+  const kwRev = kRevs[0] || '阻滞能量';
+
+  return {
+    id, name, name_cn, emoji,
+    meaningUpright: up[0],
+    meaningReversed: rev[0],
+    upright: { 
+        keywords: kUps, 
+        general: up[2], 
+        love: up[3], 
+        career: up[4],
+        // Auto-generate using context if missing
+        study: getField(up, 5, `学习效率提升，思维清晰。适合进修${kwUp}相关领域，保持当前的好奇心与动力。`),
+        social: getField(up, 6, `人际关系和谐，适合${kwUp}。你在朋友圈中展现出积极的能量，容易获得他人支持。`),
+        family: getField(up, 7, `家庭氛围安稳，${kwUp}是关键。与家人的沟通顺畅，居住环境带来安全感。`),
+        health: getField(up, 8, `身心状态良好，充满活力。建议保持规律运动，让${kwUp}的能量流动。`),
+        self: getField(up, 9, `内在自信，专注于${kwUp}。自我价值感提升，你是自己生活的主宰。`),
+        spirit: getField(up, 10, `顺应宇宙能量，${kwUp}指引方向。直觉敏锐，适合冥想或进行灵性探索。`),
+        action: getField(up, 11, `现在适合采取行动，${kwUp}。不要犹豫，机会稍纵即逝，勇敢迈出第一步。`),
+        trend: getField(up, 12, `未来趋势向上，${kwUp}。事情正朝着预期的方向发展，保持耐心与信心。`)
+    },
+    reversed: { 
+        keywords: kRevs, 
+        general: rev[2], 
+        love: rev[3], 
+        career: rev[4],
+        study: getField(rev, 5, `学习遇到瓶颈，注意${kwRev}。可能因为分心或方法不对而感到吃力，建议调整节奏。`),
+        social: getField(rev, 6, `社交可能出现误解，避免${kwRev}。提防小人或无效社交，保护好自己的能量场。`),
+        family: getField(rev, 7, `家庭内部有隐忧，需要${kwRev}。注意沟通方式，避免因小事引发争执。`),
+        health: getField(rev, 8, `注意休息，避免过度消耗。${kwRev}可能导致身体亚健康，关注睡眠与饮食。`),
+        self: getField(rev, 9, `内在感到迷茫，需要反思${kwRev}。接纳自己的不完美，不要自我攻击。`),
+        spirit: getField(rev, 10, `灵性受阻，倾听内心声音。不要忽视${kwRev}的信号，那是灵魂在求救。`),
+        action: getField(rev, 11, `暂时按兵不动，重新评估。现在不是冒进的时候，${kwRev}可能会带来风险。`),
+        trend: getField(rev, 12, `趋势不明朗，建议等待。事情可能会有反复或延误，保持${kwRev}的觉察。`)
+    },
+    image: getCardImage(id)
+  };
+};
+
 const RAW_DECK_DATA = [
   // --- Major Arcana (22) ---
-  { id: 0, name: "The Fool", name_cn: "愚者", emoji: "🃏", meaningUpright: "新的开始，纯真，自由", meaningReversed: "鲁莽，不负责任" },
-  { id: 1, name: "The Magician", name_cn: "魔术师", emoji: "🪄", meaningUpright: "创造力，显化，能力", meaningReversed: "欺骗，甚至操纵" },
-  { id: 2, name: "The High Priestess", name_cn: "女祭司", emoji: "🌙", meaningUpright: "直觉，潜意识，神圣知识", meaningReversed: "秘密，与直觉断联" },
-  { id: 3, name: "The Empress", name_cn: "皇后", emoji: "👑", meaningUpright: "女性力量，自然，丰饶", meaningReversed: "创造力受阻，依赖" },
-  { id: 4, name: "The Emperor", name_cn: "皇帝", emoji: "🦁", meaningUpright: "权威，结构，控制", meaningReversed: "暴政，僵化，缺乏纪律" },
-  { id: 5, name: "The Hierophant", name_cn: "教皇", emoji: "⛪", meaningUpright: "精神智慧，传统，从众", meaningReversed: "个人信仰，叛逆，非传统" },
-  { id: 6, name: "The Lovers", name_cn: "恋人", emoji: "💕", meaningUpright: "爱，和谐，选择", meaningReversed: "不和谐，失衡，错误选择" },
-  { id: 7, name: "The Chariot", name_cn: "战车", emoji: "🛒", meaningUpright: "控制，意志力，胜利", meaningReversed: "失去方向，攻击性" },
-  { id: 8, name: "Strength", name_cn: "力量", emoji: "💪", meaningUpright: "内在力量，勇气，同情", meaningReversed: "自我怀疑，不安全感" },
-  { id: 9, name: "The Hermit", name_cn: "隐士", emoji: "🏮", meaningUpright: "内省，寻找灵魂，独处", meaningReversed: "孤立，寂寞，退缩" },
-  { id: 10, name: "Wheel of Fortune", name_cn: "命运之轮", emoji: "🎡", meaningUpright: "好运，命运，周期", meaningReversed: "厄运，抵抗变化" },
-  { id: 11, name: "Justice", name_cn: "正义", emoji: "⚖️", meaningUpright: "正义，公平，真理", meaningReversed: "不公，不诚实" },
-  { id: 12, name: "The Hanged Man", name_cn: "倒吊人", emoji: "🦇", meaningUpright: "臣服，新视角，牺牲", meaningReversed: "拖延，无谓的牺牲" },
-  { id: 13, name: "Death", name_cn: "死神", emoji: "💀", meaningUpright: "结束，改变，转化", meaningReversed: "抗拒改变，停滞" },
-  { id: 14, name: "Temperance", name_cn: "节制", emoji: "🥛", meaningUpright: "平衡，适度，耐心", meaningReversed: "失衡，过度" },
-  { id: 15, name: "The Devil", name_cn: "恶魔", emoji: "😈", meaningUpright: "阴影自我，依恋，成瘾", meaningReversed: "释放限制性信念" },
-  { id: 16, name: "The Tower", name_cn: "高塔", emoji: "⚡", meaningUpright: "突然的改变，动荡，觉醒", meaningReversed: "避免灾难，恐惧改变" },
-  { id: 17, name: "The Star", name_cn: "星星", emoji: "⭐", meaningUpright: "希望，信念，更新", meaningReversed: "缺乏信念，绝望" },
-  { id: 18, name: "The Moon", name_cn: "月亮", emoji: "🌚", meaningUpright: "幻觉，直觉，潜意识", meaningReversed: "恐惧，困惑，误解" },
-  { id: 19, name: "The Sun", name_cn: "太阳", emoji: "☀️", meaningUpright: "积极，成功，活力", meaningReversed: "内心小孩，悲观" },
-  { id: 20, name: "Judgement", name_cn: "审判", emoji: "🎺", meaningUpright: "审判，重生，内心召唤", meaningReversed: "自我怀疑，拒绝召唤" },
-  { id: 21, name: "The World", name_cn: "世界", emoji: "🌍", meaningUpright: "完成，整合，旅行", meaningReversed: "未完成，缺乏闭环" },
-  
-  // --- Wands (Fire) ---
-  { id: 22, name: "Ace of Wands", name_cn: "权杖一", emoji: "🪵", meaningUpright: "灵感，新机会，潜力", meaningReversed: "延迟，缺乏动力" },
-  { id: 23, name: "Two of Wands", name_cn: "权杖二", emoji: "🪵", meaningUpright: "未来规划，决定，发现", meaningReversed: "恐惧未知，缺乏计划" },
-  { id: 24, name: "Three of Wands", name_cn: "权杖三", emoji: "🪵", meaningUpright: "扩张，远见，海外机会", meaningReversed: "障碍，延误，挫折" },
-  { id: 25, name: "Four of Wands", name_cn: "权杖四", emoji: "🪵", meaningUpright: "庆祝，和谐，归家", meaningReversed: "家庭冲突，不稳定" },
-  { id: 26, name: "Five of Wands", name_cn: "权杖五", emoji: "🪵", meaningUpright: "竞争，冲突，分歧", meaningReversed: "避免冲突，达成共识" },
-  { id: 27, name: "Six of Wands", name_cn: "权杖六", emoji: "🪵", meaningUpright: "胜利，认可，自信", meaningReversed: "失败，缺乏认可，自负" },
-  { id: 28, name: "Seven of Wands", name_cn: "权杖七", emoji: "🪵", meaningUpright: "防御，坚持立场，挑战", meaningReversed: "放弃，不知所措" },
-  { id: 29, name: "Eight of Wands", name_cn: "权杖八", emoji: "🪵", meaningUpright: "速度，行动，消息", meaningReversed: "延迟，沮丧，恐慌" },
-  { id: 30, name: "Nine of Wands", name_cn: "权杖九", emoji: "🪵", meaningUpright: "韧性，勇气，坚持", meaningReversed: "精疲力竭，放弃" },
-  { id: 31, name: "Ten of Wands", name_cn: "权杖十", emoji: "🪵", meaningUpright: "负担，责任，压力", meaningReversed: "崩溃，卸下重担" },
-  { id: 32, name: "Page of Wands", name_cn: "权杖侍从", emoji: "🪵", meaningUpright: "探索，兴奋，自由", meaningReversed: "缺乏方向，悲观" },
-  { id: 33, name: "Knight of Wands", name_cn: "权杖骑士", emoji: "🪵", meaningUpright: "行动，冒险，冲动", meaningReversed: "愤怒，冲动，鲁莽" },
-  { id: 34, name: "Queen of Wands", name_cn: "权杖王后", emoji: "🪵", meaningUpright: "自信，决心，社交", meaningReversed: "嫉妒，不安全感" },
-  { id: 35, name: "King of Wands", name_cn: "权杖国王", emoji: "🪵", meaningUpright: "大局观，领导力，创业", meaningReversed: "冲动，专横，期望过高" },
-
-  // --- Cups (Water) ---
-  { id: 36, name: "Ace of Cups", name_cn: "圣杯一", emoji: "🏆", meaningUpright: "新恋情，同情，创造力", meaningReversed: "情感压抑，空虚" },
-  { id: 37, name: "Two of Cups", name_cn: "圣杯二", emoji: "🏆", meaningUpright: "结合，伙伴关系，吸引力", meaningReversed: "失衡，断裂，误解" },
-  { id: 38, name: "Three of Cups", name_cn: "圣杯三", emoji: "🏆", meaningUpright: "友谊，社群，聚会", meaningReversed: "孤立，过度放纵，八卦" },
-  { id: 39, name: "Four of Cups", name_cn: "圣杯四", emoji: "🏆", meaningUpright: "冷漠，沉思，脱节", meaningReversed: "觉察，抓住机会" },
-  { id: 40, name: "Five of Cups", name_cn: "圣杯五", emoji: "🏆", meaningUpright: "失落，悲伤，遗憾", meaningReversed: "接受，继续前进" },
-  { id: 41, name: "Six of Cups", name_cn: "圣杯六", emoji: "🏆", meaningUpright: "怀旧，童年，回忆", meaningReversed: "活在过去，不成熟" },
-  { id: 42, name: "Seven of Cups", name_cn: "圣杯七", emoji: "🏆", meaningUpright: "选择，幻想，愿望", meaningReversed: "清醒，做出选择" },
-  { id: 43, name: "Eight of Cups", name_cn: "圣杯八", emoji: "🏆", meaningUpright: "离开，寻找真理，失望", meaningReversed: "恐惧改变，停滞" },
-  { id: 44, name: "Nine of Cups", name_cn: "圣杯九", emoji: "🏆", meaningUpright: "满足，愿望成真，感激", meaningReversed: "贪婪，不满，自鸣得意" },
-  { id: 45, name: "Ten of Cups", name_cn: "圣杯十", emoji: "🏆", meaningUpright: "幸福，家庭和谐，圆满", meaningReversed: "家庭破碎，疏离" },
-  { id: 46, name: "Page of Cups", name_cn: "圣杯侍从", emoji: "🏆", meaningUpright: "新感情，好奇，直觉", meaningReversed: "情绪化，甚至幼稚" },
-  { id: 47, name: "Knight of Cups", name_cn: "圣杯骑士", emoji: "🏆", meaningUpright: "浪漫，魅力，想象力", meaningReversed: "情绪波动，嫉妒，失望" },
-  { id: 48, name: "Queen of Cups", name_cn: "圣杯王后", emoji: "🏆", meaningUpright: "慈悲，关怀，情感安全", meaningReversed: "依赖，情感不稳" },
-  { id: 49, name: "King of Cups", name_cn: "圣杯国王", emoji: "🏆", meaningUpright: "情绪平衡，宽容，外交", meaningReversed: "情绪操控，喜怒无常" },
-
-  // --- Swords (Air) ---
-  { id: 50, name: "Ace of Swords", name_cn: "宝剑一", emoji: "🗡️", meaningUpright: "清晰，突破，新思想", meaningReversed: "困惑，混乱，残忍" },
-  { id: 51, name: "Two of Swords", name_cn: "宝剑二", emoji: "🗡️", meaningUpright: "僵局，艰难的决定，逃避", meaningReversed: "犹豫不决，信息过载" },
-  { id: 52, name: "Three of Swords", name_cn: "宝剑三", emoji: "🗡️", meaningUpright: "心碎，悲伤，痛苦", meaningReversed: "释放痛苦，乐观" },
-  { id: 53, name: "Four of Swords", name_cn: "宝剑四", emoji: "🗡️", meaningUpright: "休息，恢复，沉思", meaningReversed: "精疲力竭，压力" },
-  { id: 54, name: "Five of Swords", name_cn: "宝剑五", emoji: "🗡️", meaningUpright: "冲突，不惜代价的胜利", meaningReversed: "和解，原谅，平息" },
-  { id: 55, name: "Six of Swords", name_cn: "宝剑六", emoji: "🗡️", meaningUpright: "过渡，离开，平静", meaningReversed: "情感包袱，无法前行" },
-  { id: 56, name: "Seven of Swords", name_cn: "宝剑七", emoji: "🗡️", meaningUpright: "欺骗，策略，隐秘", meaningReversed: "坦白，良心发现" },
-  { id: 57, name: "Eight of Swords", name_cn: "宝剑八", emoji: "🗡️", meaningUpright: "限制，受害者心态，困境", meaningReversed: "自由，新的视角" },
-  { id: 58, name: "Nine of Swords", name_cn: "宝剑九", emoji: "🗡️", meaningUpright: "焦虑，噩梦，恐惧", meaningReversed: "希望，绝望终结" },
-  { id: 59, name: "Ten of Swords", name_cn: "宝剑十", emoji: "🗡️", meaningUpright: "背叛，痛苦的结束，触底", meaningReversed: "复苏，最坏的已过去" },
-  { id: 60, name: "Page of Swords", name_cn: "宝剑侍从", emoji: "🗡️", meaningUpright: "好奇，新想法，沟通", meaningReversed: "欺骗，操纵，多嘴" },
-  { id: 61, name: "Knight of Swords", name_cn: "宝剑骑士", emoji: "🗡️", meaningUpright: "行动，野心，直接", meaningReversed: "冲动，不可预测，鲁莽" },
-  { id: 62, name: "Queen of Swords", name_cn: "宝剑王后", emoji: "🗡️", meaningUpright: "独立，公正，清晰的界限", meaningReversed: "冷酷，痛苦，甚至残忍" },
-  { id: 63, name: "King of Swords", name_cn: "宝剑国王", emoji: "🗡️", meaningUpright: "理智，权威，真理", meaningReversed: "滥用权力，操纵，暴虐" },
-
-  // --- Pentacles (Earth) ---
-  { id: 64, name: "Ace of Pentacles", name_cn: "星币一", emoji: "🪙", meaningUpright: "新机会，繁荣，显化", meaningReversed: "错失机会，贪婪" },
-  { id: 65, name: "Two of Pentacles", name_cn: "星币二", emoji: "🪙", meaningUpright: "平衡，适应，优先顺位", meaningReversed: "失衡，杂乱无章" },
-  { id: 66, name: "Three of Pentacles", name_cn: "星币三", emoji: "🪙", meaningUpright: "团队合作，学习，实施", meaningReversed: "缺乏团队精神，混乱" },
-  { id: 67, name: "Four of Pentacles", name_cn: "星币四", emoji: "🪙", meaningUpright: "控制，安全，保守", meaningReversed: "贪婪，物质主义" },
-  { id: 68, name: "Five of Pentacles", name_cn: "星币五", emoji: "🪙", meaningUpright: "贫穷，孤立，不安全感", meaningReversed: "恢复，精神贫困" },
-  { id: 69, name: "Six of Pentacles", name_cn: "星币六", emoji: "🪙", meaningUpright: "慷慨，慈善，给予和接受", meaningReversed: "自私，债务，甚至勒索" },
-  { id: 70, name: "Seven of Pentacles", name_cn: "星币七", emoji: "🪙", meaningUpright: "耐心，投资，长期规划", meaningReversed: "浪费工作，缺乏回报" },
-  { id: 71, name: "Eight of Pentacles", name_cn: "星币八", emoji: "🪙", meaningUpright: "技能，精通，工匠精神", meaningReversed: "完美主义，缺乏激情" },
-  { id: 72, name: "Nine of Pentacles", name_cn: "星币九", emoji: "🪙", meaningUpright: "富足，奢华，自给自足", meaningReversed: "炫耀，财务挫折" },
-  { id: 73, name: "Ten of Pentacles", name_cn: "星币十", emoji: "🪙", meaningUpright: "财富，遗产，家庭", meaningReversed: "财务失败，家庭纠纷" },
-  { id: 74, name: "Page of Pentacles", name_cn: "星币侍从", emoji: "🪙", meaningUpright: "显化，勤奋，新工作", meaningReversed: "拖延，缺乏重点" },
-  { id: 75, name: "Knight of Pentacles", name_cn: "星币骑士", emoji: "🪙", meaningUpright: "效率，例行公事，保守", meaningReversed: "懒惰，无聊，甚至停滞" },
-  { id: 76, name: "Queen of Pentacles", name_cn: "星币王后", emoji: "🪙", meaningUpright: "滋养，务实，舒适", meaningReversed: "自我中心，嫉妒" },
-  { id: 77, name: "King of Pentacles", name_cn: "星币国王", emoji: "🪙", meaningUpright: "财富，商业，纪律", meaningReversed: "贪婪，顽固，占有欲" },
+  mkCard(0, "The Fool", "愚者", "🃏",
+    [
+      "新的开始，纯真，自由", "开始,冒险,纯真,自发性", 
+      "你正站在悬崖边，准备踏入未知。这是信仰之跃的时刻，不要害怕犯错，保持那份孩童般的好奇心。", 
+      "一段新的恋情可能突然出现，充满刺激和不确定性。不要想太多未来，享受当下。", 
+      "适合创业、换工作或尝试全新的领域。即使没有经验，你的热情就是最大的资本。",
+      "学习新事物的最佳时机，保持空杯心态。不要被过去的知识束缚，大胆尝试跨学科或新技能。",
+      "结交新朋友，进入新圈子。大家会被你的真诚和幽默吸引，适合参加非正式的聚会。",
+      "可能搬家或离开原生家庭独立生活。家庭氛围轻松愉快，没有太多束缚。",
+      "活力四射，但要注意意外受伤。尝试新的运动方式，如徒步或极限运动。",
+      "找回内心的纯真，释放压力。不要太在意别人的眼光，做回那个无忧无虑的孩子。",
+      "灵魂正在经历新的轮回或觉醒。相信直觉的指引，宇宙会接住你。",
+      "大胆行动！现在不行动更待何时？放手一搏，不要被过多的计划束缚。",
+      "新的周期刚刚开始，未来充满无限可能。节奏轻快，适合推进。"
+    ],
+    [
+      "鲁莽，不负责任", "鲁莽,幼稚,分心,愚蠢", 
+      "你的冒险精神可能变成了鲁莽。在跳跃之前，请先看清脚下的路，不要忽视现实的警告。", 
+      "可能在一段不负责任的关系中，或者害怕承诺。小心对方（或你自己）只是想玩玩而已。", 
+      "工作上可能因为缺乏计划而导致失误。不要在这个时候冲动辞职或投资。",
+      "学习不专心，容易半途而废。基础没打好就想飞，小心摔得痛。",
+      "在社交中可能因为口无遮拦而得罪人。或者交友不慎，被损友带偏。",
+      "家庭责任感缺失，或者因为任性而与家人冲突。不愿承担家务或责任。",
+      "忽视身体信号，生活不规律。注意脚踝或跌倒，不要作死。",
+      "内心感到不安，用幼稚的行为掩饰恐惧。不敢面对成长的责任。",
+      "拒绝成长，抗拒命运的安排。迷失方向，不知道自己为何出发。",
+      "不要冲动！停下来检查装备和地图。现在的行动可能是盲目的。",
+      "时机未到，或者方向错误。需要重新规划，不要急于求成。"
+    ]
+  ),
+  mkCard(1, "The Magician", "魔术师", "🪄",
+    [
+      "创造力，显化，能力", "能力,显化,专注,资源", 
+      "你拥有实现目标所需的一切资源。现在的关键是专注和行动，“如其在下，如其在上”，你可以显化你的愿望。", 
+      "在关系中你很有吸引力且掌握主动权。如果你想脱单或推进关系，现在是行动的最佳时机。", 
+      "这是展示才华、利用技能解决问题的好时候。你能够掌控局面，推动项目成功。",
+      "学习能力爆表，适合考试或钻研技术。你的专注力能创造奇迹，特别适合语言或口才训练。",
+      "在社交场合游刃有余，善于沟通和表达。你是众人的焦点，容易结识贵人。",
+      "有能力改善居住环境，或者你是家庭中的问题解决者。适合装修或添置智能设备。",
+      "身心平衡，能量流动顺畅。适合开始新的健身计划，特别是涉及手眼协调的运动。",
+      "相信自己的能力，我是我命运的主宰。清晰地知道自己是谁，要什么。",
+      "你就是连接精神与物质的桥梁。显化法则正在生效，保持正念。",
+      "利用你手头的所有资源，立即行动。主动出击，成功率极高。",
+      "事情正在快速发展，且完全在你掌控之中。节奏紧凑有力。"
+    ],
+    [
+      "欺骗，甚至操纵", "欺骗,操纵,能力受阻,犹豫", 
+      "你可能感到有心无力，或者被外表所迷惑。小心那些看起来太美好的事物，或者你在浪费自己的天赋。", 
+      "警惕情感操控或不诚实的行为。也许你（或对方）并没有展现真实的自己。", 
+      "职场上可能遇到骗局，或者你感到怀才不遇。检查是否有技能短板阻碍了你的发展。",
+      "学习上投机取巧，或者被杂事分心。注意基础知识的缺失，不要试图作弊。",
+      "小心社交诈骗，或者有人利用你的信任。沟通不畅，词不达意。",
+      "家庭沟通中存在隐瞒或误导。注意电器故障或管道问题。",
+      "精神紧张导致身体不适，或者是心理作用。注意神经系统。",
+      "自我怀疑，觉得自己是个冒牌货。缺乏自信，意志力薄弱。",
+      "能量受阻，意图不纯。小心“黑魔法”般的负面念头。",
+      "不要走捷径，也不要被花言巧语蒙蔽。谨慎行动，核实信息。",
+      "计划可能落空，或者方向被误导。节奏混乱，甚至停滞。"
+    ]
+  ),
+  mkCard(2, "The High Priestess", "女祭司", "🌙",
+    ["直觉，潜意识，神圣知识", "直觉,神秘,潜意识,等待", 
+    "向内看，答案不在外面，而在你心里。信任你的直觉和梦境，现在是静心和学习的时刻，而非行动。", 
+    "感情可能比较柏拉图，或者有一方比较被动、神秘。相信你对这段关系的感觉，哪怕表面看不出来。", 
+    "适合进行研究、学习或策划。不要急于公布计划，有些事情需要保密或进一步酝酿。",
+    "极其适合深入研究、考研或学习神秘学。静心读书效率高，适合独自钻研。",
+    "社交圈子较冷清，更喜欢一对一的深层交流。有些秘密不宜公开，保持低调。",
+    "家中安静祥和，适合独处。或者家中有女性长辈掌权，需要尊重。",
+    "关注女性健康、荷尔蒙或内分泌。情绪对身体影响大，适合瑜伽或静坐。",
+    "探索潜意识，解梦。接纳自己的阴暗面，这是一个自我疗愈的过程。",
+    "灵性觉醒的高峰期，直觉极其敏锐。相信第六感，那是神性的低语。",
+    "暂缓行动，静观其变。现在是等待的时机，不要强求。",
+    "事情还在酝酿中，真相尚未完全显露。节奏缓慢，需要耐心。"
+    ],
+    ["秘密，与直觉断联", "秘密,压抑,肤浅,孤僻", 
+    "你可能忽视了内心的声音，过于关注表面。或者有些秘密正在困扰你，让你感到不安。", 
+    "可能会有秘密恋情，或者感到情感疏离。你可能在压抑自己的真实需求。", 
+    "职场上可能存在办公室政治或隐瞒的信息。不要只听表面之词，多留意背后的动机。",
+    "学习无法集中精神，或者被表象迷惑。缺乏深度，只是浅尝辄止。",
+    "感到孤独，或者被流言蜚语困扰。拒绝沟通，自我封闭。",
+    "家庭气氛冷漠，或者有不可告人的秘密。与女性长辈关系紧张。",
+    "内分泌失调，或者因为压抑情绪而生病。注意妇科或月经问题。",
+    "忽视内心需求，过度理性化。感到空虚，甚至情绪失控。",
+    "与高我断联，迷信或过度依赖占卜。分不清直觉和妄想。",
+    "不要在信息不明时盲目行动。小心陷阱，或者你正在逃避行动。",
+    "真相被掩盖，局势不明朗。可能会有延误。"
+    ]
+  ),
+  // For the rest of the deck (Cards 3-77), use the concise array format.
+  // mkCard handles generating the new 8 dimensions using the defaults.
+  mkCard(3, "The Empress", "皇后", "👑", ["女性力量，自然，丰饶", "丰盛,母性,创造力,感官享受", "像大自然一样去滋养你的生活。这是创造、享受美和物质丰盛的时期。", "充满爱意和关怀的关系。极佳的桃花运，或者代表怀孕、生产。", "工作上会有实质性的收获。适合从事艺术、设计工作。"], ["创造力受阻，依赖", "依赖,贫瘠,创造力受阻,忽视自我", "你可能感到灵感枯竭，或者在关系中过于依赖他人。", "感情中可能出现过度粘人、嫉妒或缺乏安全感。", "工作上可能感到停滞不前，缺乏资源或灵感。"]),
+  mkCard(4, "The Emperor", "皇帝", "🦁", ["权威，结构，控制", "权威,结构,领导力,父亲原型", "现在需要逻辑、纪律和结构。像皇帝一样掌控局面。", "关系稳定但可能缺乏浪漫。寻找的是一个负责任的伴侣。", "这是建立规则、升职或担任领导角色的好时机。"], ["暴政，僵化，缺乏纪律", "暴政,僵化,控制欲,软弱", "权威可能变成了压迫。你可能太固执，或者反过来显得软弱。", "关系中可能存在控制欲过强的问题，或者一方过于大男子主义。", "职场上可能遇到暴君般的老板，或者管理僵化。"]),
+  mkCard(5, "The Hierophant", "教皇", "⛪", ["精神智慧，传统，从众", "传统,信仰,学习,从众", "遵循传统和既定规则是现在的最佳策略。寻求导师的指引。", "倾向于传统的恋爱模式，可能涉及相亲、婚姻承诺。", "适合在大机构、学校或政府部门工作。遵守流程。",], ["个人信仰，叛逆，非传统", "叛逆,非传统,束缚,虚伪", "你可能感到被传统束缚，想要打破规则。", "可能会有一段不被世俗看好的关系，或者你想要挣脱某种模式。", "你可能想要跳出体制，尝试自由职业。"]),
+  mkCard(6, "The Lovers", "恋人", "💕", ["爱，和谐，选择", "爱,和谐,选择,价值观", "这不仅仅是爱情，更是关于选择。你需要做出一个符合你价值观的决定。", "灵魂伴侣般的连接，充满激情和默契。面临重要的情感抉择。", "工作上可能面临合作机会，或者需要你在两个方向中做出选择。"], ["不和谐，失衡，错误选择", "不和谐,分离,错误选择,诱惑", "内心冲突，难以做出决定。你可能因为恐惧或诱惑而做出了违背本心的选择。", "关系出现裂痕，或者一方不忠。可能面临分手。", "合作关系破裂，或者你对目前的工作感到矛盾。"]),
+  mkCard(7, "The Chariot", "战车", "🛒", ["控制，意志力，胜利", "胜利,意志力,控制,方向", "无论遇到什么阻碍，只要你有钢铁般的意志，你就能胜利。", "在感情中你可能需要主动出击。如果你和伴侣有分歧，需要你来掌控方向。", "事业上的巨大成功就在眼前，但需要极大的努力和竞争。"], ["失去方向，攻击性", "失控,攻击性,迷失方向,失败", "你可能失去了对局面的控制，就像脱缰的野马。", "感情中可能出现争吵、控制欲或想要逃离。", "项目可能偏离轨道，或者你感到精疲力竭。"]),
+  mkCard(8, "Strength", "力量", "💪", ["内在力量，勇气，同情", "勇气,耐心,同情,内在力量", "真正的力量不是武力，而是温柔的坚持。", "一段成熟、互相尊重的关系。用温柔的方式去解决冲突。", "工作中需要耐心和软技能。你有能力处理棘手的人际关系。",], ["自我怀疑，不安全感", "软弱,不安全感,暴躁,自我怀疑", "你可能感到内心脆弱，被恐惧或冲动所控制。", "可能会因为不安全感而表现出嫉妒或依赖。", "在职场上可能缺乏自信，不敢表达观点。"]),
+  mkCard(9, "The Hermit", "隐士", "🏮", ["内省，寻找灵魂，独处", "内省,独处,指引,寻找", "暂时退出人群，寻找内心的光。这不是孤独，而是必要的独处。", "单身也没关系，利用这段时间提升自己。", "在这个阶段，独自工作比团队合作更有效。",], ["孤立，寂寞，退缩", "孤立,寂寞,退缩,拒绝沟通", "你可能把自己封闭起来，拒绝与外界沟通。", "感情中出现冷暴力或拒绝沟通的情况。", "职场上可能过于孤僻，导致信息闭塞。"]),
+  mkCard(10, "Wheel of Fortune", "命运之轮", "🎡", ["好运，命运，周期", "好运,变化,因果,转折点", "改变是唯一的不变。命运之轮在转动，好运即将来临。", "命中注定的相遇，或者关系迎来重大转折。", "意想不到的机会、升职或跳槽。",], ["厄运，抵抗变化", "厄运,阻碍,抵抗变化,坏运气", "你可能遇到一些不可控的挫折，感觉运气不在你这边。", "感情可能会经历波折或外部阻力。", "工作计划可能被打乱。接受现实，调整心态。"]),
+  mkCard(11, "Justice", "正义", "⚖️", ["正义，公平，真理", "公平,真理,因果,法律", "种瓜得瓜，种豆得豆。现在是追求公平和真相的时候。", "如果你们的关系是平等的，它会开花结果。", "签署合同、法律事务或需要公正判断的工作。",], ["不公，不诚实", "不公,偏见,不诚实,推卸责任", "你可能受到了不公正的待遇，或者你自己没有诚实面对。", "关系中存在欺骗或不平等。", "职场上可能遭遇不公的评价，或者法律纠纷。"]),
+  mkCard(12, "The Hanged Man", "倒吊人", "🦇", ["臣服，新视角，牺牲", "牺牲,等待,新视角,暂停", "现在的停滞是为了让你换个角度看世界。", "感情可能陷入僵局，或者需要你做出某种牺牲。", "工作可能卡住了，但这正是反思和学习的机会。",], ["拖延，无谓的牺牲", "拖延,无谓牺牲,僵局,受害者心态", "你可能在做无谓的牺牲，或者因为害怕做决定而一直拖延。", "一段消耗你的关系，你一直在付出却没有回报。", "项目无限期延误，或者你因为固执而错过了改变的机会。"]),
+  mkCard(13, "Death", "死神", "💀", ["结束，改变，转化", "结束,重生,改变,断舍离", "不要害怕，这通常不是肉体的死亡，而是旧模式的结束。", "一段关系可能走到尽头，或者关系模式发生彻底改变。", "失业、转行或项目结束。虽然痛苦，但这会把你推向更适合你的道路。",], ["抗拒改变，停滞", "停滞,抗拒改变,腐朽,恐惧", "你紧抓着已经死去的东西不放，这只会带来更多痛苦。", "你可能无法放下前任，或者维持着一段名存实亡的关系。", "害怕换工作，即使现在的工作让你痛苦。"]),
+  mkCard(14, "Temperance", "节制", "🥛", ["平衡，适度，耐心", "平衡,耐心,治愈,融合", "寻找中庸之道。不要极端，要在对立面之间找到平衡。", "一段细水长流、互相治愈的关系。", "工作上需要协调各方利益，保持心态平和。",], ["失衡，过度", "失衡,过度,冲突,缺乏耐心", "你的生活失去了平衡，可能在某方面过度投入。", "感情中可能忽冷忽热，或者付出与索取不平衡。", "工作压力大，或者人际关系紧张。"]),
+  mkCard(15, "The Devil", "恶魔", "😈", ["阴影自我，依恋，成瘾", "束缚,欲望,成瘾,物质主义", "你被自己的欲望或恐惧束缚住了。但这锁链其实很松。", "一段充满激情但可能不健康的关系。", "可能为了金钱而忍受不喜欢的工作，或者陷入职场勾心斗角。",], ["释放限制性信念", "释放,觉醒,打破束缚,重获自由", "你开始意识到束缚你的东西，并准备挣脱它。", "你决定离开一段消耗你的关系，或者摆脱了对某人的痴迷。", "你不再受金钱或权力的奴役，开始追求更有意义的工作。"]),
+  mkCard(16, "The Tower", "高塔", "⚡", ["突然的改变，动荡，觉醒", "灾难,剧变,觉醒,崩溃", "建立在沙堆上的塔倒了。虽然令人震惊，但这是为了打破虚假的幻象。", "关系可能会突然破裂，或者发现令人震惊的真相。", "突然的裁员、公司倒闭或项目失败。",], ["避免灾难，恐惧改变", "避免灾难,恐惧,勉强维持,内爆", "你可能勉强维持着摇摇欲坠的现状，害怕改变。", "你知道关系有问题，但因为害怕孤单而不敢面对。", "工作上如履薄冰，时刻担心出问题。"]),
+  mkCard(17, "The Star", "星星", "⭐", ["希望，信念，更新", "希望,治愈,灵感,宁静", "风暴过后的宁静。星星给你带来希望和灵感。", "在经历困难后，你对爱情重燃希望。", "工作上充满了创意和愿景。你做的事情很有意义。",], ["缺乏信念，绝望", "绝望,缺乏信心,失落,创意受阻", "你可能感到迷茫，失去了希望。", "对感情感到悲观，觉得真爱不会降临。", "感到才华无处施展，或者对工作前景失去信心。"]),
+  mkCard(18, "The Moon", "月亮", "🌚", ["幻觉，直觉，潜意识", "幻觉,不安,潜意识,秘密", "月光下看不清真相。你可能感到不安、困惑或恐惧。", "感情中可能存在欺骗、隐瞒或误解。", "职场上可能前路不明，或者有人在背后搞小动作。",], ["恐惧，困惑，误解", "释怀,揭露秘密,清晰,克服恐惧", "迷雾逐渐散去，真相开始浮出水面。", "秘密被揭穿，或者你终于看清了对方的真面目。", "你开始理清混乱的工作局面，或者发现了之前的错误。"]),
+  mkCard(19, "The Sun", "太阳", "☀️", ["积极，成功，活力", "快乐,成功,活力,真理", "这是塔罗牌中最好的牌之一。一切都清晰、温暖、充满生机。", "充满快乐、热情和真诚的关系。", "事业达到顶峰，获得认可和奖励。",], ["内心小孩，悲观", "悲观,暂时受阻,不切实际,内心小孩", "虽然太阳还在，但被云挡住了。", "关系中可能因为小事而闹别扭，或者你太理所当然了。", "工作上可能遇到小阻碍，或者你因为自大而犯错。"]),
+  mkCard(20, "Judgement", "审判", "🎺", ["审判，重生，内心召唤", "觉醒,召唤,重生,决断", "天使吹响号角，这是觉醒和做出重大决定的时刻。", "关系走到十字路口，是复合还是彻底分开？", "职业生涯的转折点。你可能听到内心的召唤。",], ["自我怀疑，拒绝召唤", "自我怀疑,拒绝改变,后悔,优柔寡断", "你听到了召唤，但因为害怕而捂住耳朵。", "无法放下过去的遗憾，导致无法开始新恋情。", "你可能在浪费天赋，不敢追求梦想。"]),
+  mkCard(21, "The World", "世界", "🌍", ["完成，整合，旅行", "圆满,完成,整合,新周期", "一个周期的完美结束。你已经完成了功课。", "修成正果，关系进入完美的阶段。", "项目圆满成功，达到职业目标。",], ["未完成，缺乏闭环", "未完成,延迟,缺乏闭环,空虚", "虽然接近终点，但还差最后一步。", "关系虽然稳定但似乎缺了点什么。", "工作上感觉卡在最后一关，或者虽然成功了但感到空虚。"]),
+  mkCard(22, "Ace of Wands", "权杖一", "🪵", ["灵感，新机会，潜力", "开始,激情,灵感,行动", "就像一根燃烧的火炬，一个新的机会或灵感突然出现。", "一段充满激情的新恋情，或者现有关系重燃爱火。", "创业、新项目或新工作的绝佳时机。"], ["延迟，缺乏动力", "延迟,缺乏动力,错失机会,受阻", "你可能有想法但没行动，或者时机未到。", "激情的开端遇到阻碍，或者你对这段关系提不起劲。", "计划难以启动，或者你感到职业倦怠。"]),
+  mkCard(23, "Two of Wands", "权杖二", "🪵", ["未来规划，决定，发现", "规划,决定,远见,舒适区", "你手里拿着地球仪，站在城堡上。现在是决定的时候。", "可能面临异地恋的选择，或者规划两人的长远未来。", "需要制定长期战略。不要安于现状。"], ["恐惧未知，缺乏计划", "恐惧,缺乏计划,冲动,受困", "你害怕离开舒适区，或者因为缺乏计划而徘徊不前。", "对未来感到迷茫，不知道关系该往哪走。", "职业规划混乱，或者因为犹豫而错过了拓展的机会。"]),
+  mkCard(24, "Three of Wands", "权杖三", "🪵", ["扩张，远见，海外机会", "扩张,展望,合作,等待", "你的船只已经出海，现在是等待收获和进一步扩张的时候。", "关系稳步发展，可能涉及异地或共同规划旅行。", "业务拓展、寻求海外机会或跨界合作。"], ["障碍，延误，挫折", "延误,障碍,失望,退缩", "你期待的船只迟迟未归。", "异地恋遇到困难，或者未来的规划无法达成一致。", "市场反应冷淡，或者扩张计划受阻。"]),
+  mkCard(25, "Four of Wands", "权杖四", "🪵", ["庆祝，和谐，归家", "庆祝,和谐,家庭,稳定", "欢庆的时刻！这通常代表一个阶段性的胜利。", "关系稳定甜蜜，可能订婚、结婚或同居。", "团队庆祝成功，工作环境和谐稳定。"], ["家庭冲突，不稳定", "冲突,不稳定,过渡期,被排斥", "虽然大体还行，但可能有些小摩擦。", "关系有些动荡，或者觉得家里待着不舒服。", "团队内部不合，或者工作环境让你觉得没有归属感。"]),
+  mkCard(26, "Five of Wands", "权杖五", "🪵", ["竞争，冲突，分歧", "竞争,冲突,混乱,挑战", "一群人在打架。这代表混乱、竞争和意见不合。", "充满争吵和分歧，像欢喜冤家。", "职场竞争激烈，头脑风暴时的意见冲突。"], ["避免冲突，达成共识", "逃避,解决冲突,妥协,内耗", "冲突平息，或者你为了安宁而选择回避问题。", "争吵结束，达成和解。", "竞争结束，或者你退出了竞争。"]),
+  mkCard(27, "Six of Wands", "权杖六", "🪵", ["胜利，认可，自信", "胜利,荣誉,自信,骄傲", "你骑着马凯旋归来，受到众人的欢呼。", "你的魅力征服了对方，或者你们的关系受到大家的祝福。", "升职加薪、获得奖项或项目大获全胜。"], ["失败，缺乏认可，自负", "失败,自负,名誉受损,被忽视", "你可能从马上跌落，或者你的成就没有得到应有的认可。", "表白失败，或者感觉在关系中得不到对方的赏识。", "项目失败，或者功劳被别人抢走。"]),
+  mkCard(28, "Seven of Wands", "权杖七", "🪵", ["防御，坚持立场，挑战", "坚持,防御,挑战,勇气", "你站在高处，独自面对挑战者。", "外界可能反对你们的关系，或者你需要保护这段感情不受干扰。", "职场竞争白热化，你需要证明自己的能力。"], ["放弃，不知所措", "放弃,不知所措,软弱,被压倒", "压力太大，你感到力不从心，想要放弃抵抗。", "你可能不想再为这段关系抗争了。", "你可能在竞争中败下阵来，或者觉得自己没有能力胜任。"]),
+  mkCard(29, "Eight of Wands", "权杖八", "🪵", ["速度，行动，消息", "速度,消息,旅行,变化", "事情进展极快，可能有突发消息、旅行或快速的变化。", "一见钟情，或者关系进展神速。", "工作效率极高，项目快速推进。"], ["延迟，沮丧，恐慌", "延迟,恐慌,混乱,急躁", "本来应该快的事情慢下来了，或者因为太快而失控。", "关系进展受阻，或者对方忽冷忽热让你抓狂。", "项目延期，邮件没回复，或者因为急躁而忙中出错。"]),
+  mkCard(30, "Nine of Wands", "权杖九", "🪵", ["韧性，勇气，坚持", "坚持,防御,疲惫,界限", "你受了伤，但这不能击垮你。坚持住，黎明就在眼前。", "你在感情中受过伤，所以变得小心翼翼。", "工作压力巨大，你已经精疲力竭，但必须咬牙坚持。",], ["精疲力竭，放弃", "放弃,精疲力竭,崩溃,偏执", "你已经到了极限，无法再坚持下去了。", "你可能决定放弃这段艰难的关系。", "工作把你压垮了，你可能选择辞职或彻底躺平。"]),
+  mkCard(31, "Ten of Wands", "权杖十", "🪵", ["负担，责任，压力", "负担,压力,责任,过度劳累", "你抱着十根权杖艰难前行。责任太重了。", "你在这段关系中承担了太多，感到窒息。", "工作过载，你是那个什么都揽在自己身上的人。"], ["崩溃，卸下重担", "崩溃,释放,卸下重担,逃避", "你终于放下了重担，或者被重担压垮了。", "你决定不再独自承担一切，可能会结束关系。", "你辞去了繁重的工作，或者因为过劳而生病强制休息。"]),
+  mkCard(32, "Page of Wands", "权杖侍从", "🪵", ["探索，兴奋，自由", "探索,新消息,热情,孩子气", "一个充满好奇心的信使。带来好消息。", "令人兴奋的新桃花，或者关系中出现有趣的新活动。", "开始一个新的项目，或者发现一个新的兴趣点。"], ["缺乏方向，悲观", "拖延,坏消息,缺乏热情,无聊", "你可能感到无聊，或者有想法没行动。", "对方可能只是撩一下就跑，或者关系变得沉闷乏味。", "工作缺乏动力，或者项目遇到挫折让你灰心。"]),
+  mkCard(33, "Knight of Wands", "权杖骑士", "🪵", ["行动，冒险，冲动", "行动,冲动,旅行,激情", "骑马飞奔的骑士。行动力爆表，充满魅力。", "热烈的追求，充满激情的恋情。", "执行力强，适合短期突击任务。"], ["愤怒，冲动，鲁莽", "鲁莽,愤怒,不可靠,分散", "过于冲动导致坏事，或者脾气暴躁。", "花花公子，或者因为冲动而争吵。", "工作上急功近利，或者因为鲁莽而得罪人。"]),
+  mkCard(34, "Queen of Wands", "权杖王后", "🪵", ["自信，决心，社交", "自信,魅力,独立,社交", "她是自信、阳光、独立的女性，充满个人魅力。", "你在关系中自信且迷人，或者是遇到了这样一个充满吸引力的对象。", "你有能力领导团队，善于社交和自我营销。"], ["嫉妒，不安全感", "嫉妒,情绪化,控制欲,缺乏自信", "自信变成了自大，或者内心极度缺乏安全感。", "可能会有嫉妒心作祟，或者因为不安全感而无理取闹。", "职场上可能遇到小心眼的女性领导，或者你因为情绪化而影响工作。"]),
+  mkCard(35, "King of Wands", "权杖国王", "🪵", ["大局观，领导力，创业", "领导力,远见,魅力,创业", "成熟的领导者，不仅有行动力，还有远见和策略。", "一个成熟、有魅力的伴侣，或者关系稳固且充满激情。", "处于领导地位，掌控大局。适合创业或带领大团队。"], ["冲动，专横，期望过高", "专横,冲动,傲慢,期望过高", "领导力变成了独裁。脾气暴躁，听不进别人的意见。", "大男子主义，或者对伴侣要求过高。", "独断专行的领导，或者设定了不切实际的目标导致失败。"]),
+  mkCard(36, "Ace of Cups", "圣杯一", "🏆", ["新恋情，同情，创造力", "爱,新开始,直觉,溢出", "圣杯里的水溢出来了。这是情感的涌动，纯粹的爱的开始。", "一段新的恋情，或者内心充满了爱意。", "富有创造力的灵感涌现，或者工作中充满了善意和支持。"], ["情感压抑，空虚", "空虚,压抑,失望,情感受阻", "杯子倒了，水流光了。你可能感到情感空虚。", "失恋，或者感觉爱已枯竭。", "缺乏灵感，或者工作环境冷漠。"]),
+  mkCard(37, "Two of Cups", "圣杯二", "🏆", ["结合，伙伴关系，吸引力", "结合,平等,吸引,合作", "两个人交换圣杯。这是平等的爱，互相吸引，完美的伙伴关系。", "彼此吸引，两情相悦。可能是确立关系、订婚或结婚。", "完美的商业合作伙伴，双方互补且目标一致。"], ["失衡，断裂，误解", "失衡,分离,误解,不平等", "关系失衡，可能一方付出太多。", "争吵、冷战或分手。", "合作关系破裂，或者双方利益不一致。"]),
+  mkCard(38, "Three of Cups", "圣杯三", "🏆", ["友谊，社群，聚会", "聚会,友谊,庆祝,八卦", "三个女人举杯庆祝。代表快乐的社交生活，闺蜜聚会。", "在朋友圈中认识新对象，或者关系得到朋友的支持。", "团队氛围融洽，庆祝项目成功。"], ["孤立，过度放纵，八卦", "孤立,放纵,八卦,小圈子", "你可能感到被排斥在圈子之外，或者过度沉迷于社交和享乐。", "可能会有三角关系，或者朋友介入影响了你们的感情。", "团队不合，或者工作变成了单纯的吃喝玩乐。"]),
+  mkCard(39, "Four of Cups", "圣杯四", "🏆", ["冷漠，沉思，脱节", "冷漠,无聊,错过,沉思", "你对现状不满，却又拒绝新机会。", "对感情感到厌倦，或者因为专注于缺失的部分而忽略了眼前的爱。", "工作倦怠期，对什么都提不起劲。"], ["觉察，抓住机会", "觉醒,行动,抓住机会,动力", "你终于抬起头，看到了那个新杯子。", "愿意给追求者一个机会，或者决定打破沉闷的关系模式。", "重新找回工作动力，或者抓住了一个之前被忽视的机会。"]),
+  mkCard(40, "Five of Cups", "圣杯五", "🏆", ["失落，悲伤，遗憾", "悲伤,遗憾,失落,聚焦负面", "盯着打翻的三个杯子哭泣，却忘了身后还有两个立着的。", "失恋的痛苦，或者对过去的遗憾。", "项目失败或遭受损失。不要一直纠结于过去的错误。"], ["接受，继续前进", "接受,疗愈,前进,原谅", "你转过身，拿起了剩下的两个杯子。", "走出失恋的阴影，准备迎接新生活。", "吸取教训，重整旗鼓。"]),
+  mkCard(41, "Six of Cups", "圣杯六", "🏆", ["怀旧，童年，回忆", "怀旧,纯真,过去,旧人", "两个孩子在分享花朵。代表纯真的回忆，过去的人或事回归。", "前任回头，或者遇到青梅竹马。", "重拾过去的梦想，或者回到熟悉的环境工作。"], ["活在过去，不成熟", "过去,幼稚,无法前进,依赖", "沉溺于过去，无法面对现实。", "无法放下前任，导致无法开始新恋情。", "工作上因循守旧，或者表现得不够专业成熟。"]),
+  mkCard(42, "Seven of Cups", "圣杯七", "🏆", ["选择，幻想，愿望", "选择,幻想,诱惑,迷茫", "面对云中的七个杯子，每个都装着不同的东西。选择太多。", "桃花太多挑花眼，或者对伴侣有不切实际的幻想。", "面临多个职业选择，或者只有空想没有行动。"], ["清醒，做出选择", "清醒,选择,现实,行动", "幻象破灭，或者你终于看清了自己真正想要什么。", "认清现实，不再幻想完美的白马王子。", "从空想中醒来，开始脚踏实地地执行计划。"]),
+  mkCard(43, "Eight of Cups", "圣杯八", "🏆", ["离开，寻找真理，失望", "离开,寻找,失望,放弃", "一个人转身离开堆满的圣杯，走向荒野。物质/情感已满，但内心空虚。", "虽然看起来很配，但你觉得缺了点什么，决定离开寻找真爱。", "辞职，离开不适合的环境，即使它看起来很稳定。"], ["恐惧改变，停滞", "恐惧,犹豫,凑合,停滞", "你想走但不敢走，因为害怕未知。", "凑合着过日子，不敢结束这段鸡肋的关系。", "害怕失业而不敢辞职，即使工作让你痛苦。"]),
+  mkCard(44, "Nine of Cups", "圣杯九", "🏆", ["满足，愿望成真，感激", "满足,愿望成真,快乐,享受", "一个人满意地坐在九个圣杯前。这是“许愿牌”。", "关系甜蜜，你对现状非常满意。", "工作顺利，成果丰硕。"], ["贪婪，不满，自鸣得意", "贪婪,不满,炫耀,空虚", "虽然拥有很多，但依然感到空虚。", "对伴侣要求过高，永远不满足。", "工作上取得了成绩但变得傲慢。"]),
+  mkCard(45, "Ten of Cups", "圣杯十", "🏆", ["幸福，家庭和谐，圆满", "幸福,家庭,圆满,和谐", "一家人看着彩虹。这是情感的大团圆。", "完美的家庭生活，幸福的婚姻。", "团队像家人一样，工作环境极其舒适。"], ["家庭破碎，疏离", "破碎,冲突,疏离,表面和平", "家庭不和，争吵不断。", "婚姻危机，或者与家人断绝关系。", "团队内部派系林立，或者工作让你无法兼顾家庭。"]),
+  mkCard(46, "Page of Cups", "圣杯侍从", "🏆", ["新感情，好奇，直觉", "新感情,直觉,消息,温柔", "一个拿着杯子的年轻人，杯子里有条鱼。", "新的追求者，或者收到情书。", "从事创意工作，或者依靠直觉做决定。"], ["情绪化，甚至幼稚", "情绪化,幼稚,敏感,坏消息", "过于敏感，容易受伤。", "对方可能太幼稚，或者情感勒索。", "创意受阻，或者因为情绪化而搞砸工作。"]),
+  mkCard(47, "Knight of Cups", "圣杯骑士", "🏆", ["浪漫，魅力，想象力", "浪漫,追求,魅力,理想化", "骑着白马的骑士，手捧圣杯。", "浪漫的求爱，充满诗意。", "跟随热情工作，艺术天赋高。"], ["情绪波动，嫉妒，失望", "情绪化,欺骗,失望,不切实际", "情绪不稳定，喜怒无常。", "幻灭，发现对方不是想象中的样子。", "工作不切实际，或者因为心情不好而拖延。"]),
+  mkCard(48, "Queen of Cups", "圣杯王后", "🏆", ["慈悲，关怀，情感安全", "慈悲,直觉,关怀,倾听", "温柔、包容、直觉极强的女性。", "一段深情、互相照顾的关系。", "适合助人行业（如咨询、护理）。"], ["依赖，情感不稳", "依赖,情绪化,受害者,粘人", "过度敏感，情绪化，容易把别人的问题当成自己的。", "太粘人，失去自我。", "工作中太情绪化，无法理智思考。"]),
+  mkCard(49, "King of Cups", "圣杯国王", "🏆", ["情绪平衡，宽容，外交", "平衡,宽容,外交,成熟", "掌控情绪的王者。既有丰富的情感，又能理智控制。", "成熟、稳重的伴侣，能提供情感支持。", "情商高，善于外交和谈判。"], ["情绪操控，喜怒无常", "操控,冷漠,喜怒无常,成瘾", "表面冷静内心冷漠，或者利用情绪操控别人。", "情感骗子，或者冷暴力。", "职场上的伪君子，或者因为情绪失控而做出错误决策。"]),
+  mkCard(50, "Ace of Swords", "宝剑一", "🗡️", ["清晰，突破，新思想", "清晰,突破,真相,决断", "一把剑刺破皇冠。代表思想的突破。", "理智的看待关系，坦诚的沟通。", "新点子，新计划。思维清晰，决策果断。"], ["困惑，混乱，残忍", "困惑,混乱,残忍,思维受阻", "思维混乱，无法看清真相。", "沟通不畅，充满误解。", "计划受阻，缺乏思路。"]),
+  mkCard(51, "Two of Swords", "宝剑二", "🗡️", ["僵局，艰难的决定，逃避", "僵局,逃避,平衡,防御", "蒙着眼睛，双手持剑交叉。处于防御状态。", "冷战，或者在两个人之间犹豫不决。", "工作陷入僵局，不知道该往哪个方向走。"], ["犹豫不决，信息过载", "揭露,抉择,信息过载,打破僵局", "眼罩滑落，不论好坏，你必须面对真相并做出决定了。", "打破冷战，开始沟通。", "即使信息杂乱，也必须做出选择了。"]),
+  mkCard(52, "Three of Swords", "宝剑三", "🗡️", ["心碎，悲伤，痛苦", "心碎,悲伤,痛苦,背叛", "三把剑刺穿心脏，背景是雨天。", "分手，吵架，三角关系，或者被深深伤害。", "工作上的重大失误，被批评，或者被解雇。"], ["释放痛苦，乐观", "释放,恢复,原谅,乐观", "拔出宝剑，虽然还疼，但伤口开始愈合。", "从失恋中走出来，开始原谅。", "从失败中吸取教训，重整旗鼓。"]),
+  mkCard(53, "Four of Swords", "宝剑四", "🗡️", ["休息，恢复，沉思", "休息,恢复,冥想,暂停", "骑士躺在教堂里休息。战斗后的修整。", "关系进入冷静期，或者你需要独处来理清思绪。", "休假，病假，或者在忙碌后放慢节奏。"], ["精疲力竭，压力", "精疲力竭,被迫休息,压力,觉醒", "休息不够，或者被迫停下来。", "冷战结束，或者你意识到不能再逃避问题了。", "过劳，或者在休息期结束后重新投入工作。"]),
+  mkCard(54, "Five of Swords", "宝剑五", "🗡️", ["冲突，不惜代价的胜利", "冲突,自私,胜利,孤立", "胜利者拿着三把剑笑，失败者离去。", "激烈的争吵，一定要争个输赢。", "职场恶性竞争，勾心斗角。"], ["和解，原谅，平息", "和解,平息,吸取教训,悔恨", "意识到争吵无益，愿意放下武器。", "愿意道歉，寻求和解。", "停止内耗，专注于解决问题。"]),
+  mkCard(55, "Six of Swords", "宝剑六", "🗡️", ["过渡，离开，平静", "过渡,离开,疗愈,前进", "乘船离开汹涌的水域，驶向平静。", "离开一段痛苦的关系，或者一起去旅行散心。", "离职，搬家，或者项目进入平稳期。"], ["情感包袱，无法前行", "停滞,包袱,抗拒,无法摆脱", "想走走不掉，或者带着过去的问题进入新环境。", "无法摆脱前任的影响，或者关系一直在这个死循环里。", "工作变动受阻，或者问题没有解决。"]),
+  mkCard(56, "Seven of Swords", "宝剑七", "🗡️", ["欺骗，策略，隐秘", "欺骗,策略,隐瞒,小聪明", "一个人偷偷拿走五把剑。代表偷偷摸摸，走捷径。", "欺骗，隐瞒，或者不想让别人知道这段关系。", "想用小聪明解决问题，或者在准备跳槽。"], ["坦白，良心发现", "坦白,被揭穿,改过,回归", "秘密被发现，或者良心发现决定坦白。", "坦白隐瞒的事情，或者决定不再欺骗。", "意识到捷径走不通，决定脚踏实地。"]),
+  mkCard(57, "Eight of Swords", "宝剑八", "🗡️", ["限制，受害者心态，困境", "限制,束缚,恐惧,受害者", "被绑着眼睛，周围是剑。其实束缚很松。", "觉得这段关系没有出路，但又不敢离开。", "觉得工作没前途又不敢辞职。"], ["自由，新的视角", "自由,解脱,新视角,行动", "眼罩掉落，你发现自己其实可以走出去。", "决定打破僵局，或者离开束缚你的关系。", "找到解决问题的新方法，或者鼓起勇气改变现状。"]),
+  mkCard(58, "Nine of Swords", "宝剑九", "🗡️", ["焦虑，噩梦，恐惧", "焦虑,失眠,恐惧,压力", "半夜惊醒，掩面哭泣。过度的思虑。", "担心对方变心，或者被过去的情伤折磨。", "工作压力大到失眠，担心完不成任务。"], ["希望，绝望终结", "释怀,求助,好转,面对恐惧", "最黑暗的时刻过去了。", "不再胡思乱想，开始面对现实解决问题。", "压力减轻，找到了应对方法。"]),
+  mkCard(59, "Ten of Swords", "宝剑十", "🗡️", ["背叛，痛苦的结束，触底", "结束,背叛,痛苦,触底", "十把剑刺在背上。彻底的失败，痛苦的结束。", "痛苦的分手，被深深伤害。", "项目彻底失败，被解雇，或者遭受重大打击。"], ["复苏，最坏的已过去", "复苏,幸存,好转,重建", "拔出宝剑，开始疗伤。虽然很痛，但你活下来了。", "从情伤中慢慢恢复，开始新的生活。", "在失败的废墟上重建。"]),
+  mkCard(60, "Page of Swords", "宝剑侍从", "🗡️", ["好奇，新想法，沟通", "好奇,观察,新想法,沟通", "拿着剑的年轻人，警惕地看着四周。", "通过网络或信息沟通，互相试探。", "收集数据，学习新技能，或者有新的点子。"], ["欺骗，操纵，多嘴", "多疑,八卦,攻击性,混乱", "只说不做，或者是散布谣言、八卦。", "沟通充满攻击性，或者对方在监视你。", "计划不周全，或者因为多嘴而惹祸。"]),
+  mkCard(61, "Knight of Swords", "宝剑骑士", "🗡️", ["行动，野心，直接", "行动,急躁,直接,逻辑", "骑马飞奔，剑指前方。行动迅速，逻辑清晰。", "快速发展的关系，或者理智的辩论。", "执行力强，雷厉风行。"], ["冲动，不可预测，鲁莽", "冲动,鲁莽,攻击性,混乱", "因为急躁而犯错，或者变得极具攻击性。", "言语暴力，争吵升级。", "工作上盲目行动，导致混乱。"]),
+  mkCard(62, "Queen of Swords", "宝剑王后", "🗡️", ["独立，公正，清晰的界限", "独立,清晰,公正,界限", "她理智、独立、能看穿谎言。不容废话。", "你在关系中保持独立，或者需要理智地划清界限。", "专业、高效，依靠逻辑判断。"], ["冷酷，痛苦，甚至残忍", "冷酷,刻薄,封闭,痛苦", "理智变成了冷酷，或者因为过去的伤痛而封闭内心。", "因爱生恨，或者变得冷漠、拒绝沟通。", "职场上过于严厉，没有人情味。"]),
+  mkCard(63, "King of Swords", "宝剑国王", "🗡️", ["理智，权威，真理", "理智,权威,真理,公正", "坐在石座上，持剑思考。代表最高的理智。", "理智的伴侣，不善言辞但值得信赖。", "专家，顾问，或者高层管理者。"], ["滥用权力，操纵，暴虐", "操控,残忍,不公,滥用权力", "用高智商去操控别人，或者冷酷无情。", "精神虐待，或者完全不讲感情。", "利用职权谋私，或者做出不公的决定。"]),
+  mkCard(64, "Ace of Pentacles", "星币一", "🪙", ["新机会，繁荣，显化", "机会,财富,健康,开始", "云中伸出的手托着巨大的星币。", "一段稳定的、有未来的关系开始。", "新工作，加薪，投资的好机会。"], ["错失机会，贪婪", "错失,贪婪,损失,不稳定", "金币掉落，错失良机。", "关系缺乏现实基础，或者因为钱而吵架。", "投资失利，或者工资不如预期。"]),
+  mkCard(65, "Two of Pentacles", "星币二", "🪙", ["平衡，适应，优先顺位", "平衡,适应,多任务,流动", "一个人在玩弄两个星币，背景波涛汹涌。", "在感情和工作之间找平衡，或者同时考虑两个选择。", "身兼数职，或者资金周转。"], ["失衡，杂乱无章", "失衡,混乱,超负荷,失败", "球掉了，平衡被打破。", "无法兼顾感情，或者因为太忙而冷落对方。", "财务状况失控，或者工作积压太多导致崩溃。"]),
+  mkCard(66, "Three of Pentacles", "星币三", "🪙", ["团队合作，学习，实施", "合作,技能,学习,规划", "工匠、神父和建筑师在讨论图纸。", "关系需要共同经营，或者涉及到第三方的协助。", "团队协作顺利，各司其职。"], ["缺乏团队精神，混乱", "冲突,混乱,缺乏技能,独自", "团队配合不好，各执一词。", "关系中缺乏配合，或者有人没付出努力。", "工作环境混乱，或者觉得队友带不动。"]),
+  mkCard(67, "Four of Pentacles", "星币四", "🪙", ["控制，安全，保守", "控制,占有,保守,安全感", "紧紧抱住四个星币。守财奴，过度保守。", "占有欲强，或者因为缺乏安全感而紧抓对方不放。", "工作稳定但没发展，或者不敢投资。"], ["贪婪，物质主义", "贪婪,损失,放手,浪费", "可能因为太贪婪而失去，或者终于学会放手。", "意识到控制欲会毁了关系，开始放松。", "花钱如流水，或者因为太保守而错失良机。"]),
+  mkCard(68, "Five of Pentacles", "星币五", "🪙", ["贫穷，孤立，不安全感", "贫穷,困难,孤立,求助", "两个乞丐在雪地里走过教堂。", "感到被冷落，或者两人共同经历经济困难。", "失业，破产，或者感到被团队排挤。"], ["恢复，精神贫困", "恢复,好转,精神贫困,希望", "最艰难的时刻过去了，开始好转。", "关系开始解冻，或者度过了经济危机。", "找到新工作，或者财务状况改善。"]),
+  mkCard(69, "Six of Pentacles", "星币六", "🪙", ["慷慨，慈善，给予和接受", "给予,接受,慈善,平衡", "商人给乞丐施舍。代表给予和接受的平衡。", "一方付出多一方接受多，但目前是平衡的。", "获得投资、奖金，或者你在帮助新人。"], ["自私，债务，甚至勒索", "自私,债务,不平等,利用", "施舍变成了控制，或者只索取不付出。", "关系严重不平等，一方像是在乞讨爱。", "投资没到位，或者被利用。"]),
+  mkCard(70, "Seven of Pentacles", "星币七", "🪙", ["耐心，投资，长期规划", "耐心,评估,等待,收获", "农夫看着长出来的庄稼。代表努力后的等待。", "关系进入平稳期，你在思考这段关系是否值得继续投入。", "长期项目初见成效，但还需要时间。"], ["浪费工作，缺乏回报", "急躁,浪费,无果,放弃", "付出了努力但没收获，或者太急躁拔苗助长。", "觉得这段关系在浪费时间，想要放弃。", "投资失败，或者工作没有成效。"]),
+  mkCard(71, "Eight of Pentacles", "星币八", "🪙", ["技能，精通，工匠精神", "勤奋,技能,细节,专注", "工匠在专注地雕刻星币。代表刻苦钻研，磨练技能。", "为了关系默默努力，或者专注于自己的提升。", "进修，学新技能，或者专注细节的工作。"], ["完美主义，缺乏激情", "完美主义,敷衍,枯燥,缺乏激情", "过于追求完美导致进度慢，或者工作枯燥乏味。", "关系变得例行公事，缺乏激情。", "工作敷衍了事，或者技能不足。"]),
+  mkCard(72, "Nine of Pentacles", "星币九", "🪙", ["富足，奢华，自给自足", "富足,独立,享受,自信", "贵妇在花园里享受。代表物质富足，独立自主。", "有魅力的单身贵族，或者在关系中保持独立和自我空间。", "财务自由，事业有成。"], ["炫耀，财务挫折", "依赖,炫耀,虚假,财务挫折", "依附于人，或者表面光鲜实则拮据。", "为了钱在一起，或者失去了自我。", "投资失利，或者为了维持面子而过度消费。"]),
+  mkCard(73, "Ten of Pentacles", "星币十", "🪙", ["财富，遗产，家庭", "财富,家庭,遗产,传统", "一家人，老人，狗，城堡。代表家族繁荣。", "稳定的长期关系，获得家庭认可，家族联姻。", "家族企业，或者积累了巨额财富。"], ["财务失败，家庭纠纷", "纠纷,损失,家庭不和,破产", "家族纷争，遗产问题，或者看起来有钱其实负债累累。", "家庭反对，或者为了金钱结婚。", "公司财务危机，或者投资血本无归。"]),
+  mkCard(74, "Page of Pentacles", "星币侍从", "🪙", ["显化，勤奋，新工作", "学习,新机会,务实,勤奋", "年轻的学生捧着星币。代表学习新技能。", "关系稳定发展，虽然慢但很踏实。", "收到offer，开始新项目，或者学习新知识。"], ["拖延，缺乏重点", "拖延,懒惰,不切实际,分心", "想得多做得少，或者进度缓慢。", "关系进展太慢，让人着急。", "工作效率低，或者错失机会。"]),
+  mkCard(75, "Knight of Pentacles", "星币骑士", "🪙", ["效率，例行公事，保守", "勤奋,可靠,保守,缓慢", "骑着黑马的骑士，稳稳地走。最可靠但也最慢的骑士。", "关系非常稳定，甚至有点无聊。", "工作勤勤恳恳，按部就班。"], ["懒惰，无聊，甚至停滞", "停滞,顽固,懒惰,无聊", "太固执，不知变通。或者彻底停滞不前。", "关系像死水一样，毫无激情。", "工作效率低下，或者拒绝改变。"]),
+  mkCard(76, "Queen of Pentacles", "星币王后", "🪙", ["滋养，务实，舒适", "务实,滋养,财富,安全感", "抱着星币的王后，周围是繁荣的自然。", "不仅感情好，物质生活也很有保障。", "擅长理财，工作能力强且稳重。"], ["自我中心，嫉妒", "贪婪,忽视家庭,多疑,失衡", "过于看重物质，忽略情感。", "为了钱而控制对方，或者多疑嫉妒。", "工作狂，或者理财混乱。"]),
+  mkCard(77, "King of Pentacles", "星币国王", "🪙", ["财富，商业，纪律", "财富,成功,可靠,野心", "坐在布满牛头的王座上。代表商业大亨。", "成功、富有、稳重的伴侣。提供坚实的物质基础。", "事业有成，擅长管理和投资。"], ["贪婪，顽固，占有欲", "贪婪,顽固,腐败,唯利是图", "唯利是图的商人，不择手段。", "把伴侣当成私有财产，控制欲强。", "行贿受贿，或者因为固执而导致生意失败。"]),
 ];
 
 export const TAROT_DECK: TarotCard[] = RAW_DECK_DATA.map(card => ({
   ...card,
+  // Helper functions like getCardImage rely on ID, so ensure it's passed correctly
   image: getCardImage(card.id)
 }));
