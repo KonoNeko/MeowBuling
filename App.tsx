@@ -1,11 +1,23 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS } from './constants';
-import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
+import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading, CategoryQuickNav, SpreadStartModal } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 
 // Helper for random ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
+
+// Mapping for Chinese categories with emojis
+const CATEGORY_MAP: Record<string, string> = {
+    "General Insight": "🔮 综合洞察",
+    "Love & Relationship": "💕 情感关系",
+    "Career & Study": "🚀 事业学业",
+    "Decision-Making": "⚖️ 抉择指引",
+    "Healing": "🌿 疗愈成长",
+    "Future Forecast": "📅 运势预测",
+    "Daily Guidance": "☀️ 每日指引",
+    "Manifestation": "✨ 愿望显化"
+};
 
 const App = () => {
   // --- State ---
@@ -15,6 +27,9 @@ const App = () => {
   const [question, setQuestion] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]); // New: Tags to filter spreads
   
+  // Home Quick Draw State
+  const [homeQuestion, setHomeQuestion] = useState("");
+
   // Library Interaction State
   const [librarySpreadToStart, setLibrarySpreadToStart] = useState<SpreadDefinition | null>(null);
 
@@ -128,6 +143,34 @@ const App = () => {
     setView(AppView.DRAW);
   };
 
+  // Quick Draw Logic (Single Card)
+  const handleQuickDraw = () => {
+      // 1. Find the Single Card Spread ('daily_1')
+      const spread = SPREADS.find(s => s.id === 'daily_1');
+      if (!spread) {
+          triggerToast("喵？找不到单张牌阵配置。");
+          return;
+      }
+      
+      // 2. Find a generic Topic. 'fortune' (运势与日常) covers general questions well.
+      const topic = TOPICS.find(t => t.id === 'fortune') || TOPICS[0];
+      
+      // 3. Set State
+      setSelectedTopic(topic);
+      setSelectedSpread(spread);
+      
+      // Use homeQuestion if set, otherwise a default general question
+      const q = homeQuestion.trim() || "宇宙此时此刻给我的指引是什么？";
+      setQuestion(q);
+      
+      // 4. Reset Drawing
+      setDrawStep('init');
+      setDrawnCards([]);
+      
+      // 5. Navigate to Draw View
+      setView(AppView.DRAW);
+  };
+
   // New: Handle starting directly from Library
   const handleDirectStartFromLibrary = (spread: SpreadDefinition, customQuestion: string) => {
       // 1. Try to find a matching topic based on spread category
@@ -160,7 +203,7 @@ const App = () => {
     // 1. Prepare Deck
     const rawDeck = [...TAROT_DECK];
     
-    // Simulate shuffle duration
+    // Simulate shuffle duration - 2.8s to match animation + buffer
     setTimeout(() => {
         // 2. Fisher-Yates Shuffle Logic
         for (let i = rawDeck.length - 1; i > 0; i--) {
@@ -176,7 +219,7 @@ const App = () => {
 
         setDeck(shuffledWithReversals);
         setDrawStep('picking');
-    }, 2500); // 2.5 seconds of chaos
+    }, 2800); 
   };
   
   // Drag handlers for the scroll container (Container Scroll)
@@ -320,10 +363,12 @@ const App = () => {
 
   const renderHome = () => (
     <div className="h-full w-full overflow-y-auto custom-scrollbar relative z-10">
-      <div className="min-h-full flex flex-col items-center justify-center p-6 space-y-12 animate-fade-in text-center pb-40 pt-24">
-        <div className="space-y-6 flex flex-col items-center">
-          {/* Magic Wizard Cat Design */}
-          <div className="relative w-40 h-40 flex items-center justify-center group">
+      <div className="min-h-full flex flex-col items-center justify-center p-6 space-y-8 animate-fade-in text-center pb-32 pt-20">
+        
+        {/* Header Section */}
+        <div className="space-y-4 flex flex-col items-center">
+          {/* Cat Wizard Design */}
+          <div className="relative w-40 h-40 flex items-center justify-center group scale-90 md:scale-100">
               {/* Hat (SVG) */}
               <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-28 z-20 animate-float" style={{ animationDuration: '5s' }}>
                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] filter">
@@ -357,23 +402,76 @@ const App = () => {
           </div>
 
           <div className="space-y-2">
-              <h1 className="text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 tracking-wider">
+              <h1 className="text-5xl md:text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 tracking-wider">
                 喵卜灵
               </h1>
-              <p className="text-indigo-200/80 text-xl font-light tracking-wide">
-                古老喵星智慧 · 心理投射 · 灵魂指引
-              </p>
+              {/* Tarot App Hint */}
+              <div className="flex items-center justify-center gap-2 text-xs md:text-sm font-bold text-purple-300 uppercase tracking-[0.1em] opacity-80">
+                 <span>✦</span> 喵星塔罗 · 心理投射 · 灵魂指引 <span>✦</span>
+              </div>
           </div>
         </div>
 
-        <div className="space-y-4 w-full max-w-xs">
-          <Button onClick={handleStart} className="w-full text-lg shadow-purple-500/40">
-            开启探索旅程
-          </Button>
-          <Button variant="ghost" onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }} className="w-full">
-            查看心灵足迹
-          </Button>
+        {/* --- MAIN ACTION: Full Theme Divination --- */}
+        <div className="w-full max-w-sm relative group z-10">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[110%] h-[110%] bg-purple-600/20 rounded-full blur-[40px] pointer-events-none animate-pulse-glow"></div>
+            
+            <GlassCard 
+                onClick={handleStart}
+                className="relative w-full p-6 bg-gradient-to-br from-[#2e1065]/80 to-[#1e1b4b]/80 border-purple-500/40 hover:border-purple-400/60 flex flex-col items-center gap-3 cursor-pointer group-hover:scale-[1.02] transition-all shadow-[0_0_30px_rgba(109,40,217,0.2)]"
+            >
+                <div className="flex items-center gap-3 mb-1">
+                    <span className="text-3xl filter drop-shadow-glow">🌌</span>
+                    <h3 className="text-2xl font-mystic text-white font-bold tracking-wide group-hover:text-yellow-200 transition-colors">
+                        开启完整占卜
+                    </h3>
+                </div>
+                <div className="h-px w-3/4 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                <p className="text-sm text-indigo-200/80 font-medium">
+                    情感 • 事业 • 运势 • 抉择
+                </p>
+                <div className="mt-2 text-xs bg-white/10 px-3 py-1 rounded-full text-purple-200 group-hover:bg-white/20 transition-colors">
+                    探索多维度牌阵解析 →
+                </div>
+            </GlassCard>
         </div>
+
+        {/* --- SECONDARY ACTION: Quick Draw --- */}
+        <div className="w-full max-w-sm relative z-10">
+             <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-sm flex flex-col gap-3 hover:bg-white/10 transition-colors">
+                <div className="flex items-center justify-between px-1">
+                    <h3 className="text-sm font-bold text-purple-300 flex items-center gap-2">
+                        <span>⚡</span> 灵感一瞬
+                    </h3>
+                    <span className="text-[10px] text-white/40">快速单张指引</span>
+                </div>
+                
+                <div className="flex gap-2">
+                    <input 
+                        type="text" 
+                        placeholder="心中默念问题..."
+                        className="flex-1 bg-black/40 border border-purple-500/20 rounded-xl px-3 py-2 text-white focus:outline-none focus:border-purple-400/50 text-sm transition-all focus:bg-black/60 placeholder-white/20"
+                        value={homeQuestion}
+                        onChange={(e) => setHomeQuestion(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleQuickDraw()}
+                    />
+                    <button 
+                        onClick={handleQuickDraw} 
+                        className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-bold shadow-lg shadow-purple-900/50 transition-all active:scale-95"
+                    >
+                        抽牌
+                    </button>
+                </div>
+             </div>
+        </div>
+
+         {/* History Link */}
+         <button 
+            onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }} 
+            className="text-indigo-400/50 hover:text-indigo-300 text-xs tracking-widest transition-all py-2 flex items-center gap-2 group"
+         >
+            <span className="group-hover:rotate-12 transition-transform">📜</span> 查看心灵足迹
+         </button>
       </div>
     </div>
   );
@@ -546,62 +644,70 @@ const App = () => {
     // 2. Shuffling Animation State (Improved)
     if (drawStep === 'shuffling') {
         return (
-            <div className="h-full flex flex-col items-center justify-center relative overflow-hidden bg-black/40 backdrop-blur-sm z-50">
-                <div className="relative w-full h-full flex items-center justify-center">
-                    {/* Orbiting Chaos Particles */}
-                    {Array.from({length: 12}).map((_, i) => {
-                        // Create random orbit ranges for more chaotic look
-                        const tx = (Math.random() - 0.5) * 500 + 'px';
-                        const ty = (Math.random() - 0.5) * 500 + 'px';
-                        return (
-                           <div 
-                              key={i}
-                              className="absolute w-24 h-40 bg-gradient-to-br from-indigo-950 to-purple-900 rounded-lg border border-purple-400/30 animate-shuffle-orbit shadow-2xl"
-                              style={{
-                                  '--tx': tx,
-                                  '--ty': ty,
-                                  animationDelay: `${i * 0.15}s`,
-                                  left: 'calc(50% - 3rem)',
-                                  top: 'calc(50% - 5rem)',
-                              } as React.CSSProperties}
-                           >
-                               <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
-                           </div>
-                        )
-                    })}
-                    <div className="absolute z-50 text-center pointer-events-none">
-                        <h2 className="text-5xl font-mystic text-white animate-pulse mb-4 tracking-widest drop-shadow-[0_0_15px_rgba(168,85,247,0.8)]">洗牌中</h2>
-                        <p className="text-indigo-200 text-lg">请集中精神，默念你的问题</p>
-                        <p className="text-xl text-purple-300 font-serif italic mt-6 opacity-80">"{question}"</p>
-                    </div>
-                </div>
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-hidden">
+               <div className="relative w-full h-full">
+                   {/* Create flying cards */}
+                   {Array.from({length: 40}).map((_, i) => {
+                       // Random destination
+                       const angle = Math.random() * Math.PI * 2;
+                       const dist = 150 + Math.random() * 350; // Fly out distance
+                       const tx = Math.cos(angle) * dist + 'px';
+                       const ty = Math.sin(angle) * dist + 'px';
+                       const tr = (Math.random() - 0.5) * 720 + 'deg'; // Spin 2 rotations
+                       
+                       return (
+                          <div
+                            key={i}
+                            className="absolute top-1/2 left-1/2 w-20 h-32 md:w-24 md:h-36 bg-indigo-900 border border-purple-400/50 rounded-lg shadow-2xl animate-card-fly"
+                            style={{
+                                '--tx': tx,
+                                '--ty': ty,
+                                '--tr': tr,
+                                animationDelay: `${Math.random() * 0.5}s`,
+                                backgroundImage: `url('https://www.transparenttextures.com/patterns/stardust.png')`,
+                                backfaceVisibility: 'hidden'
+                            } as React.CSSProperties}
+                          >
+                             <div className="w-full h-full flex items-center justify-center opacity-30">
+                                <span className="text-xl">🔮</span>
+                             </div>
+                             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+                          </div>
+                       )
+                   })}
+                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                      <h2 className="text-4xl font-mystic text-white/90 animate-pulse drop-shadow-[0_0_20px_#a855f7] tracking-widest">命运洗牌中...</h2>
+                   </div>
+               </div>
             </div>
         )
     }
 
-    // 3. Picking State (Refined Layout for Mobile)
+    // 3. Picking State
     return (
-      <div className="h-full flex flex-col items-center justify-between animate-fade-in relative overflow-hidden">
+      <div className="h-full w-full relative overflow-hidden bg-[#0f0c29]">
         
-        {/* Top Area: Spread */}
-        {/* Use pt-16 to clear fixed Header */}
-        <div className="w-full flex-1 flex flex-col items-center pt-16 overflow-hidden relative z-0">
+        {/* Spread Area: Takes full space behind, scrollable */}
+        <div className="absolute inset-0 pt-16 overflow-y-auto custom-scrollbar z-0 flex flex-col">
             
-            {/* Title - Compact */}
-            <div className="text-center py-2 pointer-events-auto shrink-0 z-20">
-                <h2 className="text-lg font-mystic text-purple-200 flex items-center justify-center gap-2">
-                    {selectedSpread?.name} 
-                    <Badge className="text-sm px-2">{drawnCards.length} / {selectedSpread?.cardCount}</Badge>
-                </h2>
-                <p className="text-indigo-400 text-[10px] opacity-80">
-                    {drawnCards.length === selectedSpread?.cardCount ? "正在揭示..." : "拖拽卡牌到上方槽位"}
-                </p>
-            </div>
+            {/* Spacer for Header */}
+            <div className="h-6 shrink-0"></div>
 
             {selectedSpread && (
-                <div className="w-full flex-1 overflow-y-auto scrollbar-hide flex items-center justify-center p-2 pb-4">
-                     {/* Scale down slightly on mobile to ensure fit */}
-                     <div className="w-full max-w-2xl transform scale-90 md:scale-100 origin-center transition-transform">
+                <div className="w-full flex-1 flex flex-col items-center min-h-[60vh] pb-64"> {/* pb-64 to clear the deck */}
+                     
+                     <div className="text-center mb-6 px-4">
+                        <h2 className="text-xl font-mystic text-purple-200 flex items-center justify-center gap-2">
+                            {selectedSpread?.name} 
+                            <Badge className="text-sm px-2">{drawnCards.length} / {selectedSpread?.cardCount}</Badge>
+                        </h2>
+                        <p className="text-indigo-400 text-xs mt-1 opacity-80">
+                            {drawnCards.length === selectedSpread?.cardCount ? "正在揭示..." : "请从下方拖拽卡牌至槽位"}
+                        </p>
+                    </div>
+
+                     {/* The Spread Layout */}
+                     <div className="w-full max-w-2xl px-4 transform transition-transform origin-top">
                          <SpreadLayout 
                             spread={selectedSpread} 
                             drawnCards={drawnCards} 
@@ -613,44 +719,47 @@ const App = () => {
             )}
         </div>
 
-        {/* Bottom Area: Deck */}
-        {/* Increased height (h-72) and changed alignment to items-end to prevent clipping at top */}
+        {/* Deck Area: Fixed at bottom, overlays spread */}
         {drawnCards.length < (selectedSpread?.cardCount || 0) && (
-            // Changed z-20 to z-50 to ensure it sits above the spread area if they overlap
-            <div className="w-full h-72 md:h-80 flex items-end relative z-50 shrink-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29] to-transparent pb-32 pointer-events-none">
-                 {/* Inner container with pointer-events-auto */}
+            <div className="absolute bottom-0 left-0 w-full h-56 z-50 pointer-events-none">
+                 {/* Gradient Backdrop */}
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29]/95 to-transparent"></div>
+                 
+                 {/* Scroll Container */}
                  <div 
                     ref={scrollContainerRef}
-                    className="w-full h-full flex items-end overflow-x-auto px-[50vw] pb-4 pt-16 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing relative z-10 pointer-events-auto"
+                    className="absolute inset-0 flex items-end overflow-x-auto px-[50vw] pb-8 pt-12 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing pointer-events-auto"
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
                 >
-                    <div className="flex items-end" style={{ width: 'max-content' }}>
+                    <div className="flex items-end px-4 space-x-[-3rem] md:space-x-[-4rem]" style={{ width: 'max-content' }}>
                         {deck.map((card, idx) => (
                             <div 
                                 key={card.id}
-                                className="draggable-card relative w-20 h-36 md:w-28 md:h-48 -ml-12 md:-ml-16 cursor-pointer transition-all duration-300 hover:-translate-y-10 hover:scale-110 hover:z-50 group hover:mx-2 select-none"
+                                className="draggable-card relative w-20 h-32 md:w-28 md:h-44 transition-all duration-300 hover:-translate-y-6 hover:scale-110 hover:z-50 hover:space-x-0 group select-none origin-bottom"
                                 onClick={() => handleCardClick(card)}
                                 draggable={true} 
                                 onDragStart={(e) => handleDragStart(e, card)}
-                                style={{
-                                    transformOrigin: 'bottom center',
-                                }}
                             >
-                                <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/30 shadow-xl overflow-hidden relative transform transition-transform group-hover:rotate-0">
-                                    <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                                <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/50 shadow-xl overflow-hidden relative">
+                                    <div className="w-full h-full opacity-60 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
                                     <div className="absolute inset-1 border border-dashed border-white/10 rounded"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    {/* Back Design */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-60 transition-opacity">
+                                        <span className="text-2xl">🔮</span>
+                                    </div>
                                 </div>
                             </div>
                         ))}
                     </div>
                 </div>
+                
                 {/* Instruction Overlay */}
-                <div className="absolute bottom-20 left-0 w-full text-center pointer-events-none text-white/30 text-[10px] animate-pulse z-30">
-                    ← 滑动选牌 • 拖拽上方 →
+                <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none text-white/40 text-[10px] animate-pulse z-50">
+                    ← 左右滑动选牌 • 长按拖拽 →
                 </div>
             </div>
         )}
@@ -690,7 +799,8 @@ const App = () => {
           {/* The Spread Display (Using the Layout Engine now!) */}
           <div className="w-full overflow-x-auto py-8 flex justify-center">
              {selectedSpread && (
-                <div className="w-full max-w-2xl scale-75 md:scale-100 origin-top">
+                // Removed scale-75 to prevent card shrinkage on mobile
+                <div className="w-full max-w-2xl origin-top">
                     <SpreadLayout 
                         spread={selectedSpread} 
                         drawnCards={readingResult.cards} 
@@ -780,7 +890,7 @@ const App = () => {
     <div className="h-full overflow-y-auto p-6 pt-24 custom-scrollbar animate-fade-in pb-32">
         <div className="max-w-4xl mx-auto relative">
             {/* Scroll Header Container */}
-            <div className="sticky top-0 z-30 py-4 -mx-6 px-6 bg-gradient-to-b from-[#0f0c29] via-[#0f0c29]/90 to-transparent flex justify-center">
+            <div className="relative z-30 py-4 -mx-6 px-6 flex justify-center">
                 <div className="relative transform hover:scale-105 transition-transform duration-300">
                     {/* The Scroll Graphic */}
                     {/* Left Roll Handle */}
@@ -916,26 +1026,63 @@ const App = () => {
   const renderSpreadLibrary = () => {
       // Group spreads by category
       const categories = Array.from(new Set(SPREADS.map(s => s.category)));
+      
+      const scrollToCategory = (cat: string) => {
+          const el = document.getElementById(`cat-${cat}`);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      };
+
+      // Map Categories to Objects with Chinese Labels
+      const navCategories = categories.map(cat => ({
+          id: cat,
+          label: CATEGORY_MAP[cat] || cat // Fallback to English if not found
+      }));
 
       return (
-        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-32">
-            <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-10 space-y-2">
-                    <h2 className="text-3xl font-mystic text-white">牌阵宝典</h2>
-                    <p className="text-indigo-300">探索古老与现代的占卜几何学</p>
-                </div>
+        <div className="h-full overflow-y-auto pt-0 custom-scrollbar animate-fade-in pb-32 scroll-smooth">
+            {/* Start Modal */}
+            {librarySpreadToStart && (
+                <SpreadStartModal 
+                    spread={librarySpreadToStart} 
+                    onClose={() => setLibrarySpreadToStart(null)}
+                    onStart={(q) => handleDirectStartFromLibrary(librarySpreadToStart, q)}
+                />
+            )}
 
+            {/* Spacer for Fixed Header */}
+            <div className="h-16 w-full shrink-0"></div>
+
+            <CategoryQuickNav categories={navCategories} onSelect={scrollToCategory} />
+
+            <div className="max-w-6xl mx-auto px-6 relative text-center mb-6 space-y-2 mt-8">
+                <h2 className="text-3xl font-mystic text-white">牌阵宝典</h2>
+                <p className="text-indigo-300">探索古老与现代的占卜几何学</p>
+            </div>
+
+            <div className="max-w-6xl mx-auto px-6 relative">
                 {categories.map(cat => (
-                    <div key={cat} className="mb-10">
-                        <h3 className="text-xl font-mystic text-purple-200 mb-6 pl-4 border-l-4 border-indigo-500">{cat}</h3>
+                    <div key={cat} id={`cat-${cat}`} className="mb-12 scroll-mt-32">
+                        <div className="flex items-center gap-4 mb-6">
+                            <h3 className="text-xl font-mystic text-purple-200">{CATEGORY_MAP[cat] || cat}</h3>
+                            <div className="h-px bg-purple-500/30 flex-1"></div>
+                        </div>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {SPREADS.filter(s => s.category === cat).map(spread => (
-                                <GlassCard key={spread.id} className="flex flex-col gap-4 group hover:bg-white/10 cursor-default">
+                                <GlassCard 
+                                    key={spread.id} 
+                                    className="flex flex-col gap-4 group hover:bg-white/10 cursor-pointer transition-all hover:scale-[1.01] hover:border-purple-500/40 relative overflow-hidden"
+                                    onClick={() => setLibrarySpreadToStart(spread)}
+                                >
+                                    {/* Action hint overlay on hover */}
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity bg-purple-600 text-white text-[10px] px-2 py-1 rounded-full font-bold shadow-lg">
+                                        点击占卜 ▶
+                                    </div>
+
                                     <div className="flex justify-between items-start">
                                         <h4 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">{spread.name}</h4>
                                         <Badge className="text-[10px]">{spread.cardCount} 张</Badge>
                                     </div>
-                                    <div className="flex justify-center py-4 bg-black/20 rounded-xl">
+                                    <div className="flex justify-center py-4 bg-black/20 rounded-xl group-hover:bg-black/30 transition-colors">
                                         <div className="scale-75">
                                            <SpreadPreview spread={spread} />
                                         </div>

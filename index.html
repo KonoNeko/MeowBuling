@@ -60,8 +60,8 @@
 
       /* Particle Explosion */
       @keyframes particle-explode {
-        0% { transform: translate(0, 0) scale(1); opacity: 1; }
-        100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        0% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; }
+        100% { transform: translate(var(--tx), var(--ty)) scale(0) rotate(var(--tr)); opacity: 0; }
       }
       .animate-particle-explode {
         animation: particle-explode 0.8s ease-out forwards;
@@ -87,6 +87,48 @@
       }
       .animate-shuffle-orbit {
         animation: shuffle-orbit 1s ease-in-out infinite;
+      }
+
+      /* New: Card Fly Animation */
+      @keyframes card-fly {
+        0% { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 0; }
+        10% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+        50% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(var(--tr)); opacity: 1; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
+        85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
+        100% { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 0; }
+      }
+      .animate-card-fly {
+        animation: card-fly 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+      }
+
+      /* New: Cat Reveal Animation */
+      @keyframes cat-reveal {
+        0% { transform: scale(0); opacity: 0; filter: blur(20px) brightness(2); }
+        50% { transform: scale(1.2); opacity: 1; filter: blur(0px) brightness(1.2); }
+        70% { transform: scale(0.9); filter: brightness(1); }
+        100% { transform: scale(1); opacity: 1; }
+      }
+      .animate-cat-reveal {
+        animation: cat-reveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      }
+
+      /* New: Holy Light Burst */
+      @keyframes light-burst {
+        0% { transform: scale(0) rotate(0deg); opacity: 1; }
+        100% { transform: scale(3) rotate(180deg); opacity: 0; }
+      }
+      .animate-light-burst {
+        animation: light-burst 0.8s ease-out forwards;
+      }
+
+      /* New: Progress Bar Charge */
+      @keyframes progress-charge {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+      }
+      .animate-progress {
+        background-size: 200% 100%;
+        animation: progress-charge 1.5s linear infinite;
       }
       
       /* Custom Scrollbar Hiding */

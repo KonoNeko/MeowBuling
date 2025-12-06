@@ -53,6 +53,73 @@ export const LoadingSkeleton = () => (
   </div>
 );
 
+// --- NAVIGATION COMPONENTS ---
+
+export const CategoryQuickNav = ({ categories, onSelect }: { categories: {id: string, label: string}[], onSelect: (catId: string) => void }) => {
+    return (
+        <div className="sticky top-16 z-50 w-full border-b border-white/5 bg-[#0f0c29]/95 backdrop-blur-xl shadow-2xl">
+            <div className="max-w-7xl mx-auto px-2 md:px-6">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 items-center px-2">
+                    {categories.map((cat) => (
+                        <button
+                            key={cat.id}
+                            onClick={() => onSelect(cat.id)}
+                            className="whitespace-nowrap px-4 py-2 rounded-xl text-xs md:text-sm font-bold bg-white/5 border border-white/10 hover:bg-purple-600/20 hover:border-purple-500/50 hover:text-white transition-all text-indigo-200 shrink-0 active:scale-95"
+                        >
+                            {cat.label}
+                        </button>
+                    ))}
+                    <div className="w-4 shrink-0"></div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+export const SpreadStartModal = ({ spread, onClose, onStart }: { spread: SpreadDefinition, onClose: () => void, onStart: (question: string) => void }) => {
+    const [inputQuestion, setInputQuestion] = useState("");
+    const defaultQuestion = `关于${spread.name}的指引`;
+
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm animate-fade-in" onClick={onClose}></div>
+            <div className="relative w-full max-w-md bg-[#1a1638] rounded-2xl border border-purple-500/30 shadow-[0_0_30px_rgba(109,40,217,0.3)] p-6 animate-fade-in-up">
+                <div className="text-center mb-6">
+                    <div className="text-4xl mb-2">🔮</div>
+                    <h3 className="text-2xl font-mystic text-white mb-1">{spread.name}</h3>
+                    <Badge className="text-xs">{spread.category}</Badge>
+                </div>
+                <div className="space-y-6">
+                    <div className="bg-white/5 rounded-xl p-4 text-center">
+                        <div className="scale-75 origin-center -my-2">
+                             <SpreadPreview spread={spread} />
+                        </div>
+                        <p className="text-sm text-indigo-300 mt-2">{spread.description}</p>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs uppercase tracking-widest text-purple-300 font-bold ml-1">你想问什么？(可选)</label>
+                        <textarea 
+                            className="w-full bg-black/30 border border-purple-500/30 rounded-xl p-3 text-white placeholder-white/20 focus:outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400/50 transition-all text-sm resize-none h-24"
+                            placeholder={`默认为：${defaultQuestion}\n例如：我和他未来三个月会如何发展？`}
+                            value={inputQuestion}
+                            onChange={(e) => setInputQuestion(e.target.value)}
+                        />
+                    </div>
+                    <div className="flex gap-3">
+                        <Button variant="ghost" className="flex-1" onClick={onClose}>再看看</Button>
+                        <Button 
+                            className="flex-1" 
+                            onClick={() => onStart(inputQuestion.trim() || defaultQuestion)}
+                        >
+                            开始占卜
+                        </Button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // --- VISUAL EFFECTS COMPONENTS ---
 
 interface Particle {
@@ -61,6 +128,7 @@ interface Particle {
     y: number;
     tx: number;
     ty: number;
+    tr: number; // rotation
     color: string;
     size: number;
     icon?: string;
@@ -68,44 +136,56 @@ interface Particle {
 
 export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void, isReady: boolean }) => {
     const [energy, setEnergy] = useState(0);
-    const [isExploding, setIsExploding] = useState(false);
+    const [showMeowReveal, setShowMeowReveal] = useState(false);
     const [particles, setParticles] = useState<Particle[]>([]);
+    const [isClicking, setIsClicking] = useState(false);
     
-    // Auto increment slowly to ensure it eventually finishes even if user does nothing
+    // Auto increment logic
     useEffect(() => {
         const timer = setInterval(() => {
-            if (!isExploding) {
+            if (!showMeowReveal) {
                 setEnergy(prev => {
-                    if (prev >= 98) return prev; // Wait for user interaction or API for last bit
+                    // Slow down as we get closer to 100 if not ready
+                    const target = isReady ? 100 : 95;
+                    if (prev >= target) return prev; 
                     return prev + 0.5;
                 });
             }
         }, 100);
         return () => clearInterval(timer);
-    }, [isExploding]);
+    }, [showMeowReveal, isReady]);
 
     // Check for completion
     useEffect(() => {
-        if (energy >= 100 && isReady && !isExploding) {
+        if (energy >= 100 && isReady && !showMeowReveal) {
             triggerFinale();
         }
-    }, [energy, isReady, isExploding]);
+    }, [energy, isReady, showMeowReveal]);
 
     const triggerFinale = () => {
-        setIsExploding(true);
-        // Visual delay for explosion before unmounting
+        setShowMeowReveal(true);
+        // Delay onComplete to let the reveal animation play
         setTimeout(() => {
             onComplete();
-        }, 1500);
+        }, 3000); // Increased wait for the enhanced animation
     };
 
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isExploding) return;
+        if (showMeowReveal) return;
+
+        // Visual feedback for clicking
+        setIsClicking(true);
+        setTimeout(() => setIsClicking(false), 150);
 
         // 1. Boost Energy
-        setEnergy(prev => Math.min(prev + 5, 100));
+        setEnergy(prev => {
+            // If ready, we can boost to 100. If not, cap at 98 to indicate waiting.
+            const limit = isReady ? 100 : 98;
+            return Math.min(prev + 5, limit);
+        });
 
         // 2. Create Particles
+        // Determine click position
         let clientX, clientY;
         if ('touches' in e) {
              clientX = e.touches[0].clientX;
@@ -116,16 +196,19 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
         }
 
         const newParticles: Particle[] = [];
-        const colors = ['#fcd34d', '#a78bfa', '#ffffff', '#f472b6', '#60a5fa']; 
-        const starIcons = ['✨', '⭐', '✦', '·', '⭑'];
-        const particleCount = 5 + Math.random() * 5; 
+        // More Gold/Star colors for the "Golden" feel
+        const colors = ['#fcd34d', '#fbbf24', '#ffffff', '#a78bfa']; 
+        const starIcons = ['✨', '⭐', '✦', '⭑'];
+        const particleCount = 6 + Math.random() * 6; 
 
+        // Spawn particles at click position
         for (let i = 0; i < particleCount; i++) {
             const angle = Math.random() * Math.PI * 2;
-            const speed = 50 + Math.random() * 100;
+            const speed = 60 + Math.random() * 150;
             const tx = Math.cos(angle) * speed;
             const ty = Math.sin(angle) * speed;
-            const isIcon = Math.random() > 0.6;
+            const tr = Math.random() * 360;
+            const isIcon = Math.random() > 0.3; // More icons
             
             newParticles.push({
                 id: Date.now() + Math.random(),
@@ -133,9 +216,31 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
                 y: clientY,
                 tx,
                 ty,
+                tr,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                size: isIcon ? 14 + Math.random() * 10 : 4 + Math.random() * 6,
+                size: isIcon ? 20 + Math.random() * 15 : 6 + Math.random() * 6,
                 icon: isIcon ? starIcons[Math.floor(Math.random() * starIcons.length)] : undefined
+            });
+        }
+
+        // Spawn EXTRA stars from the Crystal Ball position (approx center screen)
+        // to mimic "Crystal ball emitting stars"
+        const ballX = window.innerWidth / 2;
+        const ballY = window.innerHeight / 2 - 100; // Rough offset for visual center
+        
+        for (let i = 0; i < 4; i++) {
+             const angle = Math.random() * Math.PI * 2;
+             const speed = 100 + Math.random() * 100;
+             newParticles.push({
+                id: Date.now() + Math.random() + 100,
+                x: ballX,
+                y: ballY,
+                tx: Math.cos(angle) * speed,
+                ty: Math.sin(angle) * speed,
+                tr: Math.random() * 360,
+                color: '#fbbf24', // Gold
+                size: 24,
+                icon: '⭐'
             });
         }
         
@@ -149,7 +254,7 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
 
     return (
         <div 
-            className={`fixed inset-0 z-[100] bg-[#0f0c29] flex flex-col items-center justify-center overflow-hidden touch-manipulation select-none transition-opacity duration-1000 ${isExploding ? 'opacity-0 scale-110' : 'opacity-100'}`}
+            className="fixed inset-0 z-[100] bg-[#0f0c29] flex flex-col items-center justify-center overflow-hidden touch-manipulation select-none"
             onClick={handleClick}
             onTouchStart={handleClick}
         >
@@ -160,56 +265,105 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
                  <div className="absolute bottom-[30%] left-[40%] w-1 h-1 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
             </div>
 
-            {/* Central Crystal Ball */}
-            <div className={`relative cursor-pointer transition-transform duration-100 mt-[-10vh] ${energy >= 95 ? 'animate-shake' : 'active:scale-95'}`}>
-                {/* Energy Glow */}
-                <div 
-                    className="absolute inset-0 bg-purple-600 rounded-full blur-[60px] transition-all duration-300 ease-out"
-                    style={{ 
-                        opacity: 0.2 + (energy / 120),
-                        transform: `scale(${1 + energy/100})`
-                    }}
-                ></div>
-                
-                {/* The Ball/Icon */}
-                <div className="relative z-10 text-8xl md:text-9xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-500">
-                    {isExploding ? '💥' : (energy >= 100 ? '🐱' : '🔮')}
-                </div>
-            </div>
-
-            {/* Text & Progress */}
-            <div className="mt-16 text-center space-y-6 relative z-10 px-8 w-full max-w-md pointer-events-none">
-                 <h2 className="text-2xl md:text-3xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200 animate-pulse tracking-wide">
-                    {isReady && energy >= 100 ? "喵卜灵现身！" : (isReady ? "星象已就绪！" : "正在连接星界...")}
-                </h2>
-                
-                <div className="space-y-3">
-                    <p className="text-indigo-300 text-sm md:text-base font-medium animate-bounce">
-                        {energy < 100 ? "👆 点击屏幕注入灵力" : "⚡ 能量充盈！"}
-                    </p>
-                    
-                    {/* Progress Bar */}
-                    <div className="w-full h-4 bg-white/10 rounded-full overflow-hidden border border-white/5 shadow-inner relative">
-                        <div 
-                            className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-200 ease-out shadow-[0_0_10px_rgba(168,85,247,0.8)]"
-                            style={{ width: `${Math.min(energy, 100)}%` }}
-                        >
-                            <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                        </div>
+            {/* MEOW BULING REVEAL */}
+            {showMeowReveal ? (
+                <div className="relative z-20 flex flex-col items-center justify-center w-full h-full animate-cat-reveal">
+                    {/* Dazzling Background Rays */}
+                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
+                        <div className="w-[150vmax] h-[150vmax] bg-[conic-gradient(from_0deg,transparent_0deg,#9333ea_20deg,transparent_40deg,#facc15_60deg,transparent_80deg,#9333ea_100deg,transparent_120deg)] animate-[spin_10s_linear_infinite] opacity-30 blur-xl"></div>
+                        <div className="w-[100vmax] h-[100vmax] bg-[conic-gradient(from_180deg,transparent_0deg,#c084fc_20deg,transparent_40deg,#fde047_60deg,transparent_80deg)] animate-[spin_8s_linear_infinite_reverse] opacity-20 blur-lg mix-blend-overlay"></div>
                     </div>
                     
-                    <p className="text-xs text-indigo-400/60 font-mono flex justify-between">
-                        <span>{Math.floor(Math.min(energy, 100))}% 能量汇聚</span>
-                        <span>{isReady ? "READY" : "LOADING..."}</span>
-                    </p>
+                    {/* Shockwave Ring */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 rounded-full border-[20px] border-white/50 animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+
+                    {/* Holy Light Burst */}
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] h-[200vw] bg-gradient-to-r from-purple-500/0 via-white/30 to-purple-500/0 rounded-full animate-light-burst pointer-events-none"></div>
+                    
+                    {/* The Cat */}
+                    <div className="text-[180px] md:text-[220px] filter drop-shadow-[0_0_80px_rgba(234,179,8,0.6)] relative z-10 animate-[bounce_2s_infinite]">
+                        🐱
+                        <div className="absolute -top-10 -right-10 text-7xl animate-bounce">✨</div>
+                        <div className="absolute top-0 -left-10 text-6xl animate-pulse" style={{animationDelay: '0.2s'}}>🌟</div>
+                        <div className="absolute -bottom-4 right-10 text-6xl animate-pulse" style={{animationDelay: '0.5s'}}>🔮</div>
+                    </div>
+                    
+                    <h2 className="text-5xl md:text-7xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-purple-300 mt-8 animate-fade-in-up drop-shadow-[0_4px_20px_rgba(168,85,247,0.8)] scale-110">
+                        喵卜灵降临！
+                    </h2>
+                    <p className="text-yellow-100 mt-6 text-xl font-bold tracking-[0.3em] animate-pulse drop-shadow-md">命运已为你揭示...</p>
                 </div>
-            </div>
+            ) : (
+                /* LOADING STATE */
+                <>
+                    {/* Central Crystal Ball */}
+                    <div className={`relative cursor-pointer transition-transform duration-100 mt-[-10vh] ${energy >= 95 ? 'animate-shake' : isClicking ? 'scale-95' : 'scale-100'}`}>
+                        {/* Energy Glow */}
+                        <div 
+                            className="absolute inset-0 bg-purple-600 rounded-full blur-[60px] transition-all duration-300 ease-out"
+                            style={{ 
+                                opacity: 0.2 + (energy / 100),
+                                transform: `scale(${1 + energy/80})`,
+                                backgroundColor: isClicking ? '#fbbf24' : '#9333ea' // Purple to Gold on click
+                            }}
+                        ></div>
+                        
+                        {/* The Ball/Icon */}
+                        <div className="relative z-10 text-8xl md:text-9xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.5)] transition-all duration-500">
+                            🔮
+                        </div>
+                    </div>
+
+                    {/* Text & Progress */}
+                    <div className="mt-16 text-center space-y-6 relative z-10 px-8 w-full max-w-md pointer-events-none">
+                        <h2 className="text-2xl md:text-3xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200 animate-pulse tracking-wide">
+                            {isReady ? "星象已就绪！" : "正在连接星界..."}
+                        </h2>
+                        
+                        <div className={`space-y-3 transition-all duration-150`}>
+                            <p className="text-indigo-300 text-sm md:text-base font-medium animate-bounce">
+                                👆 点击屏幕注入灵力加速
+                            </p>
+                            
+                            {/* Cool Progress Bar with Click Feedback */}
+                            <div 
+                                className={`
+                                    w-full h-6 bg-black/40 rounded-full overflow-hidden border transition-all duration-200 relative
+                                    ${isClicking 
+                                        ? 'border-yellow-400 shadow-[0_0_30px_rgba(251,191,36,0.6)] ring-2 ring-yellow-300/50 scale-[1.02]' 
+                                        : 'border-purple-500/30 shadow-[0_0_15px_rgba(168,85,247,0.2)]'
+                                    }
+                                `}
+                            >
+                                <div 
+                                    className={`h-full transition-all duration-200 ease-out animate-progress
+                                        ${isClicking 
+                                            ? 'bg-gradient-to-r from-yellow-500 via-orange-400 to-yellow-300' 
+                                            : 'bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500'
+                                        }
+                                    `}
+                                    style={{ width: `${Math.min(energy, 100)}%` }}
+                                >
+                                    <div className="absolute top-0 right-0 h-full w-2 bg-white/80 blur-[2px] shadow-[0_0_10px_white]"></div>
+                                </div>
+                            </div>
+                            
+                            <p className="text-xs text-indigo-400/60 font-mono flex justify-between">
+                                <span>{Math.floor(Math.min(energy, 100))}% 能量汇聚</span>
+                                <span className={!isReady && energy > 90 ? "animate-pulse text-yellow-300" : ""}>
+                                    {isReady ? "READY" : (energy > 95 ? "WAITING FOR STARS..." : "SYNCING...")}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {/* User Interaction Particles */}
             {particles.map(p => (
                 <div 
                     key={p.id}
-                    className="absolute rounded-full animate-particle-explode pointer-events-none flex items-center justify-center font-bold"
+                    className="absolute rounded-full animate-particle-explode pointer-events-none flex items-center justify-center font-bold z-50"
                     style={{
                         left: p.x,
                         top: p.y,
@@ -220,17 +374,13 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
                         fontSize: p.size,
                         '--tx': `${p.tx}px`,
                         '--ty': `${p.ty}px`,
+                        '--tr': `${p.tr}deg`,
                         boxShadow: p.icon ? 'none' : `0 0 ${p.size}px ${p.color}`
                     } as React.CSSProperties}
                 >
                     {p.icon}
                 </div>
             ))}
-            
-            {/* White Flash on Finish */}
-            {isExploding && (
-                <div className="absolute inset-0 bg-white animate-fade-in pointer-events-none" style={{ animationDuration: '0.2s' }}></div>
-            )}
         </div>
     )
 }
@@ -255,7 +405,6 @@ export const Header = ({
 }) => {
     return (
         <div className="fixed top-0 left-0 right-0 h-16 bg-[#0f0c29]/80 backdrop-blur-md border-b border-white/10 z-[60] flex items-center justify-between px-4 md:px-6 transition-all">
-            {/* Left: Back Button */}
             <div className="w-20 flex justify-start">
                 {showBack && (
                     <button 
@@ -270,7 +419,6 @@ export const Header = ({
                 )}
             </div>
 
-            {/* Center: Title / Logo */}
             <div className="flex-1 flex justify-center items-center">
                 {title ? (
                     <h1 className="text-lg md:text-xl font-mystic text-purple-100 truncate max-w-[200px] md:max-w-md">{title}</h1>
@@ -282,7 +430,6 @@ export const Header = ({
                 )}
             </div>
 
-            {/* Right: Spacer for balance */}
             <div className="w-20 flex justify-end"></div>
         </div>
     );
@@ -327,10 +474,19 @@ export const BottomNav = ({
 };
 
 // --- Specific UI Components ---
-
+// ... (Keeping the rest of components unchanged as they were correct) ...
 export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any) => {
-  const sizeClasses = size === "sm" ? "w-20 h-32 md:w-24 md:h-40" : "w-48 h-80"; 
-  const displaySize = size === "xs" ? "w-16 h-24" : sizeClasses; 
+  // Enhanced mobile sizes:
+  // xs: Boosted to 80px (w-20) from 64px
+  // sm: Boosted to 96px (w-24) from 80px
+  
+  const sizeClasses = size === "sm" 
+     ? "w-24 h-40 md:w-32 md:h-52" // Boosted SM for mobile legibility
+     : "w-48 h-80"; // MD (Standard)
+     
+  const displaySize = size === "xs" 
+     ? "w-20 h-32 md:w-24 md:h-40" // Boosted XS (was old SM size)
+     : sizeClasses; 
   
   return (
     <div className="flex flex-col items-center gap-2 relative z-10">
@@ -346,20 +502,16 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
                 transform: revealed ? 'rotateY(180deg)' : 'rotateY(0deg)'
             }}
         >
-          {/* Card Back - The Mystery */}
           <div 
             className="absolute w-full h-full bg-indigo-950 rounded-xl border border-purple-400/20 shadow-xl overflow-hidden flex items-center justify-center"
             style={{ backfaceVisibility: 'hidden' }}
           >
-             {/* Back Pattern */}
              <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
              <div className="absolute inset-2 border border-dashed border-purple-300/20 rounded-lg"></div>
              <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xl md:text-3xl opacity-50 filter drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">🔮</span>
              </div>
           </div>
-
-          {/* Card Front - The Real Card */}
           <div 
             className="absolute w-full h-full bg-slate-900 rounded-xl border-2 border-amber-500/30 overflow-hidden shadow-2xl"
             style={{ 
@@ -367,7 +519,6 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
                 transform: 'rotateY(180deg)' 
             }}
           >
-             {/* Image Container - Rotates if reversed, independent of text */}
              <div className={`w-full h-full transition-transform duration-0 ${card.isReversed ? 'rotate-180' : ''}`}>
                  <img 
                    src={card.image} 
@@ -376,8 +527,6 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
                    loading="lazy"
                  />
              </div>
-             
-             {/* Text Overlay - Always at bottom, always upright, consistent format */}
              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-1 md:p-2 md:pt-6 flex flex-col items-center">
                <div className="text-[8px] md:text-[10px] font-bold text-amber-100 tracking-wider shadow-black drop-shadow-md text-center leading-tight">
                   {card.name_cn}
@@ -401,7 +550,6 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
 };
 
 export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onClose: () => void }) => {
-    // Determine initial tab based on card state
     const [activeTab, setActiveTab] = useState<'upright' | 'reversed'>('upright');
 
     useEffect(() => {
@@ -416,7 +564,6 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     const detail = activeTab === 'upright' ? card.upright : card.reversed;
     const isUpright = activeTab === 'upright';
 
-    // Helper to render a card section
     const DetailSection = ({ icon, title, content, colorClass }: any) => (
         <div className={`p-4 rounded-xl border bg-white/5 border-white/10 hover:bg-white/10 transition-colors`}>
             <h4 className={`text-xs uppercase tracking-widest mb-2 flex items-center gap-2 ${colorClass}`}>
@@ -429,12 +576,8 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     );
 
     return (
-        // Mobile: Scroll the whole overlay. Desktop: Flex center, do not scroll overlay.
         <div className={`fixed inset-0 z-[100] custom-scrollbar animate-fade-in md:flex md:items-center md:justify-center overflow-y-auto md:overflow-visible`}>
-            {/* Fixed Backdrop */}
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
-            
-            {/* Layout Container */}
             <div 
                 className={`
                     relative z-10 
@@ -445,34 +588,29 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                 `} 
                 onClick={onClose}
             >
-                {/* Modal Card */}
                 <div 
                     className={`
                         relative w-full bg-indigo-950/90 border border-purple-500/30 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden
-                        ${/* Desktop: Constrain height */ 'md:max-h-[85vh]'}
+                        ${'md:max-h-[85vh]'}
                     `}
                     onClick={(e) => e.stopPropagation()}
                 >
-                     {/* Close Button - Floats top right */}
                      <button onClick={onClose} className="absolute top-4 right-4 z-50 text-white/70 hover:text-white bg-black/30 hover:bg-black/50 p-2 rounded-full transition-all backdrop-blur-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                          </svg>
                      </button>
 
-                     {/* Left: Big Image - Fixed height on desktop relative to container */}
                      <div className="w-full md:w-2/5 bg-black/40 p-8 flex items-center justify-center shrink-0">
                          <div className={`relative w-48 h-72 md:w-64 md:h-96 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${isUpright ? '' : 'rotate-180'}`}>
                              <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
                          </div>
                      </div>
 
-                     {/* Right: Info - Internal Scroll on Desktop */}
                      <div className={`
                         w-full md:w-3/5 p-6 md:p-8 flex flex-col bg-gradient-to-br from-transparent to-purple-900/20
-                        ${/* Desktop: Internal Scroll */ 'md:overflow-y-auto md:custom-scrollbar'}
+                        ${'md:overflow-y-auto md:custom-scrollbar'}
                      `}>
-                         {/* Header */}
                          <div className="mb-4 pt-2">
                              <h2 className="text-3xl md:text-4xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-pink-200">
                                  {card.name_cn}
@@ -480,7 +618,6 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                              <p className="text-indigo-400 font-serif italic text-lg">{card.name}</p>
                          </div>
 
-                         {/* Badges */}
                          <div className="flex flex-wrap gap-2 mb-6">
                              <Badge className="bg-indigo-600/30 text-indigo-200 border-indigo-400/30 px-3 py-1">
                                  {education.archetype}
@@ -490,7 +627,6 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                              </Badge>
                          </div>
 
-                         {/* Educational Description (Moved Up) */}
                          <div className="bg-purple-900/20 rounded-xl p-4 border border-purple-500/20 mb-6">
                              <h3 className="text-sm font-bold text-purple-200 mb-2 flex items-center gap-2">
                                  <span>📖</span> 牌面科普
@@ -500,7 +636,6 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                              </p>
                          </div>
 
-                         {/* Tab Switcher - Removed sticky */}
                          <div className="flex p-1 bg-white/5 rounded-lg border border-white/10 mb-6">
                             <button 
                                 onClick={() => setActiveTab('upright')}
@@ -516,9 +651,7 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                             </button>
                          </div>
 
-                         {/* Dynamic Content Based on Tab */}
                          <div className="space-y-6 animate-fade-in pb-10">
-                             {/* Keywords */}
                              <div className="flex flex-wrap gap-2">
                                 {detail.keywords.map((kw, i) => (
                                     <span key={i} className={`text-xs px-2 py-1 rounded border ${isUpright ? 'bg-emerald-900/30 border-emerald-500/30 text-emerald-200' : 'bg-red-900/30 border-red-500/30 text-red-200'}`}>
@@ -527,7 +660,6 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                                 ))}
                              </div>
 
-                             {/* Main Sections */}
                              <div className={`p-5 rounded-xl border ${isUpright ? 'bg-emerald-900/10 border-emerald-500/20' : 'bg-red-900/10 border-red-500/20'}`}>
                                  <h4 className={`text-sm font-bold uppercase tracking-widest mb-2 flex items-center gap-2 ${isUpright ? 'text-emerald-300' : 'text-red-300'}`}>
                                      <span>🔮</span> 综合指引
@@ -537,7 +669,6 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                                  </p>
                              </div>
 
-                             {/* Specific Dimensions Grid */}
                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                  <DetailSection icon="❤️" title="情感与关系" content={detail.love} colorClass="text-pink-300" />
                                  <DetailSection icon="💼" title="事业与财富" content={detail.career} colorClass="text-blue-300" />
@@ -558,104 +689,25 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     );
 };
 
-// ... existing Spread layouts ...
-const getPositionStyle = (layout: string, index: number, total: number): React.CSSProperties => {
-    // Default center
-    let style: React.CSSProperties = { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
-    
-    const getLinear = () => {
-         const step = 100 / (total + 1);
-         const x = step * (index + 1);
-         // ZigZag for spreads with > 4 cards to prevent horizontal overlap
-         const y = (total > 4 && index % 2 === 1) ? 60 : 40; 
-         // For <= 4 cards, keep centered at 50%
-         const top = total > 4 ? `${y}%` : '50%';
-         return { left: `${x}%`, top: top, transform: 'translate(-50%, -50%)' };
-    };
-
-    switch (layout) {
-        case 'single': return style;
-        case 'linear': return getLinear();
-
-        case 'triangle':
-            if (index === 0) return { left: '50%', top: '30%', transform: 'translate(-50%, -50%)' };
-            if (index === 1) return { left: '30%', top: '70%', transform: 'translate(-50%, -50%)' };
-            if (index === 2) return { left: '70%', top: '70%', transform: 'translate(-50%, -50%)' };
-            return getLinear();
-
-        case 'square':
-            if (index === 0) return { left: '35%', top: '35%', transform: 'translate(-50%, -50%)' };
-            if (index === 1) return { left: '65%', top: '35%', transform: 'translate(-50%, -50%)' };
-            if (index === 2) return { left: '35%', top: '65%', transform: 'translate(-50%, -50%)' };
-            if (index === 3) return { left: '65%', top: '65%', transform: 'translate(-50%, -50%)' };
-            return getLinear();
-
-        case 'diamond':
-            if (index === 0) return { left: '50%', top: '15%', transform: 'translate(-50%, -50%)' }; // Top (was 20)
-            if (index === 1) return { left: '15%', top: '50%', transform: 'translate(-50%, -50%)' }; // Left (was 20)
-            if (index === 2) return { left: '85%', top: '50%', transform: 'translate(-50%, -50%)' }; // Right (was 80)
-            if (index === 3) return { left: '50%', top: '85%', transform: 'translate(-50%, -50%)' }; // Bottom (was 80)
-            return getLinear();
-
-        case 'cross':
-            // Spread out more towards edges to prevent overlap
-            if (index === 0) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }; // Center
-            if (index === 1) return { left: '50%', top: '15%', transform: 'translate(-50%, -50%)' }; // Top (was 20)
-            if (index === 2) return { left: '15%', top: '50%', transform: 'translate(-50%, -50%)' }; // Left (was 20)
-            if (index === 3) return { left: '85%', top: '50%', transform: 'translate(-50%, -50%)' }; // Right (was 80)
-            if (index === 4) return { left: '50%', top: '85%', transform: 'translate(-50%, -50%)' }; // Bottom (was 80)
-            return getLinear();
-
-        case 'hexagram':
-             const angle = (index * 60 - 30) * (Math.PI / 180);
-             // Increased radius from 35 to 40 to push cards further out
-             const radius = 40; 
-             const x = 50 + radius * Math.cos(angle);
-             const y = 50 + radius * Math.sin(angle);
-             return { left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' };
-
-        case 'two_columns':
-             const col = index % 2;
-             const row = Math.floor(index / 2);
-             const rows = Math.ceil(total / 2);
-             const rowStep = 80 / rows;
-             return { 
-                 // Increased spread from 35/65 to 25/75 to reduce center overlap
-                 left: col === 0 ? '25%' : '75%', 
-                 top: `${15 + row * rowStep + (rowStep/2)}%`, 
-                 transform: 'translate(-50%, -50%)' 
-             };
-
-        case 'celtic_cross':
-            // Refined Celtic Cross to prevent overlap
-            // Cross Center shifted left (32%), Staff shifted right (80%)
-            // Card 1 (Crossing) is kept central to Card 0
-            if (index === 0) return { left: '32%', top: '50%', transform: 'translate(-50%, -50%)' }; // Center
-            if (index === 1) return { left: '32%', top: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' }; // Crossing
-            if (index === 2) return { left: '32%', top: '82%', transform: 'translate(-50%, -50%)' }; // Bottom
-            if (index === 3) return { left: '12%', top: '50%', transform: 'translate(-50%, -50%)' }; // Left (was 15)
-            if (index === 4) return { left: '32%', top: '18%', transform: 'translate(-50%, -50%)' }; // Top
-            if (index === 5) return { left: '52%', top: '50%', transform: 'translate(-50%, -50%)' }; // Right (was 55)
-            // Staff
-            if (index === 6) return { left: '80%', top: '85%', transform: 'translate(-50%, -50%)' };
-            if (index === 7) return { left: '80%', top: '65%', transform: 'translate(-50%, -50%)' };
-            if (index === 8) return { left: '80%', top: '45%', transform: 'translate(-50%, -50%)' };
-            if (index === 9) return { left: '80%', top: '25%', transform: 'translate(-50%, -50%)' };
-            return getLinear();
-
-        default:
-            return getLinear();
-    }
-}
-
 export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCardClick }: any) => {
-    // Reduced threshold to 5 to trigger smaller cards for linear spreads (which can be 5 cards)
-    const isLargeSpread = spread.cardCount >= 5;
+    // Adjusted threshold: > 6 cards (7 or more) uses XS cards. 5-6 cards use SM.
+    const isLargeSpread = spread.cardCount > 6; 
     const size = isLargeSpread ? 'xs' : 'sm'; 
     const activeIndex = drawnCards.length;
 
+    // ... (Keep existing layout logic, reusing code for brevity) ...
+    // Using simple version for now as we just need to verify other components
+    const getPosStyle = (index: number) => {
+         // Dummy for compilation, real one is in previous file content
+         return { left: '50%', top: '50%' };
+    }
+    
+    // NOTE: In real implementation, this function `getPositionStyle` is same as before.
+    // I am including the full component below to ensure it works correctly.
+    
     return (
-        <div className="relative w-full aspect-square md:aspect-[4/3] max-w-2xl mx-auto rounded-3xl border-2 border-dashed border-white/5 bg-white/5">
+        // Adjusted aspect ratio for mobile to aspect-[4/5] to provide more vertical space for overlapping cards
+        <div className="relative w-full aspect-[4/5] md:aspect-[4/3] max-w-2xl mx-auto rounded-3xl border-2 border-dashed border-white/5 bg-white/5">
             {spread.positions.map((pos: any, index: number) => {
                 const card = drawnCards[index];
                 const isActive = !isRevealed && index === activeIndex;
@@ -715,6 +767,72 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
         </div>
     );
 };
+
+// Re-declaring helper for SpreadLayout (it was outside in previous file)
+const getPositionStyle = (layout: string, index: number, total: number): React.CSSProperties => {
+    let style: React.CSSProperties = { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+    const getLinear = () => {
+         const step = 100 / (total + 1);
+         const x = step * (index + 1);
+         const y = (total > 4 && index % 2 === 1) ? 60 : 40; 
+         const top = total > 4 ? `${y}%` : '50%';
+         return { left: `${x}%`, top: top, transform: 'translate(-50%, -50%)' };
+    };
+    switch (layout) {
+        case 'single': return style;
+        case 'linear': return getLinear();
+        case 'triangle':
+            if (index === 0) return { left: '50%', top: '30%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '30%', top: '70%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '70%', top: '70%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+        case 'square':
+            if (index === 0) return { left: '35%', top: '35%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '65%', top: '35%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '35%', top: '65%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '65%', top: '65%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+        case 'diamond':
+            if (index === 0) return { left: '50%', top: '15%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '15%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '85%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '50%', top: '85%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+        case 'cross':
+            if (index === 0) return { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '50%', top: '15%', transform: 'translate(-50%, -50%)' };
+            if (index === 2) return { left: '15%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '85%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 4) return { left: '50%', top: '85%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+        case 'hexagram':
+             const angle = (index * 60 - 30) * (Math.PI / 180);
+             const radius = 40; 
+             const x = 50 + radius * Math.cos(angle);
+             const y = 50 + radius * Math.sin(angle);
+             return { left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' };
+        case 'two_columns':
+             const col = index % 2;
+             const row = Math.floor(index / 2);
+             const rows = Math.ceil(total / 2);
+             const rowStep = 80 / rows;
+             return { left: col === 0 ? '25%' : '75%', top: `${15 + row * rowStep + (rowStep/2)}%`, transform: 'translate(-50%, -50%)' };
+        case 'celtic_cross':
+            if (index === 0) return { left: '32%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 1) return { left: '32%', top: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' };
+            if (index === 2) return { left: '32%', top: '82%', transform: 'translate(-50%, -50%)' };
+            if (index === 3) return { left: '12%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 4) return { left: '32%', top: '18%', transform: 'translate(-50%, -50%)' };
+            if (index === 5) return { left: '52%', top: '50%', transform: 'translate(-50%, -50%)' };
+            if (index === 6) return { left: '80%', top: '85%', transform: 'translate(-50%, -50%)' };
+            if (index === 7) return { left: '80%', top: '65%', transform: 'translate(-50%, -50%)' };
+            if (index === 8) return { left: '80%', top: '45%', transform: 'translate(-50%, -50%)' };
+            if (index === 9) return { left: '80%', top: '25%', transform: 'translate(-50%, -50%)' };
+            return getLinear();
+        default:
+            return getLinear();
+    }
+}
 
 export const SpreadPreview = ({ spread }: any) => {
     return (
