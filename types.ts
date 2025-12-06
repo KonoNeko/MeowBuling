@@ -1,12 +1,4 @@
 
-
-export interface ChatMessage {
-  id: string;
-  role: 'user' | 'model';
-  content: string;
-  timestamp: number;
-}
-
 export interface TarotMeaningDetail {
   keywords: string[];
   general: string;
@@ -47,8 +39,7 @@ export enum AppView {
   READING = 'READING',
   HISTORY = 'HISTORY',
   LIBRARY = 'LIBRARY',
-  SPREAD_LIBRARY = 'SPREAD_LIBRARY',
-  CHAT = 'CHAT'
+  SPREAD_LIBRARY = 'SPREAD_LIBRARY'
 }
 
 export interface AIInterpretation {

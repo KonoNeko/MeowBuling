@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS } from './constants';
-import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading, DigitalAvatar } from './components';
+import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 
 // Helper for random ID
@@ -76,7 +76,6 @@ const App = () => {
       case AppView.LIBRARY:
       case AppView.SPREAD_LIBRARY:
       case AppView.READING:
-      case AppView.CHAT:
         setView(AppView.HOME);
         break;
       case AppView.QUESTION_SELECT:
@@ -210,7 +209,7 @@ const App = () => {
     if (newDrawn.length === selectedSpread.cardCount) {
        setTimeout(() => {
          generateResult(newDrawn);
-       }, 1200);
+       }, 500);
     }
   };
 
@@ -227,15 +226,6 @@ const App = () => {
       const card = deck.find(c => c.id === cardId);
       if (!card) return;
 
-      // Logic: If user drops on a specific slot.
-      // Current behavior: We just append to drawnCards list in order, regardless of which slot was dropped on,
-      // to keep it simple, OR we force them to fill in order. 
-      // Better UX: Allow dropping on the *next available* slot, or any empty slot if we supported non-linear filling.
-      // For this app version, let's enforce order for simplicity in result generation.
-      // So if they drop on ANY slot, we just take the next one.
-      
-      // Actually, let's support "Next Slot" targeting.
-      // If `slotIndex` === `drawnCards.length`, it's the correct next slot.
       if (slotIndex === drawnCards.length) {
           selectCard(card);
       } else {
@@ -280,12 +270,13 @@ const App = () => {
 
       saveReading(newReading);
       setReadingResult(newReading);
+      // NOTE: We do NOT set loading to false here. 
+      // The EnergyLoading component handles the exit animation when readingResult is ready.
     } catch (error) {
       console.error(error);
       alert("喵？星象连接中断了，请重试。");
-      setView(AppView.HOME); 
-    } finally {
-      setLoading(false);
+      setView(AppView.HOME);
+      setLoading(false); 
     }
   };
 
@@ -300,7 +291,7 @@ const App = () => {
 
   const renderHome = () => (
     <div className="h-full w-full overflow-y-auto custom-scrollbar relative z-10">
-      <div className="min-h-full flex flex-col items-center justify-center p-6 space-y-12 animate-fade-in text-center pb-24 pt-24">
+      <div className="min-h-full flex flex-col items-center justify-center p-6 space-y-12 animate-fade-in text-center pb-40 pt-24">
         <div className="space-y-6 flex flex-col items-center">
           {/* Magic Wizard Cat Design */}
           <div className="relative w-40 h-40 flex items-center justify-center group">
@@ -359,7 +350,7 @@ const App = () => {
   );
 
   const renderTopicSelect = () => (
-    <div className="max-w-4xl mx-auto h-full flex flex-col justify-start p-6 space-y-8 animate-fade-in overflow-y-auto custom-scrollbar pt-24 pb-28">
+    <div className="max-w-4xl mx-auto h-full flex flex-col justify-start p-6 space-y-8 animate-fade-in overflow-y-auto custom-scrollbar pt-24 pb-32">
       <div className="text-center space-y-2 shrink-0">
         <h2 className="text-3xl font-mystic text-white">你想探索哪个领域？</h2>
         <p className="text-indigo-300">倾听内心的声音，选择此刻最强烈的感召</p>
@@ -385,7 +376,7 @@ const App = () => {
   );
 
   const renderQuestionSelect = () => (
-    <div className="max-w-4xl mx-auto h-full flex flex-col justify-start pt-24 p-6 space-y-6 animate-fade-in overflow-y-auto custom-scrollbar pb-20">
+    <div className="max-w-4xl mx-auto h-full flex flex-col justify-start pt-24 p-6 space-y-6 animate-fade-in overflow-y-auto custom-scrollbar pb-32">
       <div className="text-center space-y-2">
          <Badge className="mb-2 text-lg px-4 py-1">{selectedTopic?.icon} {selectedTopic?.label}</Badge>
         <h2 className="text-3xl font-mystic text-white">你想问关于什么的具体问题？</h2>
@@ -447,14 +438,14 @@ const App = () => {
     }
 
     return (
-        <div className="max-w-4xl mx-auto h-full flex flex-col justify-center p-6 space-y-8 animate-fade-in pt-20 pb-20">
-          <div className="text-center space-y-2">
+        <div className="max-w-4xl mx-auto h-full flex flex-col justify-start p-6 space-y-8 animate-fade-in overflow-y-auto custom-scrollbar pt-20 pb-40">
+          <div className="text-center space-y-2 shrink-0">
             <h2 className="text-3xl font-mystic text-white">选择你的牌阵</h2>
             <p className="text-indigo-300">为您精选了最适合当前问题的牌阵</p>
           </div>
           
           {/* Show Selected Question */}
-          <div className="w-full max-w-2xl mx-auto bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 text-center backdrop-blur-sm">
+          <div className="w-full max-w-2xl mx-auto bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 text-center backdrop-blur-sm shrink-0">
              <p className="text-xs text-purple-300 uppercase tracking-widest mb-2">当前提问</p>
              <div className="text-xl md:text-2xl font-serif text-white italic">
                “ {question} ”
@@ -468,7 +459,7 @@ const App = () => {
           </div>
     
           {/* Spread Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 overflow-y-auto max-h-[60vh] custom-scrollbar pb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
             {filteredSpreads.map(spread => (
               <GlassCard 
                 key={spread.id} 
@@ -499,7 +490,7 @@ const App = () => {
     // 1. Initial State: The Deck on Table
     if (drawStep === 'init') {
       return (
-        <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in p-6 pt-20 pb-20">
+        <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in p-6 pt-20 pb-32">
            <div className="relative w-48 h-72 cursor-pointer group" onClick={startShuffle}>
               {/* Stack effect */}
               <div className="absolute top-0 left-0 w-full h-full bg-indigo-900 rounded-xl border border-indigo-700 transform translate-x-4 translate-y-4 group-hover:translate-x-6 group-hover:translate-y-6 transition-transform"></div>
@@ -565,7 +556,7 @@ const App = () => {
         
         {/* Top Area: Spread */}
         {/* Use pt-16 to clear fixed Header */}
-        <div className="w-full flex-1 flex flex-col items-center pt-16 overflow-hidden relative">
+        <div className="w-full flex-1 flex flex-col items-center pt-16 overflow-hidden relative z-0">
             
             {/* Title - Compact */}
             <div className="text-center py-2 pointer-events-auto shrink-0 z-20">
@@ -596,7 +587,8 @@ const App = () => {
         {/* Bottom Area: Deck */}
         {/* Increased height (h-72) and changed alignment to items-end to prevent clipping at top */}
         {drawnCards.length < (selectedSpread?.cardCount || 0) && (
-            <div className="w-full h-72 md:h-80 flex items-end relative z-20 shrink-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29] to-transparent pb-24 pointer-events-none">
+            // Changed z-20 to z-50 to ensure it sits above the spread area if they overlap
+            <div className="w-full h-72 md:h-80 flex items-end relative z-50 shrink-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29] to-transparent pb-32 pointer-events-none">
                  {/* Inner container with pointer-events-auto */}
                  <div 
                     ref={scrollContainerRef}
@@ -638,9 +630,14 @@ const App = () => {
   };
 
   const renderReading = () => {
-    // 1. Loading State (Now Interactive)
+    // 1. Loading State (Interactive)
     if (loading) {
-        return <EnergyLoading />;
+        return (
+            <EnergyLoading 
+                isReady={!!readingResult} 
+                onComplete={() => setLoading(false)} 
+            />
+        );
     }
 
     if (!readingResult || !readingResult.interpretation) return null;
@@ -648,14 +645,7 @@ const App = () => {
 
     // 2. Result State
     return (
-      <div className="h-full overflow-y-auto pb-32 p-4 pt-20 custom-scrollbar">
-        {/* Floating Chat Avatar */}
-        <DigitalAvatar 
-            context={`User just received a reading about: "${readingResult.question}". 
-            Cards drawn: ${readingResult.cards.map(c => c.name_cn + (c.isReversed?'(逆位)':'')).join(', ')}. 
-            Main theme: ${interpretation.mainTheme}.`}
-            minimized={true}
-        />
+      <div className="h-full overflow-y-auto pb-40 p-4 pt-20 custom-scrollbar">
 
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
           
@@ -758,7 +748,7 @@ const App = () => {
   };
 
   const renderHistory = () => (
-    <div className="h-full overflow-y-auto p-6 pt-24 custom-scrollbar animate-fade-in pb-20">
+    <div className="h-full overflow-y-auto p-6 pt-24 custom-scrollbar animate-fade-in pb-32">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0f0c29]/90 backdrop-blur z-20 py-4 border-b border-white/10">
           <h2 className="text-3xl font-mystic text-white">时光卷轴</h2>
@@ -856,7 +846,7 @@ const App = () => {
       );
 
       return (
-        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-20">
+        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-32">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-10 space-y-2">
                     <h2 className="text-3xl font-mystic text-white">塔罗牌库</h2>
@@ -878,7 +868,7 @@ const App = () => {
       const categories = Array.from(new Set(SPREADS.map(s => s.category)));
 
       return (
-        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-20">
+        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-32">
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-10 space-y-2">
                     <h2 className="text-3xl font-mystic text-white">牌阵宝典</h2>
@@ -919,10 +909,6 @@ const App = () => {
       );
   }
 
-  const renderChat = () => (
-      <DigitalAvatar onClose={() => setView(AppView.HOME)} />
-  );
-
   return (
     <div className="w-full h-full relative overflow-hidden bg-[#0f0c29]">
       {/* Toast Notification */}
@@ -935,7 +921,7 @@ const App = () => {
       <Header 
         onBack={handleBack}
         title={view === AppView.HOME ? "" : (selectedTopic?.label || "喵卜灵")}
-        showBack={view !== AppView.HOME && view !== AppView.HISTORY && view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY && view !== AppView.CHAT}
+        showBack={view !== AppView.HOME && view !== AppView.HISTORY && view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY}
       />
 
       {/* Dynamic Background Elements */}
@@ -955,7 +941,6 @@ const App = () => {
         {view === AppView.HISTORY && renderHistory()}
         {view === AppView.LIBRARY && renderLibrary()}
         {view === AppView.SPREAD_LIBRARY && renderSpreadLibrary()}
-        {view === AppView.CHAT && renderChat()}
       </div>
 
       {/* Bottom Navigation */}

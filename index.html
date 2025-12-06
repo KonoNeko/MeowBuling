@@ -13,6 +13,7 @@
         font-family: 'Quicksand', sans-serif;
         background-color: #0f0c29;
         color: #e2e8f0;
+        overflow: hidden; /* Prevent scrolling during animations */
       }
       h1, h2, h3, h4, .font-mystic {
         font-family: 'Cinzel', serif;
@@ -40,45 +41,54 @@
         100% { box-shadow: 0 0 10px rgba(167, 139, 250, 0.5); }
       }
       
-      /* New Animations for Shuffling and Dealing */
-      @keyframes shuffle-orbit {
-        0% { transform: translate(0,0) scale(1) rotate(0deg); opacity: 0.5; }
-        25% { transform: translate(var(--tx), var(--ty)) scale(1.1) rotate(90deg); opacity: 1; }
-        50% { transform: translate(0,0) scale(0.8) rotate(180deg); opacity: 0.8; }
-        75% { transform: translate(calc(var(--tx) * -1), calc(var(--ty) * -1)) scale(1.1) rotate(270deg); opacity: 1; }
-        100% { transform: translate(0,0) scale(1) rotate(360deg); opacity: 0.5; }
+      /* Simple Animations */
+      @keyframes fade-in {
+        from { opacity: 0; }
+        to { opacity: 1; }
       }
-      .animate-shuffle-orbit {
-        animation: shuffle-orbit 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      .animate-fade-in {
+        animation: fade-in 0.5s ease-out forwards;
       }
 
-      @keyframes fly-in {
-        0% { transform: translateY(100px) scale(0.5) rotateX(45deg); opacity: 0; }
-        100% { transform: translateY(0) scale(1) rotateX(0); opacity: 1; }
+      @keyframes fade-in-up {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
       }
-      .animate-fly-in {
-        animation: fly-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+      .animate-fade-in-up {
+        animation: fade-in-up 0.5s ease-out forwards;
       }
 
-      /* Particle Explosion Animation */
+      /* Particle Explosion */
       @keyframes particle-explode {
-        0% { transform: translate(-50%, -50%) translate(0, 0) scale(1); opacity: 1; }
-        100% { transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
+        0% { transform: translate(0, 0) scale(1); opacity: 1; }
+        100% { transform: translate(var(--tx), var(--ty)) scale(0); opacity: 0; }
       }
       .animate-particle-explode {
         animation: particle-explode 0.8s ease-out forwards;
       }
 
-      /* Shake animation for overcharge */
+      /* Shake Effect */
       @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-5px) rotate(-5deg); }
-        75% { transform: translateX(5px) rotate(5deg); }
+        0%, 100% { transform: rotate(0deg); }
+        25% { transform: rotate(-5deg) scale(1.1); }
+        75% { transform: rotate(5deg) scale(1.1); }
       }
       .animate-shake {
-        animation: shake 0.2s ease-in-out;
+        animation: shake 0.2s ease-in-out infinite;
       }
 
+      /* Shuffle Orbit */
+      @keyframes shuffle-orbit {
+        0% { transform: translate(0, 0) scale(1); z-index: 10; }
+        25% { transform: translate(var(--tx), var(--ty)) scale(0.8); z-index: 5; }
+        50% { transform: translate(0, 0) scale(0.6); z-index: 1; }
+        75% { transform: translate(calc(var(--tx) * -1), calc(var(--ty) * -1)) scale(0.8); z-index: 5; }
+        100% { transform: translate(0, 0) scale(1); z-index: 10; }
+      }
+      .animate-shuffle-orbit {
+        animation: shuffle-orbit 1s ease-in-out infinite;
+      }
+      
       /* Custom Scrollbar Hiding */
       .scrollbar-hide::-webkit-scrollbar {
           display: none;
