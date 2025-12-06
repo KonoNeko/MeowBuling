@@ -721,20 +721,20 @@ const App = () => {
 
         {/* Deck Area: Fixed at bottom, overlays spread */}
         {drawnCards.length < (selectedSpread?.cardCount || 0) && (
-            <div className="absolute bottom-0 left-0 w-full h-56 z-50 pointer-events-none">
+            <div className="absolute bottom-0 left-0 w-full h-48 md:h-56 z-50 pointer-events-auto">
                  {/* Gradient Backdrop */}
                  <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29]/95 to-transparent"></div>
                  
                  {/* Scroll Container */}
                  <div 
                     ref={scrollContainerRef}
-                    className="absolute inset-0 flex items-end overflow-x-auto px-[50vw] pb-8 pt-12 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing pointer-events-auto"
+                    className="absolute inset-0 flex items-end overflow-x-auto px-4 pb-4 pt-12 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing"
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
                 >
-                    <div className="flex items-end px-4 space-x-[-3rem] md:space-x-[-4rem]" style={{ width: 'max-content' }}>
+                    <div className="flex items-end space-x-[-2rem] md:space-x-[-4rem]" style={{ width: 'max-content' }}>
                         {deck.map((card, idx) => (
                             <div 
                                 key={card.id}
@@ -758,8 +758,8 @@ const App = () => {
                 </div>
                 
                 {/* Instruction Overlay */}
-                <div className="absolute bottom-4 left-0 w-full text-center pointer-events-none text-white/40 text-[10px] animate-pulse z-50">
-                    ← 左右滑动选牌 • 长按拖拽 →
+                <div className="absolute bottom-2 left-0 w-full text-center pointer-events-none text-white/40 text-[10px] animate-pulse z-50 bg-[#0f0c29]/50 backdrop-blur-sm py-1">
+                    ← 点击卡牌抽取 • 左右滑动选牌 →
                 </div>
             </div>
         )}
@@ -1141,13 +1141,15 @@ const App = () => {
       </div>
 
       {/* Bottom Navigation */}
-      <BottomNav 
-        activeView={view} 
-        onNavigate={(v) => {
-            if (v === AppView.HISTORY) setHistory(getHistory());
-            setView(v);
-        }} 
-      />
+      {view !== AppView.DRAW && (
+        <BottomNav 
+          activeView={view} 
+          onNavigate={(v) => {
+              if (v === AppView.HISTORY) setHistory(getHistory());
+              setView(v);
+          }} 
+        />
+      )}
     </div>
   );
 };
