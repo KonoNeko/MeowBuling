@@ -1,9 +1,5 @@
 # 喵卜灵 MeowBuling - AI 塔罗牌应用
 
-<div align="center">
-<img width="1200" height="475" alt="喵卜灵应用截图" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 ## 📖 项目简介
 
 喵卜灵是一款基于人工智能的塔罗牌占卜应用，结合了传统的塔罗牌智慧与现代 AI 技术，为用户提供个性化的塔罗牌解读体验。应用采用 React + TypeScript + Vite 构建，支持多种牌阵选择和智能解读。
