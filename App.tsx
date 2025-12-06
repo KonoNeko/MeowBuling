@@ -15,6 +15,9 @@ const App = () => {
   const [question, setQuestion] = useState("");
   const [filterTags, setFilterTags] = useState<string[]>([]); // New: Tags to filter spreads
   
+  // Library Interaction State
+  const [librarySpreadToStart, setLibrarySpreadToStart] = useState<SpreadDefinition | null>(null);
+
   // Drawing State
   const [deck, setDeck] = useState<TarotCard[]>([]);
   const [drawnCards, setDrawnCards] = useState<TarotCard[]>([]);
@@ -123,6 +126,32 @@ const App = () => {
     setDrawStep('init'); 
     setDrawnCards([]);
     setView(AppView.DRAW);
+  };
+
+  // New: Handle starting directly from Library
+  const handleDirectStartFromLibrary = (spread: SpreadDefinition, customQuestion: string) => {
+      // 1. Try to find a matching topic based on spread category
+      // Map categories to topic IDs manually for best match
+      let topicId = 'fortune'; // Default fallback
+      if (spread.category.includes('Love')) topicId = 'love';
+      else if (spread.category.includes('Career')) topicId = 'career';
+      else if (spread.category.includes('Decision')) topicId = 'decision';
+      else if (spread.category.includes('Healing')) topicId = 'self';
+      
+      const topic = TOPICS.find(t => t.id === topicId) || TOPICS[4]; // Default to Fortune if fail
+
+      // 2. Set State
+      setSelectedTopic(topic);
+      setSelectedSpread(spread);
+      setQuestion(customQuestion);
+      
+      // 3. Reset Drawing State
+      setDrawStep('init');
+      setDrawnCards([]);
+      
+      // 4. Navigate
+      setLibrarySpreadToStart(null); // Close modal
+      setView(AppView.DRAW);
   };
 
   const startShuffle = () => {
@@ -749,10 +778,31 @@ const App = () => {
 
   const renderHistory = () => (
     <div className="h-full overflow-y-auto p-6 pt-24 custom-scrollbar animate-fade-in pb-32">
-      <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-8 sticky top-0 bg-[#0f0c29]/90 backdrop-blur z-20 py-4 border-b border-white/10">
-          <h2 className="text-3xl font-mystic text-white">时光卷轴</h2>
-        </div>
+        <div className="max-w-4xl mx-auto relative">
+            {/* Scroll Header Container */}
+            <div className="sticky top-0 z-30 py-4 -mx-6 px-6 bg-gradient-to-b from-[#0f0c29] via-[#0f0c29]/90 to-transparent flex justify-center">
+                <div className="relative transform hover:scale-105 transition-transform duration-300">
+                    {/* The Scroll Graphic */}
+                    {/* Left Roll Handle */}
+                    <div className="absolute top-1/2 -left-6 w-8 h-[130%] -translate-y-1/2 bg-gradient-to-r from-[#5b21b6] via-[#7c3aed] to-[#4c1d95] rounded-full border-2 border-[#fbbf24] shadow-lg z-20 flex items-center justify-center">
+                        <div className="w-4 h-4 bg-[#fbbf24] rounded-full shadow-inner opacity-80"></div>
+                    </div>
+                    
+                    {/* Scroll Body */}
+                    <div className="relative bg-[#2e1065] px-12 py-3 border-y-2 border-[#fbbf24] shadow-[0_0_20px_rgba(124,58,237,0.5)] z-10 flex items-center justify-center min-w-[240px]">
+                        <h2 className="text-3xl font-mystic text-[#fef3c7] tracking-widest drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                            时光卷轴
+                        </h2>
+                        {/* Texture */}
+                         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
+                    </div>
+
+                    {/* Right Roll Handle */}
+                    <div className="absolute top-1/2 -right-6 w-8 h-[130%] -translate-y-1/2 bg-gradient-to-l from-[#5b21b6] via-[#7c3aed] to-[#4c1d95] rounded-full border-2 border-[#fbbf24] shadow-lg z-20 flex items-center justify-center">
+                        <div className="w-4 h-4 bg-[#fbbf24] rounded-full shadow-inner opacity-80"></div>
+                    </div>
+                </div>
+            </div>
 
         {history.length === 0 ? (
           <div className="text-center py-32 space-y-4 opacity-50">
@@ -760,7 +810,7 @@ const App = () => {
             <p className="text-indigo-300">过去像一张白纸，等待你去书写。</p>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-6 mt-4">
             {history.map(reading => (
               <GlassCard key={reading.id} className="group hover:bg-white/10 transition-colors cursor-default">
                 <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 mb-4">
