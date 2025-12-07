@@ -617,26 +617,100 @@ const App = () => {
     // 1. Initial State: The Deck on Table
     if (drawStep === 'init') {
       return (
-        <div className="h-full flex flex-col items-center justify-center space-y-8 animate-fade-in p-6 pt-20 pb-32">
-           <div className="relative w-48 h-72 cursor-pointer group" onClick={startShuffle}>
-              {/* Stack effect */}
-              <div className="absolute top-0 left-0 w-full h-full bg-indigo-900 rounded-xl border border-indigo-700 transform translate-x-4 translate-y-4 group-hover:translate-x-6 group-hover:translate-y-6 transition-transform"></div>
-              <div className="absolute top-0 left-0 w-full h-full bg-indigo-800 rounded-xl border border-indigo-600 transform translate-x-2 translate-y-2 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform"></div>
-              {/* Main Deck */}
-              <div className="absolute top-0 left-0 w-full h-full bg-indigo-950 rounded-xl border-2 border-purple-500 flex items-center justify-center shadow-2xl group-hover:-translate-y-2 transition-transform">
-                  <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
-                  <span className="absolute text-5xl filter drop-shadow-glow">🔮</span>
-              </div>
+        <div className="h-full flex flex-col items-center animate-fade-in pt-16 pb-6 px-4 relative z-10 overflow-hidden supports-[height:100dvh]:h-[100dvh]">
+           
+           {/* Background Atmosphere - centered glow */}
+           <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[150vw] h-[150vw] md:w-[600px] md:h-[600px] bg-purple-900/20 rounded-full blur-[100px] animate-pulse-slow pointer-events-none"></div>
+
+           {/* 
+              CARD SECTION 
+              Use flex-1 to take up available vertical space.
+              Center align. 
+           */}
+           <div className="flex-1 flex items-center justify-center w-full min-h-0">
+               <div 
+                 className="relative group cursor-pointer perspective-1000"
+                 onClick={startShuffle}
+               >
+                  {/* Floating Wrapper with responsive sizing based on viewport height */}
+                  {/* Using vh for height to ensure it fits without scrolling on small phones */}
+                  <div className="relative h-[40vh] md:h-[45vh] max-h-[420px] w-auto aspect-[2/3] transition-transform duration-500 group-hover:scale-105 group-hover:-translate-y-2">
+                      
+                      {/* Card Shadow/Depth Layers */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-indigo-950 rounded-2xl border border-white/5 transform translate-x-3 translate-y-3 opacity-40"></div>
+                      <div className="absolute top-0 left-0 w-full h-full bg-indigo-900 rounded-2xl border border-white/5 transform translate-x-1.5 translate-y-1.5 opacity-60"></div>
+                      
+                      {/* Main Card Face */}
+                      <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-[#2e1065] to-[#0f0c29] rounded-2xl border border-purple-500/30 flex flex-col items-center justify-center overflow-hidden shadow-[0_0_40px_rgba(139,92,246,0.2)] group-hover:shadow-[0_0_60px_rgba(139,92,246,0.4)] transition-all duration-500">
+                          
+                          {/* Subtle Pattern */}
+                          <div className="absolute inset-0 opacity-20 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                          
+                          {/* Inner Border */}
+                          <div className="absolute inset-3 border border-dashed border-purple-400/10 rounded-xl"></div>
+
+                          {/* Central Icon */}
+                          <div className="text-6xl md:text-8xl filter drop-shadow-[0_0_20px_rgba(168,85,247,0.5)] animate-float mb-6">
+                              🔮
+                          </div>
+
+                          {/* Interaction Hint (from screenshot) */}
+                          <div className="absolute bottom-8 md:bottom-12 w-full flex flex-col items-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity duration-500">
+                              {/* Top Line */}
+                              <div className="w-16 md:w-24 h-[1px] bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
+                              
+                              <div className="flex flex-col items-center gap-1">
+                                  <span className="text-[10px] tracking-[0.2em] text-purple-200 uppercase font-medium">点击触碰</span>
+                                  <div className="w-1 h-1 bg-purple-300 rounded-full animate-ping"></div>
+                              </div>
+                              
+                              {/* Bottom Line */}
+                              <div className="w-16 md:w-24 h-[1px] bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"></div>
+                          </div>
+                          
+                          {/* Scanline Effect */}
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-purple-400/5 to-transparent h-[20%] w-full animate-scan pointer-events-none"></div>
+                      </div>
+                  </div>
+               </div>
            </div>
            
-           <div className="text-center space-y-2">
-             <h2 className="text-3xl font-mystic text-white">准备好连接宇宙了吗？</h2>
-             <p className="text-indigo-300">点击牌堆，开始洗牌并注入你的能量</p>
+           {/* 
+              CONTENT SECTION 
+              Fixed at bottom area, content shrinks if needed but maintains padding
+           */}
+           <div className="w-full max-w-sm text-center relative z-20 space-y-4 md:space-y-6 shrink-0">
+             
+             {/* The Title */}
+             <h2 className="text-[10px] md:text-xs font-bold tracking-[0.3em] text-indigo-300/50 uppercase">
+                The Universe is Listening
+             </h2>
+
+             {/* Instructional Box */}
+             <div className="bg-[#1a1638]/60 backdrop-blur-md border border-white/5 rounded-2xl p-4 md:p-6 shadow-xl relative overflow-hidden group">
+                {/* Glow effect inside box */}
+                <div className="absolute -top-10 -left-10 w-20 h-20 bg-purple-500/20 rounded-full blur-2xl group-hover:bg-purple-500/30 transition-colors"></div>
+                
+                <p className="text-indigo-100/80 text-xs md:text-sm leading-relaxed md:leading-loose font-light relative z-10">
+                   请深呼吸，摒除杂念。<br/>
+                   在心中默念你当下的<span className="text-yellow-200/90 font-medium mx-1">困惑</span>与<span className="text-yellow-200/90 font-medium mx-1">期盼</span>。<br/>
+                   当你感到内心平静时，注入能量开启指引。
+                </p>
+             </div>
+
+             {/* Action Button */}
+             <Button 
+                onClick={startShuffle} 
+                className="w-full py-3.5 md:py-4 bg-gradient-to-r from-[#6d28d9] to-[#4f46e5] hover:from-[#7c3aed] hover:to-[#6366f1] shadow-[0_0_20px_rgba(109,40,217,0.4)] hover:shadow-[0_0_30px_rgba(109,40,217,0.6)] border border-white/10 rounded-xl group transition-all duration-300 active:scale-95"
+             >
+                <div className="flex items-center justify-center gap-3">
+                    <span className="text-lg text-purple-200 group-hover:rotate-45 transition-transform duration-500">✨</span> 
+                    <span className="text-sm md:text-base tracking-widest font-bold text-white">注入能量 • 开始洗牌</span>
+                    <span className="text-lg text-purple-200 group-hover:-rotate-45 transition-transform duration-500">✨</span>
+                </div>
+             </Button>
+
            </div>
-           
-           <Button onClick={startShuffle} className="px-12 py-4 text-xl shadow-purple-500/50 animate-pulse">
-             开始洗牌
-           </Button>
         </div>
       )
     }

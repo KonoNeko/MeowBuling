@@ -131,6 +131,17 @@
         animation: progress-charge 1.5s linear infinite;
       }
       
+      /* New: Scan Effect for Card */
+      @keyframes scan {
+        0% { transform: translateY(-100%); opacity: 0; }
+        20% { opacity: 1; }
+        80% { opacity: 1; }
+        100% { transform: translateY(400%); opacity: 0; }
+      }
+      .animate-scan {
+        animation: scan 4s linear infinite;
+      }
+
       /* Custom Scrollbar Hiding */
       .scrollbar-hide::-webkit-scrollbar {
           display: none;
