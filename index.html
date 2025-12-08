@@ -68,68 +68,14 @@
         animation: particle-explode 0.8s ease-out forwards;
       }
 
-      /* Shake Effect */
-      @keyframes shake {
-        0%, 100% { transform: rotate(0deg); }
-        25% { transform: rotate(-5deg) scale(1.1); }
-        75% { transform: rotate(5deg) scale(1.1); }
-      }
-      .animate-shake {
-        animation: shake 0.2s ease-in-out infinite;
-      }
-
-      /* Shuffle Orbit */
-      @keyframes shuffle-orbit {
-        0% { transform: translate(0, 0) scale(1); z-index: 10; }
-        25% { transform: translate(var(--tx), var(--ty)) scale(0.8); z-index: 5; }
-        50% { transform: translate(0, 0) scale(0.6); z-index: 1; }
-        75% { transform: translate(calc(var(--tx) * -1), calc(var(--ty) * -1)) scale(0.8); z-index: 5; }
-        100% { transform: translate(0, 0) scale(1); z-index: 10; }
-      }
-      .animate-shuffle-orbit {
-        animation: shuffle-orbit 1s ease-in-out infinite;
-      }
-
-      /* New: Card Fly Animation */
-      @keyframes card-fly {
-        0% { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 0; }
-        10% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-        50% { transform: translate(var(--tx), var(--ty)) scale(1.2) rotate(var(--tr)); opacity: 1; box-shadow: 0 0 20px rgba(168, 85, 247, 0.6); }
-        85% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(0.2) rotate(0deg); opacity: 0; }
-      }
-      .animate-card-fly {
-        animation: card-fly 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-      }
-
-      /* New: Cat Reveal Animation */
-      @keyframes cat-reveal {
-        0% { transform: scale(0); opacity: 0; filter: blur(20px) brightness(2); }
-        50% { transform: scale(1.2); opacity: 1; filter: blur(0px) brightness(1.2); }
-        70% { transform: scale(0.9); filter: brightness(1); }
-        100% { transform: scale(1); opacity: 1; }
-      }
-      .animate-cat-reveal {
-        animation: cat-reveal 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-      }
-
-      /* New: Holy Light Burst */
-      @keyframes light-burst {
-        0% { transform: scale(0) rotate(0deg); opacity: 1; }
-        100% { transform: scale(3) rotate(180deg); opacity: 0; }
-      }
-      .animate-light-burst {
-        animation: light-burst 0.8s ease-out forwards;
-      }
-
-      /* New: Progress Bar Charge */
+      /* Progress Bar Charge */
       @keyframes progress-charge {
         0% { background-position: 100% 0; }
         100% { background-position: -100% 0; }
       }
       .animate-progress {
         background-size: 200% 100%;
-        animation: progress-charge 1.5s linear infinite;
+        animation: progress-charge 1.0s linear infinite; /* Faster progress bar */
       }
       
       /* New: Scan Effect for Card */
@@ -141,6 +87,56 @@
       }
       .animate-scan {
         animation: scan 4s linear infinite;
+      }
+
+      /* --- UPDATED FASTER SHUFFLE ANIMATIONS --- */
+
+      /* Faster rotation for inner rings */
+      @keyframes spin-fast {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .animate-spin-fast {
+        animation: spin-fast 3s linear infinite; /* Increased speed */
+      }
+
+      /* Super fast rotation for chaos phase or outer rings */
+      @keyframes spin-super-fast {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .animate-spin-super-fast {
+        animation: spin-super-fast 1.5s linear infinite; /* Very fast */
+      }
+
+      /* Reverse rotation */
+      @keyframes spin-reverse-fast {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+      }
+      .animate-spin-reverse-fast {
+        animation: spin-reverse-fast 4s linear infinite;
+      }
+
+      /* Chaos Spin for shuffling */
+      @keyframes chaos-spin {
+        0% { transform: rotate3d(1, 1, 1, 0deg) scale(1); }
+        25% { transform: rotate3d(1, -1, 0, 90deg) scale(1.1); }
+        50% { transform: rotate3d(-1, 1, 0, 180deg) scale(0.9); }
+        75% { transform: rotate3d(0, 1, 1, 270deg) scale(1.1); }
+        100% { transform: rotate3d(1, 1, 1, 360deg) scale(1); }
+      }
+      .animate-chaos-spin {
+        animation: chaos-spin 0.6s linear infinite;
+      }
+
+      /* Pulse scale for background nebula */
+      @keyframes pulse-scale {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+      }
+      .animate-pulse-scale {
+        animation: pulse-scale 2s ease-in-out infinite; /* Faster pulse */
       }
 
       /* Custom Scrollbar Hiding */

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { SpreadDefinition, TarotCard, AppView, ReadingSession } from './types';
 import { getCardEducation, SYSTEM_INSTRUCTION } from './constants';
 
@@ -57,7 +57,7 @@ export const LoadingSkeleton = () => (
 
 export const CategoryQuickNav = ({ categories, onSelect }: { categories: {id: string, label: string}[], onSelect: (catId: string) => void }) => {
     return (
-        <div className="sticky top-16 z-50 w-full border-b border-white/5 bg-[#0f0c29]/95 backdrop-blur-xl shadow-2xl">
+        <div className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#0f0c29]/95 backdrop-blur-xl shadow-2xl">
             <div className="max-w-7xl mx-auto px-2 md:px-6">
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide py-3 items-center px-2">
                     {categories.map((cat) => (
@@ -91,7 +91,7 @@ export const SpreadStartModal = ({ spread, onClose, onStart }: { spread: SpreadD
                 </div>
                 <div className="space-y-6">
                     <div className="bg-white/5 rounded-xl p-4 text-center">
-                        <div className="scale-75 origin-center -my-2">
+                        <div className="scale-75 origin-center -my-2 flex justify-center">
                              <SpreadPreview spread={spread} />
                         </div>
                         <p className="text-sm text-indigo-300 mt-2">{spread.description}</p>
@@ -132,7 +132,161 @@ interface Particle {
     color: string;
     size: number;
     icon?: string;
+    delay?: number;
 }
+
+export const ShufflingView = () => {
+    // Phase: 'start' (init hidden) -> 'shuffle' (Chaos) -> 'orbit' (Sphere Order) -> 'expand' (Fan out)
+    const [phase, setPhase] = useState<'start' | 'shuffle' | 'orbit' | 'expand'>('start');
+    const [textPhase, setTextPhase] = useState(0);
+
+    const TOTAL_CARDS = 30;
+
+    useEffect(() => {
+        // 1. Chaos Shuffle
+        const tStart = setTimeout(() => setPhase('shuffle'), 50);
+
+        // 2. Harmony (Fibonacci Sphere)
+        const t1 = setTimeout(() => setPhase('orbit'), 800);
+        
+        // 3. Final Reveal
+        const t3 = setTimeout(() => setPhase('expand'), 2600);
+        
+        // Cycle text
+        const t2 = setInterval(() => {
+            setTextPhase(p => (p + 1) % 2);
+        }, 1000);
+
+        return () => {
+            clearTimeout(tStart);
+            clearTimeout(t1);
+            clearTimeout(t3);
+            clearInterval(t2);
+        };
+    }, []);
+
+    const cards = useMemo(() => {
+        // Fibonacci Sphere Algorithm
+        // Distributes points evenly on a sphere surface
+        const phi = Math.PI * (3 - Math.sqrt(5)); // Golden Angle
+
+        return Array.from({ length: TOTAL_CARDS }).map((_, i) => {
+            
+            // --- ORBIT: FIBONACCI SPHERE ---
+            const y = 1 - (i / (TOTAL_CARDS - 1)) * 2; // y goes from 1 to -1
+            const radiusAtY = Math.sqrt(1 - y * y); // Radius at y
+            const theta = phi * i; // Golden angle increment
+
+            const sphereRadius = 22; // vmin
+            
+            // Convert to Cartesian coordinates
+            const x = Math.cos(theta) * radiusAtY * sphereRadius;
+            const z = Math.sin(theta) * radiusAtY * sphereRadius;
+            const yPos = y * sphereRadius;
+
+            // Calculate rotation to face roughly outwards/center
+            // Simple look-at math approximation for CSS
+            const rotY = 90 - (theta * 180 / Math.PI); 
+            const rotX = -Math.asin(y) * (180 / Math.PI);
+
+            // --- SHUFFLE: CHAOS ---
+            const randX = (Math.random() - 0.5) * 200; 
+            const randY = (Math.random() - 0.5) * 200;
+            const randZ = (Math.random() - 0.5) * 800;
+            const randRotX = Math.random() * 720; 
+            const randRotY = Math.random() * 720; 
+
+            // --- EXPAND: FAN OUT ---
+            const normalizedIndex = i - (TOTAL_CARDS / 2);
+            const expandX = normalizedIndex * 4;
+
+            return {
+                id: i,
+                startStyle: {
+                    transform: `translate3d(0, 0, 0) scale(0)`,
+                    opacity: 0
+                },
+                shuffleStyle: {
+                    transform: `translate3d(${randX}vmin, ${randY}vmin, ${randZ}px) rotateX(${randRotX}deg) rotateY(${randRotY}deg) scale(0.6)`,
+                    opacity: 1
+                },
+                orbitStyle: {
+                    // Position on sphere
+                    transform: `translate3d(${x}vmin, ${yPos}vmin, ${z}vmin) rotateX(${rotX}deg) rotateY(${rotY}deg) scale(0.8)`,
+                    opacity: 0.9
+                },
+                expandStyle: {
+                    transform: `translate3d(${expandX}vmin, 35vh, 0px) rotateZ(${normalizedIndex * 2}deg) scale(1)`,
+                    opacity: 1
+                }
+            };
+        });
+    }, []);
+
+    const messages = ["命运洗牌...", "星轨重组..."];
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#0f0c29] overflow-hidden select-none pointer-events-none perspective-1000">
+            {/* Background */}
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-indigo-900/60 via-[#0f0c29] to-black"></div>
+            
+            {/* Center Core Glow */}
+            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[40vmin] h-[40vmin] bg-purple-500/10 rounded-full blur-[60px] animate-pulse-scale transition-opacity duration-500 ${phase === 'expand' ? 'opacity-0' : 'opacity-100'}`}></div>
+
+            {/* --- 3D SCENE CONTAINER --- */}
+            <div 
+                className="relative w-full h-full flex items-center justify-center transform-style-3d"
+                style={{ perspective: '1500px' }}
+            >
+                {/* 
+                   SPHERE CONTAINER
+                   Rotates slowly to show the 3D structure
+                */}
+                <div 
+                    className={`
+                        relative w-full h-full flex items-center justify-center transform-style-3d
+                        ${phase === 'orbit' ? 'animate-[spin_20s_linear_infinite]' : ''}
+                    `}
+                >
+                    {cards.map(card => (
+                        <div
+                            key={card.id}
+                            className="absolute w-[8vmin] h-[12vmin] bg-indigo-950/80 border border-purple-400/40 rounded-lg shadow-[0_0_10px_rgba(168,85,247,0.3)] backface-visible transition-all ease-in-out"
+                            style={{
+                                transitionDuration: phase === 'shuffle' ? '600ms' : (phase === 'orbit' ? '1200ms' : '800ms'),
+                                transitionTimingFunction: phase === 'orbit' ? 'cubic-bezier(0.34, 1.56, 0.64, 1)' : 'ease-out',
+                                ...(phase === 'start' ? card.startStyle : 
+                                   phase === 'shuffle' ? card.shuffleStyle : 
+                                   phase === 'expand' ? card.expandStyle : 
+                                   card.orbitStyle)
+                            }}
+                        >
+                            {/* Inner Shimmer */}
+                            <div className="w-full h-full bg-gradient-to-tr from-purple-500/20 via-transparent to-blue-500/20 rounded-lg overflow-hidden">
+                                 <div className="absolute inset-0 opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                                 <div className="absolute inset-1 border border-dashed border-white/10 rounded"></div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* --- CORE ENERGY (Appears in Orbit) --- */}
+            {/* A small bright star in the very center of the sphere */}
+            <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-all duration-700 ${phase === 'orbit' ? 'opacity-100 scale-100' : 'opacity-0 scale-0'}`}>
+                <div className="w-[4vmin] h-[4vmin] bg-white rounded-full shadow-[0_0_40px_white] animate-pulse"></div>
+            </div>
+
+            {/* --- TEXT OVERLAY --- */}
+            <div className={`absolute bottom-[18%] left-0 w-full text-center z-50 transition-opacity duration-300 ${phase === 'expand' ? 'opacity-0' : 'opacity-100'}`}>
+                <h2 className="text-2xl md:text-3xl font-mystic tracking-[0.5em] font-light text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 via-white to-purple-200 drop-shadow-lg animate-pulse">
+                    {messages[textPhase]}
+                </h2>
+                <div className="w-32 h-[1px] bg-gradient-to-r from-transparent via-purple-400 to-transparent mx-auto mt-4"></div>
+            </div>
+        </div>
+    );
+};
 
 export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void, isReady: boolean }) => {
     const [energy, setEnergy] = useState(0);
@@ -163,11 +317,45 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
     }, [energy, isReady, showMeowReveal]);
 
     const triggerFinale = () => {
+        // --- 1. THE BIG BANG EXPLOSION ---
+        const centerX = window.innerWidth / 2;
+        const centerY = window.innerHeight / 2;
+        const explosionCount = 60; // More particles for impact
+        const newParticles: Particle[] = [];
+        
+        // Burst of particles
+        for (let i = 0; i < explosionCount; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            // Variable distance for natural look
+            const velocity = 150 + Math.random() * 400; 
+            const size = 3 + Math.random() * 6;
+            
+            newParticles.push({
+                id: Date.now() + i,
+                x: centerX,
+                y: centerY,
+                tx: Math.cos(angle) * velocity,
+                ty: Math.sin(angle) * velocity,
+                tr: Math.random() * 360,
+                color: ['#fbbf24', '#fcd34d', '#c084fc', '#e879f9', '#ffffff'][Math.floor(Math.random() * 5)],
+                size: size,
+                icon: Math.random() > 0.8 ? '✨' : undefined,
+                delay: 0
+            });
+        }
+        setParticles(prev => [...prev, ...newParticles]);
+
         setShowMeowReveal(true);
-        // Delay onComplete to let the reveal animation play
+        
+        // Clear particles after explosion settles to save memory
+        setTimeout(() => {
+            setParticles([]);
+        }, 1500);
+
+        // Delay onComplete slightly longer to let user absorb the mystical vibe
         setTimeout(() => {
             onComplete();
-        }, 3000); // Increased wait for the enhanced animation
+        }, 5000); 
     };
 
     const handleClick = (e: React.MouseEvent | React.TouchEvent) => {
@@ -184,8 +372,7 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
             return Math.min(prev + 5, limit);
         });
 
-        // 2. Create Particles
-        // Determine click position
+        // 2. Create Particles (User Interaction)
         let clientX, clientY;
         if ('touches' in e) {
              clientX = e.touches[0].clientX;
@@ -196,10 +383,9 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
         }
 
         const newParticles: Particle[] = [];
-        // More Gold/Star colors for the "Golden" feel
         const colors = ['#fcd34d', '#fbbf24', '#ffffff', '#a78bfa']; 
-        const starIcons = ['✨', '⭐', '✦', '⭑'];
-        const particleCount = 6 + Math.random() * 6; 
+        const starIcons = ['✨', '⭐', '✦'];
+        const particleCount = 5 + Math.random() * 5; 
 
         // Spawn particles at click position
         for (let i = 0; i < particleCount; i++) {
@@ -208,7 +394,7 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
             const tx = Math.cos(angle) * speed;
             const ty = Math.sin(angle) * speed;
             const tr = Math.random() * 360;
-            const isIcon = Math.random() > 0.3; // More icons
+            const isIcon = Math.random() > 0.4; // Frequent stars
             
             newParticles.push({
                 id: Date.now() + Math.random(),
@@ -218,35 +404,12 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
                 ty,
                 tr,
                 color: colors[Math.floor(Math.random() * colors.length)],
-                size: isIcon ? 20 + Math.random() * 15 : 6 + Math.random() * 6,
+                size: isIcon ? 15 + Math.random() * 10 : 4 + Math.random() * 4,
                 icon: isIcon ? starIcons[Math.floor(Math.random() * starIcons.length)] : undefined
-            });
-        }
-
-        // Spawn EXTRA stars from the Crystal Ball position (approx center screen)
-        // to mimic "Crystal ball emitting stars"
-        const ballX = window.innerWidth / 2;
-        const ballY = window.innerHeight / 2 - 100; // Rough offset for visual center
-        
-        for (let i = 0; i < 4; i++) {
-             const angle = Math.random() * Math.PI * 2;
-             const speed = 100 + Math.random() * 100;
-             newParticles.push({
-                id: Date.now() + Math.random() + 100,
-                x: ballX,
-                y: ballY,
-                tx: Math.cos(angle) * speed,
-                ty: Math.sin(angle) * speed,
-                tr: Math.random() * 360,
-                color: '#fbbf24', // Gold
-                size: 24,
-                icon: '⭐'
             });
         }
         
         setParticles(prev => [...prev, ...newParticles]);
-
-        // Cleanup particles
         setTimeout(() => {
             setParticles(prev => prev.filter(p => !newParticles.find(np => np.id === p.id)));
         }, 1000);
@@ -258,40 +421,70 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
             onClick={handleClick}
             onTouchStart={handleClick}
         >
-            {/* Background Particles */}
-            <div className="absolute inset-0 pointer-events-none opacity-30">
+            {/* Background Atmosphere - Always present */}
+            <div className="absolute inset-0 pointer-events-none opacity-40">
                  <div className="absolute top-[20%] left-[20%] w-1 h-1 bg-white rounded-full animate-pulse"></div>
                  <div className="absolute top-[60%] right-[20%] w-1.5 h-1.5 bg-purple-300 rounded-full animate-pulse" style={{animationDelay: '1s'}}></div>
                  <div className="absolute bottom-[30%] left-[40%] w-1 h-1 bg-blue-300 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
             </div>
 
-            {/* MEOW BULING REVEAL */}
+            {/* MEOW BULING REVEAL - THE MYSTICAL FINALE */}
             {showMeowReveal ? (
-                <div className="relative z-20 flex flex-col items-center justify-center w-full h-full animate-cat-reveal">
-                    {/* Dazzling Background Rays */}
-                    <div className="absolute inset-0 flex items-center justify-center overflow-hidden pointer-events-none">
-                        <div className="w-[150vmax] h-[150vmax] bg-[conic-gradient(from_0deg,transparent_0deg,#9333ea_20deg,transparent_40deg,#facc15_60deg,transparent_80deg,#9333ea_100deg,transparent_120deg)] animate-[spin_10s_linear_infinite] opacity-30 blur-xl"></div>
-                        <div className="w-[100vmax] h-[100vmax] bg-[conic-gradient(from_180deg,transparent_0deg,#c084fc_20deg,transparent_40deg,#fde047_60deg,transparent_80deg)] animate-[spin_8s_linear_infinite_reverse] opacity-20 blur-lg mix-blend-overlay"></div>
-                    </div>
+                <div className="relative z-20 flex flex-col items-center justify-center w-full h-full animate-fade-in duration-1000">
                     
-                    {/* Shockwave Ring */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-0 h-0 rounded-full border-[20px] border-white/50 animate-[ping_1.5s_cubic-bezier(0,0,0.2,1)_infinite]"></div>
+                    {/* 1. Flash of Light (The Transition) */}
+                    <div className="absolute inset-0 bg-white animate-[particle-explode_1s_ease-out_forwards] pointer-events-none z-50 mix-blend-overlay"></div>
 
-                    {/* Holy Light Burst */}
-                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200vw] h-[200vw] bg-gradient-to-r from-purple-500/0 via-white/30 to-purple-500/0 rounded-full animate-light-burst pointer-events-none"></div>
-                    
-                    {/* The Cat */}
-                    <div className="text-[180px] md:text-[220px] filter drop-shadow-[0_0_80px_rgba(234,179,8,0.6)] relative z-10 animate-[bounce_2s_infinite]">
-                        🐱
-                        <div className="absolute -top-10 -right-10 text-7xl animate-bounce">✨</div>
-                        <div className="absolute top-0 -left-10 text-6xl animate-pulse" style={{animationDelay: '0.2s'}}>🌟</div>
-                        <div className="absolute -bottom-4 right-10 text-6xl animate-pulse" style={{animationDelay: '0.5s'}}>🔮</div>
+                    {/* 2. Deep Nebula Background */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                         {/* Large rotating nebula glows */}
+                         <div className="w-[100vw] h-[100vw] bg-purple-900/40 rounded-full blur-[120px] animate-[spin_60s_linear_infinite]"></div>
+                         <div className="absolute w-[80vw] h-[80vw] bg-indigo-900/40 rounded-full blur-[100px] animate-[spin_40s_linear_infinite_reverse]"></div>
+                         <div className="absolute w-[40vw] h-[40vw] bg-pink-900/20 rounded-full blur-[80px] animate-pulse"></div>
+                    </div>
+
+                    {/* 3. Sacred Geometry (Elegant Lines) */}
+                    <div className="absolute flex items-center justify-center opacity-60">
+                        <div className="absolute w-[300px] h-[300px] md:w-[500px] md:h-[500px] border border-white/10 rounded-full animate-[spin_30s_linear_infinite]"></div>
+                        <div className="absolute w-[240px] h-[240px] md:w-[400px] md:h-[400px] border border-dashed border-purple-300/20 rounded-full animate-[spin_45s_linear_infinite_reverse]"></div>
+                        {/* Thin gold ring */}
+                        <div className="absolute w-[280px] h-[280px] md:w-[460px] md:h-[460px] border-[0.5px] border-yellow-200/10 rounded-full scale-110 animate-pulse"></div>
                     </div>
                     
-                    <h2 className="text-5xl md:text-7xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-white to-purple-300 mt-8 animate-fade-in-up drop-shadow-[0_4px_20px_rgba(168,85,247,0.8)] scale-110">
-                        喵卜灵降临！
-                    </h2>
-                    <p className="text-yellow-100 mt-6 text-xl font-bold tracking-[0.3em] animate-pulse drop-shadow-md">命运已为你揭示...</p>
+                    {/* 4. The Prophet (Cat) - Slow majestic float */}
+                    <div className="relative z-10 flex flex-col items-center">
+                        <div className="text-[120px] md:text-[160px] filter drop-shadow-[0_0_80px_rgba(168,85,247,0.6)] animate-float scale-110">
+                            🐱
+                            {/* Inner glow behind cat */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-white/20 rounded-full blur-2xl -z-10"></div>
+                        </div>
+                    </div>
+                    
+                    {/* 5. The Prophecy Text - Immersive Copy */}
+                    <div className="relative z-10 mt-16 text-center space-y-6">
+                        
+                        {/* Primary Title */}
+                        <div className="animate-fade-in-up" style={{animationDelay: '0.3s'}}>
+                             <h2 className="text-4xl md:text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-b from-yellow-100 via-purple-100 to-indigo-200 tracking-[0.2em] font-light drop-shadow-[0_0_20px_rgba(255,255,255,0.4)]">
+                                星 轨 已 定
+                            </h2>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="flex justify-center items-center gap-4 opacity-0 animate-fade-in" style={{animationDelay: '0.8s'}}>
+                            <div className="h-px w-16 bg-gradient-to-r from-transparent to-purple-400"></div>
+                            <div className="text-xl text-yellow-200">✦</div>
+                            <div className="h-px w-16 bg-gradient-to-l from-transparent to-purple-400"></div>
+                        </div>
+
+                        {/* Secondary Text */}
+                        <div className="animate-fade-in-up" style={{animationDelay: '1.2s'}}>
+                            <p className="text-indigo-200 text-sm md:text-lg font-serif tracking-widest uppercase">
+                                天 机 显 现 · 命 运 回 响
+                            </p>
+                        </div>
+
+                    </div>
                 </div>
             ) : (
                 /* LOADING STATE */
@@ -359,7 +552,7 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
                 </>
             )}
 
-            {/* User Interaction Particles */}
+            {/* Particles Render Layer */}
             {particles.map(p => (
                 <div 
                     key={p.id}
@@ -375,7 +568,8 @@ export const EnergyLoading = ({ onComplete, isReady }: { onComplete: () => void,
                         '--tx': `${p.tx}px`,
                         '--ty': `${p.ty}px`,
                         '--tr': `${p.tr}deg`,
-                        boxShadow: p.icon ? 'none' : `0 0 ${p.size}px ${p.color}`
+                        boxShadow: p.icon ? 'none' : `0 0 ${p.size}px ${p.color}`,
+                        animationDelay: `${p.delay || 0}s`
                     } as React.CSSProperties}
                 >
                     {p.icon}
@@ -474,7 +668,7 @@ export const BottomNav = ({
 };
 
 // --- Specific UI Components ---
-// ... (Keeping the rest of components unchanged as they were correct) ...
+
 export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any) => {
   // Enhanced mobile sizes:
   // xs: Boosted to 80px (w-20) from 64px
@@ -689,95 +883,19 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     );
 };
 
-export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCardClick }: any) => {
-    // Adjusted threshold: > 6 cards (7 or more) uses XS cards. 5-6 cards use SM.
-    const isLargeSpread = spread.cardCount > 6; 
-    const size = isLargeSpread ? 'xs' : 'sm'; 
-    const activeIndex = drawnCards.length;
+// --- Spread Layout Logic ---
 
-    // ... (Keep existing layout logic, reusing code for brevity) ...
-    // Using simple version for now as we just need to verify other components
-    const getPosStyle = (index: number) => {
-         // Dummy for compilation, real one is in previous file content
-         return { left: '50%', top: '50%' };
-    }
-    
-    // NOTE: In real implementation, this function `getPositionStyle` is same as before.
-    // I am including the full component below to ensure it works correctly.
-    
-    return (
-        // Adjusted aspect ratio for mobile to aspect-[4/5] to provide more vertical space for overlapping cards
-        <div className="relative w-full aspect-[4/5] md:aspect-[4/3] max-w-2xl mx-auto rounded-3xl border-2 border-dashed border-white/5 bg-white/5">
-            {spread.positions.map((pos: any, index: number) => {
-                const card = drawnCards[index];
-                const isActive = !isRevealed && index === activeIndex;
-                const style = getPositionStyle(spread.layout_type || 'linear', index, spread.cardCount);
-                
-                return (
-                    <div 
-                        key={pos.id}
-                        className={`absolute transition-all duration-500`}
-                        style={{...style, animationDelay: `${index * 0.1}s`}}
-                        onClick={() => !card && onDrop && onDrop(null, index)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => {
-                            e.preventDefault();
-                            const cardId = e.dataTransfer.getData("cardId");
-                            if (cardId && onDrop && !card) {
-                                onDrop(parseInt(cardId), index);
-                            }
-                        }}
-                    >
-                        {!card && (
-                            <div className={`
-                                ${isLargeSpread ? 'w-16 h-24' : 'w-20 h-32 md:w-24 md:h-40'} 
-                                rounded-lg border-2 border-dashed 
-                                ${isActive 
-                                    ? 'border-yellow-400 bg-yellow-400/20 shadow-[0_0_20px_rgba(250,204,21,0.6)] scale-105 z-10' 
-                                    : 'border-white/20 bg-white/5'
-                                }
-                                flex flex-col items-center justify-center text-center p-1
-                                transition-all duration-300
-                            `}>
-                                <span className={`font-bold mb-1 ${isActive ? 'text-yellow-200' : 'text-white/30'}`}>{index + 1}</span>
-                                <span className={`text-[8px] leading-tight ${isActive ? 'text-yellow-100' : 'text-white/30'}`}>{pos.name}</span>
-                                {isActive && <div className="absolute -top-2 -right-2 w-4 h-4 bg-yellow-400 rounded-full animate-ping"></div>}
-                            </div>
-                        )}
-
-                        {card && (
-                            <div className="animate-fade-in-up">
-                                <CardDisplay 
-                                    card={card} 
-                                    revealed={isRevealed} 
-                                    size={size}
-                                    label={isRevealed ? undefined : `${index + 1}. ${pos.name}`}
-                                    onClick={() => onCardClick && onCardClick(card)}
-                                />
-                                {isRevealed && (
-                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/50 px-2 rounded text-[10px] text-white z-50">
-                                        {pos.name}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                )
-            })}
-        </div>
-    );
-};
-
-// Re-declaring helper for SpreadLayout (it was outside in previous file)
 const getPositionStyle = (layout: string, index: number, total: number): React.CSSProperties => {
     let style: React.CSSProperties = { left: '50%', top: '50%', transform: 'translate(-50%, -50%)' };
+    
     const getLinear = () => {
-         const step = 100 / (total + 1);
-         const x = step * (index + 1);
-         const y = (total > 4 && index % 2 === 1) ? 60 : 40; 
-         const top = total > 4 ? `${y}%` : '50%';
-         return { left: `${x}%`, top: top, transform: 'translate(-50%, -50%)' };
+            const step = 100 / (total + 1);
+            const x = step * (index + 1);
+            const y = (total > 4 && index % 2 === 1) ? 60 : 40; 
+            const top = total > 4 ? `${y}%` : '50%';
+            return { left: `${x}%`, top: top, transform: 'translate(-50%, -50%)' };
     };
+
     switch (layout) {
         case 'single': return style;
         case 'linear': return getLinear();
@@ -806,17 +924,17 @@ const getPositionStyle = (layout: string, index: number, total: number): React.C
             if (index === 4) return { left: '50%', top: '85%', transform: 'translate(-50%, -50%)' };
             return getLinear();
         case 'hexagram':
-             const angle = (index * 60 - 30) * (Math.PI / 180);
-             const radius = 40; 
-             const x = 50 + radius * Math.cos(angle);
-             const y = 50 + radius * Math.sin(angle);
-             return { left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' };
+                const angle = (index * 60 - 30) * (Math.PI / 180);
+                const radius = 40; 
+                const x = 50 + radius * Math.cos(angle);
+                const y = 50 + radius * Math.sin(angle);
+                return { left: `${x}%`, top: `${y}%`, transform: 'translate(-50%, -50%)' };
         case 'two_columns':
-             const col = index % 2;
-             const row = Math.floor(index / 2);
-             const rows = Math.ceil(total / 2);
-             const rowStep = 80 / rows;
-             return { left: col === 0 ? '25%' : '75%', top: `${15 + row * rowStep + (rowStep/2)}%`, transform: 'translate(-50%, -50%)' };
+                const col = index % 2;
+                const row = Math.floor(index / 2);
+                const rows = Math.ceil(total / 2);
+                const rowStep = 80 / rows;
+                return { left: col === 0 ? '25%' : '75%', top: `${15 + row * rowStep + (rowStep/2)}%`, transform: 'translate(-50%, -50%)' };
         case 'celtic_cross':
             if (index === 0) return { left: '32%', top: '50%', transform: 'translate(-50%, -50%)' };
             if (index === 1) return { left: '32%', top: '50%', transform: 'translate(-50%, -50%) rotate(90deg)' };
@@ -834,7 +952,7 @@ const getPositionStyle = (layout: string, index: number, total: number): React.C
     }
 }
 
-export const SpreadPreview = ({ spread }: any) => {
+export const SpreadPreview = ({ spread }: { spread: SpreadDefinition }) => {
     return (
         <div className="relative w-24 h-24 bg-white/5 rounded-lg border border-white/10 mx-auto">
              {spread.positions.map((pos: any, index: number) => {
@@ -848,6 +966,68 @@ export const SpreadPreview = ({ spread }: any) => {
                             transform: style.transform?.toString().replace('rotate(90deg)', '') + ' scale(0.8)',
                         }}
                      />
+                 )
+             })}
+        </div>
+    )
+}
+
+export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCardClick }: any) => {
+    const isLargeSpread = spread.cardCount > 6;
+    const cardSize = isLargeSpread ? 'xs' : 'sm';
+    
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "move";
+    };
+
+    const handleDrop = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        const cardId = e.dataTransfer.getData("cardId");
+        if (cardId && onDrop) {
+            onDrop(parseInt(cardId), index);
+        }
+    };
+
+    return (
+        <div className="relative w-full h-[50vh] md:h-[600px] mx-auto select-none">
+             {spread.positions.map((pos: any, index: number) => {
+                 const style = getPositionStyle(spread.layout_type || 'linear', index, spread.cardCount);
+                 const card = drawnCards[index];
+                 
+                 return (
+                     <div 
+                        key={index}
+                        data-spread-slot={index}
+                        className={`absolute flex flex-col items-center justify-center transition-all duration-500 ${!card ? 'animate-pulse-slow' : ''}`}
+                        style={style}
+                        onDragOver={handleDragOver}
+                        onDrop={(e) => handleDrop(e, index)}
+                     >
+                        {!card && (
+                            <div className="absolute -top-6 text-[10px] text-indigo-300/70 whitespace-nowrap bg-black/40 px-2 py-0.5 rounded">
+                                {index + 1}. {pos.name}
+                            </div>
+                        )}
+
+                        {card ? (
+                            <CardDisplay 
+                                card={card} 
+                                revealed={isRevealed || true} 
+                                size={cardSize}
+                                label={isRevealed ? pos.name : undefined}
+                                onClick={() => onCardClick && onCardClick(card)}
+                            />
+                        ) : (
+                            <div className={`
+                                border-2 border-dashed border-white/20 rounded-lg bg-white/5 
+                                flex items-center justify-center text-white/20
+                                ${cardSize === 'xs' ? 'w-20 h-32 md:w-24 md:h-40' : 'w-24 h-40 md:w-32 md:h-52'}
+                            `}>
+                                <span className="text-xl font-bold">{index + 1}</span>
+                            </div>
+                        )}
+                     </div>
                  )
              })}
         </div>

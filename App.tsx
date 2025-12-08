@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS } from './constants';
-import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading, CategoryQuickNav, SpreadStartModal } from './components';
+import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading, CategoryQuickNav, SpreadStartModal, ShufflingView } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 
 // Helper for random ID
@@ -49,6 +49,12 @@ const App = () => {
   const startX = useRef(0);
   const scrollLeftPos = useRef(0);
   const isDragging = useRef(false);
+
+  // --- TOUCH DRAG STATE ---
+  const [draggingCard, setDraggingCard] = useState<TarotCard | null>(null);
+  const dragOverlayRef = useRef<HTMLDivElement>(null);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const isDraggingRef = useRef(false);
 
   // Reading & AI State
   const [readingResult, setReadingResult] = useState<ReadingSession | null>(null);
@@ -203,7 +209,7 @@ const App = () => {
     // 1. Prepare Deck
     const rawDeck = [...TAROT_DECK];
     
-    // Simulate shuffle duration - 2.8s to match animation + buffer
+    // Simulate shuffle duration - Increased to 2.8s to include expand animation
     setTimeout(() => {
         // 2. Fisher-Yates Shuffle Logic
         for (let i = rawDeck.length - 1; i > 0; i--) {
@@ -222,7 +228,7 @@ const App = () => {
     }, 2800); 
   };
   
-  // Drag handlers for the scroll container (Container Scroll)
+  // Drag handlers for the scroll container (Container Scroll) - Desktop Mouse Support
   const handleMouseDown = (e: React.MouseEvent) => {
     // Prevent interfering with DnD if the target is a card
     if ((e.target as HTMLElement).closest('.draggable-card')) return;
@@ -258,6 +264,64 @@ const App = () => {
       }
       scrollContainerRef.current.scrollLeft = scrollLeftPos.current - walk;
     }
+  };
+
+  // --- TOUCH HANDLERS FOR CARDS ---
+  
+  const handleTouchStart = (e: React.TouchEvent, card: TarotCard) => {
+      // Don't prevent default yet, we might be scrolling
+      const touch = e.touches[0];
+      dragStartPos.current = { x: touch.clientX, y: touch.clientY };
+      isDraggingRef.current = false;
+      // We don't set draggingCard state yet to avoid re-renders on simple taps/scrolls
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, card: TarotCard) => {
+      const touch = e.touches[0];
+      const dx = touch.clientX - dragStartPos.current.x;
+      const dy = touch.clientY - dragStartPos.current.y;
+
+      // Logic: If user moves vertically (Up) more than horizontally, assume dragging card out of deck
+      // Threshold of 10px prevents jitter
+      if (!isDraggingRef.current) {
+          // If upward movement is dominant
+          if (dy < -10 && Math.abs(dy) > Math.abs(dx)) {
+              isDraggingRef.current = true;
+              setDraggingCard(card); // Now we start rendering the overlay
+          }
+      }
+
+      if (isDraggingRef.current) {
+          e.preventDefault(); // Stop page scrolling
+          if (dragOverlayRef.current) {
+              // Move the overlay directly via DOM for performance
+              // Center the card on finger
+              const cardWidth = 80; // approx width
+              const cardHeight = 128; // approx height
+              dragOverlayRef.current.style.transform = `translate(${touch.clientX - cardWidth/2}px, ${touch.clientY - cardHeight/2}px)`;
+              dragOverlayRef.current.style.opacity = '1';
+          }
+      }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+      if (isDraggingRef.current && draggingCard) {
+          const touch = e.changedTouches[0];
+          // Hide overlay immediately to inspect what's underneath
+          if (dragOverlayRef.current) dragOverlayRef.current.style.opacity = '0';
+          
+          const element = document.elementFromPoint(touch.clientX, touch.clientY);
+          const slot = element?.closest('[data-spread-slot]');
+          
+          if (slot) {
+              const index = parseInt(slot.getAttribute('data-spread-slot') || '-1');
+              if (index >= 0) handleCardDrop(draggingCard.id, index);
+          }
+      }
+      
+      // Reset
+      isDraggingRef.current = false;
+      setDraggingCard(null);
   };
 
   // --- CARD INTERACTION LOGIC ---
@@ -715,60 +779,35 @@ const App = () => {
       )
     }
 
-    // 2. Shuffling Animation State (Improved)
+    // 2. Shuffling Animation State (Interactive)
     if (drawStep === 'shuffling') {
-        return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm overflow-hidden">
-               <div className="relative w-full h-full">
-                   {/* Create flying cards */}
-                   {Array.from({length: 40}).map((_, i) => {
-                       // Random destination
-                       const angle = Math.random() * Math.PI * 2;
-                       const dist = 150 + Math.random() * 350; // Fly out distance
-                       const tx = Math.cos(angle) * dist + 'px';
-                       const ty = Math.sin(angle) * dist + 'px';
-                       const tr = (Math.random() - 0.5) * 720 + 'deg'; // Spin 2 rotations
-                       
-                       return (
-                          <div
-                            key={i}
-                            className="absolute top-1/2 left-1/2 w-20 h-32 md:w-24 md:h-36 bg-indigo-900 border border-purple-400/50 rounded-lg shadow-2xl animate-card-fly"
-                            style={{
-                                '--tx': tx,
-                                '--ty': ty,
-                                '--tr': tr,
-                                animationDelay: `${Math.random() * 0.5}s`,
-                                backgroundImage: `url('https://www.transparenttextures.com/patterns/stardust.png')`,
-                                backfaceVisibility: 'hidden'
-                            } as React.CSSProperties}
-                          >
-                             <div className="w-full h-full flex items-center justify-center opacity-30">
-                                <span className="text-xl">🔮</span>
-                             </div>
-                             <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
-                          </div>
-                       )
-                   })}
-                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                      <h2 className="text-4xl font-mystic text-white/90 animate-pulse drop-shadow-[0_0_20px_#a855f7] tracking-widest">命运洗牌中...</h2>
-                   </div>
-               </div>
-            </div>
-        )
+        return <ShufflingView />
     }
 
     // 3. Picking State
     return (
       <div className="h-full w-full relative overflow-hidden bg-[#0f0c29]">
         
+        {/* Custom Back Button for Draw View (No Header) */}
+        <div className="absolute top-0 left-0 w-full z-[60] p-4 pointer-events-none">
+            <button 
+                onClick={handleBack}
+                className="pointer-events-auto w-10 h-10 rounded-full bg-black/20 backdrop-blur-md border border-white/10 flex items-center justify-center text-white/80 hover:text-white hover:bg-white/10 transition-all active:scale-95"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+        </div>
+
         {/* Spread Area: Takes full space behind, scrollable */}
-        <div className="absolute inset-0 pt-16 overflow-y-auto custom-scrollbar z-0 flex flex-col">
+        <div className="absolute inset-0 overflow-y-auto custom-scrollbar z-0 flex flex-col">
             
-            {/* Spacer for Header */}
-            <div className="h-6 shrink-0"></div>
+            {/* Top Spacer to avoid collision with back button */}
+            <div className="h-16 shrink-0"></div> 
 
             {selectedSpread && (
-                <div className="w-full flex-1 flex flex-col items-center min-h-[60vh] pb-64"> {/* pb-64 to clear the deck */}
+                <div className="w-full flex-1 flex flex-col items-center min-h-[60vh] pb-72"> {/* Increased bottom padding to clear taller deck */}
                      
                      <div className="text-center mb-6 px-4">
                         <h2 className="text-xl font-mystic text-purple-200 flex items-center justify-center gap-2">
@@ -793,29 +832,52 @@ const App = () => {
             )}
         </div>
 
+        {/* Touch Drag Overlay (Ghost Card) */}
+        {draggingCard && (
+            <div 
+                ref={dragOverlayRef}
+                className="fixed top-0 left-0 z-[100] pointer-events-none opacity-0 transition-opacity duration-150"
+                style={{ width: '80px', height: '128px' }} // Approximate small card size
+            >
+                <div className="w-full h-full bg-indigo-950/90 rounded-lg border-2 border-purple-400/50 shadow-2xl overflow-hidden relative rotate-6">
+                    <div className="w-full h-full opacity-60 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                    <div className="absolute inset-1 border border-dashed border-white/20 rounded"></div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl">🔮</span>
+                    </div>
+                </div>
+            </div>
+        )}
+
         {/* Deck Area: Fixed at bottom, overlays spread */}
         {drawnCards.length < (selectedSpread?.cardCount || 0) && (
-            <div className="absolute bottom-0 left-0 w-full h-48 md:h-56 z-50 pointer-events-auto">
-                 {/* Gradient Backdrop */}
-                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29]/95 to-transparent"></div>
+            // Increased height to h-60 (15rem/240px) to ensure visibility on mobile browsers
+            // Added pb-safe logic via padding-bottom
+            <div className="absolute bottom-0 left-0 w-full h-60 md:h-64 z-50 pointer-events-auto">
+                 {/* Gradient Backdrop - adjusted gradient start */}
+                 <div className="absolute inset-0 bg-gradient-to-t from-[#0f0c29] via-[#0f0c29] to-transparent"></div>
                  
                  {/* Scroll Container */}
                  <div 
                     ref={scrollContainerRef}
-                    className="absolute inset-0 flex items-end overflow-x-auto px-4 pb-4 pt-12 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing"
+                    className="absolute inset-0 flex items-end overflow-x-auto px-4 pb-8 pt-12 scrollbar-hide perspective-1000 cursor-grab active:cursor-grabbing"
                     onMouseDown={handleMouseDown}
                     onMouseLeave={handleMouseLeave}
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
                 >
-                    <div className="flex items-end space-x-[-2rem] md:space-x-[-4rem]" style={{ width: 'max-content' }}>
+                    <div className="flex items-end space-x-[-2.5rem] md:space-x-[-4rem] pr-8" style={{ width: 'max-content' }}>
                         {deck.map((card, idx) => (
                             <div 
                                 key={card.id}
-                                className="draggable-card relative w-20 h-32 md:w-28 md:h-44 transition-all duration-300 hover:-translate-y-6 hover:scale-110 hover:z-50 hover:space-x-0 group select-none origin-bottom"
+                                className="draggable-card relative w-20 h-32 md:w-28 md:h-44 transition-all duration-300 hover:-translate-y-8 hover:scale-110 hover:z-50 hover:space-x-0 group select-none origin-bottom mb-2" // Added mb-2 for safety
                                 onClick={() => handleCardClick(card)}
                                 draggable={true} 
                                 onDragStart={(e) => handleDragStart(e, card)}
+                                // Touch Events for Mobile Drag
+                                onTouchStart={(e) => handleTouchStart(e, card)}
+                                onTouchMove={(e) => handleTouchMove(e, card)}
+                                onTouchEnd={(e) => handleTouchEnd(e)}
                             >
                                 <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/50 shadow-xl overflow-hidden relative">
                                     <div className="w-full h-full opacity-60 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
@@ -831,8 +893,8 @@ const App = () => {
                     </div>
                 </div>
                 
-                {/* Instruction Overlay */}
-                <div className="absolute bottom-2 left-0 w-full text-center pointer-events-none text-white/40 text-[10px] animate-pulse z-50 bg-[#0f0c29]/50 backdrop-blur-sm py-1">
+                {/* Instruction Overlay - moved up slightly */}
+                <div className="absolute bottom-1 left-0 w-full text-center pointer-events-none text-white/30 text-[10px] animate-pulse z-50 py-1">
                     ← 点击卡牌抽取 • 左右滑动选牌 →
                 </div>
             </div>
@@ -1080,7 +1142,7 @@ const App = () => {
       );
 
       return (
-        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-32">
+        <div className="h-full overflow-y-auto p-6 pt-8 custom-scrollbar animate-fade-in pb-32">
             <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-10 space-y-2">
                     <h2 className="text-3xl font-mystic text-white">塔罗牌库</h2>
@@ -1122,9 +1184,6 @@ const App = () => {
                     onStart={(q) => handleDirectStartFromLibrary(librarySpreadToStart, q)}
                 />
             )}
-
-            {/* Spacer for Fixed Header */}
-            <div className="h-16 w-full shrink-0"></div>
 
             <CategoryQuickNav categories={navCategories} onSelect={scrollToCategory} />
 
@@ -1188,12 +1247,14 @@ const App = () => {
       {/* Card Detail Modal */}
       <CardDetailModal card={inspectingCard} onClose={() => setInspectingCard(null)} />
 
-      {/* Header (Simplified) */}
+      {/* Header (Simplified) - Exclude DRAW view */}
+      {(view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY && view !== AppView.DRAW) && (
       <Header 
         onBack={handleBack}
         title={view === AppView.HOME ? "" : (selectedTopic?.label || "喵卜灵")}
-        showBack={view !== AppView.HOME && view !== AppView.HISTORY && view !== AppView.LIBRARY && view !== AppView.SPREAD_LIBRARY}
+        showBack={view !== AppView.HOME && view !== AppView.HISTORY}
       />
+      )}
 
       {/* Dynamic Background Elements */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
