@@ -187,7 +187,7 @@ const App = () => {
       else if (spread.category.includes('Decision')) topicId = 'decision';
       else if (spread.category.includes('Healing')) topicId = 'self';
       
-      const topic = TOPICS.find(t => t.id === topicId) || TOPICS[4]; // Default to Fortune if fail
+      const topic = TOPICS.find(t => t.id === 'fortune') || TOPICS[4]; // Default to Fortune if fail
 
       // 2. Set State
       setSelectedTopic(topic);
@@ -826,6 +826,7 @@ const App = () => {
                             drawnCards={drawnCards} 
                             onDrop={handleCardDrop}
                             isRevealed={false} 
+                            activeSlotIndex={drawnCards.length < selectedSpread.cardCount ? drawnCards.length : -1}
                          />
                      </div>
                 </div>
@@ -839,7 +840,7 @@ const App = () => {
                 className="fixed top-0 left-0 z-[100] pointer-events-none opacity-0 transition-opacity duration-150"
                 style={{ width: '80px', height: '128px' }} // Approximate small card size
             >
-                <div className="w-full h-full bg-indigo-950/90 rounded-lg border-2 border-purple-400/50 shadow-2xl overflow-hidden relative rotate-6">
+                <div className="w-full h-full bg-indigo-950/90 rounded-lg border-2 border-yellow-400/80 shadow-[0_0_30px_rgba(250,204,21,0.5)] overflow-hidden relative rotate-6">
                     <div className="w-full h-full opacity-60 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
                     <div className="absolute inset-1 border border-dashed border-white/20 rounded"></div>
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -870,7 +871,7 @@ const App = () => {
                         {deck.map((card, idx) => (
                             <div 
                                 key={card.id}
-                                className="draggable-card relative w-20 h-32 md:w-28 md:h-44 transition-all duration-300 hover:-translate-y-8 hover:scale-110 hover:z-50 hover:space-x-0 group select-none origin-bottom mb-2" // Added mb-2 for safety
+                                className="draggable-card relative w-20 h-32 md:w-28 md:h-44 transition-all duration-300 hover:-translate-y-6 hover:scale-110 hover:z-50 hover:space-x-0 group select-none origin-bottom mb-2" // Added mb-2 for safety
                                 onClick={() => handleCardClick(card)}
                                 draggable={true} 
                                 onDragStart={(e) => handleDragStart(e, card)}
@@ -879,10 +880,10 @@ const App = () => {
                                 onTouchMove={(e) => handleTouchMove(e, card)}
                                 onTouchEnd={(e) => handleTouchEnd(e)}
                             >
-                                <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/50 shadow-xl overflow-hidden relative">
+                                <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/50 group-hover:border-yellow-400 shadow-xl group-hover:shadow-[0_0_20px_rgba(250,204,21,0.6)] overflow-hidden relative transition-all duration-300">
                                     <div className="w-full h-full opacity-60 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
                                     <div className="absolute inset-1 border border-dashed border-white/10 rounded"></div>
-                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                    <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-yellow-200/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                     {/* Back Design */}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-30 group-hover:opacity-60 transition-opacity">
                                         <span className="text-2xl">🔮</span>
@@ -893,8 +894,8 @@ const App = () => {
                     </div>
                 </div>
                 
-                {/* Instruction Overlay - moved up slightly */}
-                <div className="absolute bottom-1 left-0 w-full text-center pointer-events-none text-white/30 text-[10px] animate-pulse z-50 py-1">
+                {/* Instruction Overlay - moved up slightly and restored background */}
+                <div className="absolute bottom-2 left-0 w-full text-center pointer-events-none text-white/40 text-[10px] animate-pulse z-50 bg-[#0f0c29]/50 backdrop-blur-sm py-1">
                     ← 点击卡牌抽取 • 左右滑动选牌 →
                 </div>
             </div>
@@ -1275,15 +1276,8 @@ const App = () => {
         {view === AppView.SPREAD_LIBRARY && renderSpreadLibrary()}
       </div>
 
-      {/* Bottom Navigation */}
       {view !== AppView.DRAW && (
-        <BottomNav 
-          activeView={view} 
-          onNavigate={(v) => {
-              if (v === AppView.HISTORY) setHistory(getHistory());
-              setView(v);
-          }} 
-        />
+        <BottomNav activeView={view} onNavigate={setView} />
       )}
     </div>
   );

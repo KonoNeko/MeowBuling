@@ -735,7 +735,7 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
         </div>
       </div>
       {label && (
-        <span className={`text-[10px] md:text-xs font-medium text-purple-200 text-center uppercase tracking-wider bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded border border-white/5 transition-opacity duration-500 max-w-[120px] ${revealed ? 'opacity-100' : 'opacity-80'}`}>
+        <span className={`text-[10px] md:text-xs font-medium text-purple-200 text-center uppercase tracking-wider bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded border border-white/5 transition-opacity duration-500 max-w-[120px]`}>
           {label}
         </span>
       )}
@@ -972,7 +972,7 @@ export const SpreadPreview = ({ spread }: { spread: SpreadDefinition }) => {
     )
 }
 
-export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCardClick }: any) => {
+export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCardClick, activeSlotIndex }: any) => {
     const isLargeSpread = spread.cardCount > 6;
     const cardSize = isLargeSpread ? 'xs' : 'sm';
     
@@ -994,18 +994,22 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
              {spread.positions.map((pos: any, index: number) => {
                  const style = getPositionStyle(spread.layout_type || 'linear', index, spread.cardCount);
                  const card = drawnCards[index];
+                 const isActive = index === activeSlotIndex;
+                 const baseClasses = `absolute flex flex-col items-center justify-center transition-all duration-500`;
+                 // Enhance the active slot visual: bring to front, scale up slightly, add gold glow
+                 const activeClasses = isActive ? 'z-20 scale-105 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)]' : (!card ? 'opacity-60' : ''); 
                  
                  return (
                      <div 
                         key={index}
                         data-spread-slot={index}
-                        className={`absolute flex flex-col items-center justify-center transition-all duration-500 ${!card ? 'animate-pulse-slow' : ''}`}
+                        className={`${baseClasses} ${activeClasses} ${!card && !isActive ? 'animate-pulse-slow' : ''}`}
                         style={style}
                         onDragOver={handleDragOver}
                         onDrop={(e) => handleDrop(e, index)}
                      >
                         {!card && (
-                            <div className="absolute -top-6 text-[10px] text-indigo-300/70 whitespace-nowrap bg-black/40 px-2 py-0.5 rounded">
+                            <div className={`absolute -top-7 text-[10px] whitespace-nowrap px-2 py-0.5 rounded transition-colors ${isActive ? 'text-yellow-200 bg-yellow-900/80 font-bold border border-yellow-500/50 scale-110 shadow-lg' : 'text-indigo-300/70 bg-black/40'}`}>
                                 {index + 1}. {pos.name}
                             </div>
                         )}
@@ -1013,18 +1017,20 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
                         {card ? (
                             <CardDisplay 
                                 card={card} 
-                                revealed={isRevealed || true} 
+                                revealed={isRevealed} 
                                 size={cardSize}
-                                label={isRevealed ? pos.name : undefined}
+                                label={pos.name}
                                 onClick={() => onCardClick && onCardClick(card)}
                             />
                         ) : (
                             <div className={`
-                                border-2 border-dashed border-white/20 rounded-lg bg-white/5 
-                                flex items-center justify-center text-white/20
+                                border-2 rounded-lg flex items-center justify-center transition-all duration-300
+                                ${isActive 
+                                    ? 'border-yellow-400 bg-yellow-400/10 shadow-[inset_0_0_20px_rgba(250,204,21,0.3)]' 
+                                    : 'border-dashed border-white/20 bg-white/5 text-white/20'}
                                 ${cardSize === 'xs' ? 'w-20 h-32 md:w-24 md:h-40' : 'w-24 h-40 md:w-32 md:h-52'}
                             `}>
-                                <span className="text-xl font-bold">{index + 1}</span>
+                                <span className={`text-xl font-bold ${isActive ? 'text-yellow-200 animate-pulse' : ''}`}>{index + 1}</span>
                             </div>
                         )}
                      </div>
