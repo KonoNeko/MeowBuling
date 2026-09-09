@@ -65,6 +65,11 @@ const App = () => {
     if (!shareCardRef.current || savingShareImage) return;
     setSavingShareImage(true);
     try {
+      await document.fonts.ready;
+      await Promise.all(Array.from(shareCardRef.current.querySelectorAll('img')).map(image => image.complete ? image.decode().catch(() => undefined) : new Promise<void>(resolve => {
+        image.addEventListener('load', () => resolve(), { once: true });
+        image.addEventListener('error', () => resolve(), { once: true });
+      })));
       const dataUrl = await toPng(shareCardRef.current, {
         cacheBust: true,
         backgroundColor: '#100b2e',
@@ -828,7 +833,7 @@ const App = () => {
 
           <LocalAssistant reading={readingResult} />
 
-          <div ref={shareCardRef} aria-hidden="true" style={{ position: 'fixed', left: '-10000px', top: 0, width: 750, zIndex: -1, background: '#100b2e', color: '#f5f3ff', padding: '56px 48px', fontFamily: 'Arial, "Microsoft YaHei", sans-serif' }}>
+          <div ref={shareCardRef} aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 0, width: 750, zIndex: 1, background: '#100b2e', color: '#f5f3ff', padding: '56px 48px', fontFamily: 'Arial, "Microsoft YaHei", sans-serif' }}>
             <div style={{ borderBottom: '1px solid #4c3575', paddingBottom: 28, marginBottom: 28 }}>
               <div style={{ color: '#c4b5fd', fontSize: 18, letterSpacing: 2 }}>MEOWBULING · 喵卜灵</div>
               <div style={{ color: '#f5d0fe', fontSize: 30, fontWeight: 700, marginTop: 18 }}>{readingResult.topicLabel} · {readingResult.spreadName}</div>
