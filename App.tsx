@@ -5,7 +5,7 @@ import { AppView, ReadingSession, ReadingStyle, Topic, TarotCard, SpreadDefiniti
 import { TAROT_DECK, TOPICS, SPREADS, SPREAD_CATEGORY_LABELS, SPREAD_SUBCATEGORIES } from './constants';
 import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
-import LocalAssistant, { Sources } from './LocalAssistant';
+import LocalAssistant from './LocalAssistant';
 import SpreadLibrary from './SpreadLibrary';
 
 // Helper for random ID
@@ -722,6 +722,8 @@ const App = () => {
             <p className="text-xs text-purple-300 mt-3">{readingResult.style === 'sharp' ? '😼 犀利喵评 · 猫爪划重点' : '🌙 温柔指引 · 星光轻声说'}</p>
           </div>
 
+          {interpretation.outcome && <GlassCard className="border-purple-400/30 bg-gradient-to-br from-purple-950/70 to-indigo-950/60 space-y-3 shadow-lg shadow-purple-950/20"><p className="text-xs tracking-[0.2em] text-purple-300 uppercase">先看结论</p><h2 className="text-xl text-purple-100 font-bold">{readingResult.style === 'sharp' ? '😼 喵的直球结论' : '🌙 星光里的可能走向'}</h2><p className="text-indigo-100 leading-7 whitespace-pre-line">{interpretation.outcome}</p></GlassCard>}
+
           {/* The Spread Display (Using the Layout Engine now!) */}
           <div className="w-full overflow-x-auto py-8 flex justify-center">
              {resultSpread && (
@@ -761,19 +763,6 @@ const App = () => {
             })}
           </section>
 
-          {interpretation.outcome && <GlassCard className="border-purple-400/30 space-y-3"><h2 className="text-xl text-purple-100 font-bold">{readingResult.style === 'sharp' ? '😼 喵的直球结论' : '🌙 星光里的可能走向'}</h2><p className="text-indigo-100 leading-7 whitespace-pre-line">{interpretation.outcome}</p></GlassCard>}
-
-          {/* Fable Section (New) */}
-          <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-2xl p-8 border border-white/10 relative overflow-hidden group hover:bg-white/5 transition-colors">
-              <div className="absolute top-0 right-0 p-4 opacity-20 text-6xl rotate-12 pointer-events-none">📖</div>
-              <h3 className="text-xl font-bold text-purple-200 mb-4 flex items-center gap-2">
-                  <span>📜</span> 命运寓言
-              </h3>
-              <p className="text-lg text-indigo-100 italic font-serif leading-relaxed opacity-90">
-                  "{interpretation.fable}"
-              </p>
-          </div>
-
           {/* AI Interpretation Sections */}
           <div className="grid gap-6">
             {interpretation.detailedAnalysis.map((section, idx) => (
@@ -797,7 +786,17 @@ const App = () => {
              </p>
           </div>
 
-          <Sources sources={interpretation.sources} />
+          {/* The practical answer comes before reflective and conversational extras. */}
+          <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-2xl p-8 border border-white/10 relative overflow-hidden group hover:bg-white/5 transition-colors">
+              <div className="absolute top-0 right-0 p-4 opacity-20 text-6xl rotate-12 pointer-events-none">📖</div>
+              <h3 className="text-xl font-bold text-purple-200 mb-4 flex items-center gap-2">
+                  <span>📜</span> 命运寓言
+              </h3>
+              <p className="text-lg text-indigo-100 italic font-serif leading-relaxed opacity-90">
+                  "{interpretation.fable}"
+              </p>
+          </div>
+
           <LocalAssistant reading={readingResult} />
 
           {/* Journal Section */}
