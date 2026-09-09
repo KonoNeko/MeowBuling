@@ -1,7 +1,6 @@
 import { questionGroups } from './question-presets';
 import { browserClock, readingTime } from './reading-time';
 import React, { useState, useRef, useEffect } from 'react';
-import { toPng } from 'html-to-image';
 import { AppView, ReadingSession, ReadingStyle, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS, SPREAD_CATEGORY_LABELS, SPREAD_SUBCATEGORIES, getCardImage } from './constants';
 import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
@@ -70,25 +69,116 @@ const App = () => {
     return () => cancelAnimationFrame(frame);
   }, [view, readingResult?.id]);
 
+  const escapeSvgText = (value: string) => value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+  const wrapShareText = (value: string, maxLength: number) => {
+    const lines: string[] = [];
+    value.split(/\r?\n/).forEach(paragraph => {
+      const text = paragraph.trim();
+      if (!text) {
+        lines.push('');
+        return;
+      }
+      for (let index = 0; index < text.length; index += maxLength) {
+        lines.push(text.slice(index, index + maxLength));
+      }
+    });
+    return lines;
+  };
+
+  const fetchImageDataUrl = async (src: string) => {
+    try {
+      const response = await fetch(src);
+      if (!response.ok) return '';
+      const blob = await response.blob();
+      return await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+    } catch {
+      return '';
+    }
+  };
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+
   const saveShareImage = async () => {
-    if (!shareCardRef.current || savingShareImage) return;
+    if (!readingResult || !readingResult.interpretation || savingShareImage) return;
     setSavingShareImage(true);
     try {
-      await document.fonts.ready;
-      await Promise.all(Array.from(shareCardRef.current.querySelectorAll('img')).map(image => image.complete ? image.decode().catch(() => undefined) : new Promise<void>(resolve => {
-        image.addEventListener('load', () => resolve(), { once: true });
-        image.addEventListener('error', () => resolve(), { once: true });
-      })));
-      const dataUrl = await toPng(shareCardRef.current, {
-        cacheBust: true,
-        backgroundColor: '#100b2e',
-        pixelRatio: 2,
-        width: 750,
+      const { interpretation } = readingResult;
+      const resultSpread = SPREADS.find(spread => spread.id === readingResult.spreadId);
+      const cardImages = await Promise.all(readingResult.cards.map(card => fetchImageDataUrl(getCardImage(card.id))));
+      const cardBlocks: string[] = [];
+      let y = 600;
+      readingResult.cards.forEach((card, index) => {
+        const detail = interpretation.cardReadings?.find(entry => entry.positionIndex === index && entry.cardId === card.id);
+        const position = resultSpread?.positions[index];
+        const image = cardImages[index];
+        const cardText = wrapShareText(detail?.interpretation || (card.isReversed ? card.meaningReversed : card.meaningUpright), 25);
+        const adviceText = detail?.advice ? wrapShareText(`喵的建议：${detail.advice}`, 25) : [];
+        const textLines = [...cardText, ...adviceText];
+        const blockHeight = Math.max(230, 110 + textLines.length * 31);
+        cardBlocks.push(`
+          <rect x="48" y="${y}" width="654" height="${blockHeight}" rx="18" fill="#211844" stroke="#4c3575"/>
+          ${image ? `<image href="${image}" x="72" y="${y + 24}" width="112" height="190" preserveAspectRatio="xMidYMid slice" ${card.isReversed ? `transform="rotate(180 128 ${y + 119})"` : ''}/>` : `<rect x="72" y="${y + 24}" width="112" height="190" rx="10" fill="#39275d"/><text x="128" y="${y + 125}" text-anchor="middle" fill="#c4b5fd" font-size="36">✦</text>`}
+          <text x="210" y="${y + 38}" fill="#c4b5fd" font-size="16">第 ${index + 1} 张 · ${escapeSvgText(position?.name || '牌阵位置')}</text>
+          <text x="210" y="${y + 72}" fill="#ffffff" font-size="23" font-weight="700">${escapeSvgText(card.name_cn)} · ${card.isReversed ? '逆位' : '正位'}</text>
+          ${textLines.map((line, lineIndex) => `<text x="210" y="${y + 108 + lineIndex * 31}" fill="#ede9fe" font-size="17">${escapeSvgText(line)}</text>`).join('')}
+        `);
+        y += blockHeight + 24;
       });
-      const link = document.createElement('a');
-      link.download = `meowbuling-${readingResult?.id || 'reading'}.png`;
-      link.href = dataUrl;
-      link.click();
+      const adviceLines = wrapShareText(interpretation.advice, 31);
+      const totalHeight = y + 170 + adviceLines.length * 34;
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="${totalHeight}" viewBox="0 0 750 ${totalHeight}">
+        <rect width="750" height="${totalHeight}" fill="#100b2e"/>
+        <text x="48" y="70" fill="#c4b5fd" font-size="18" letter-spacing="2">MEOWBULING · 喵卜灵</text>
+        <text x="48" y="120" fill="#f5d0fe" font-size="30" font-weight="700">${escapeSvgText(readingResult.topicLabel)} · ${escapeSvgText(readingResult.spreadName)}</text>
+        ${wrapShareText(`“${readingResult.question}”`, 31).map((line, index) => `<text x="48" y="${165 + index * 31}" fill="#c4b5fd" font-size="20">${escapeSvgText(line)}</text>`).join('')}
+        <rect x="48" y="240" width="654" height="300" rx="20" fill="#25164b" stroke="#7955ad"/>
+        <text x="74" y="280" fill="#c4b5fd" font-size="16" letter-spacing="3">先看结论</text>
+        <text x="74" y="325" fill="#ffffff" font-size="27" font-weight="700">${escapeSvgText(interpretation.mainTheme)}</text>
+        ${wrapShareText(interpretation.outcome || interpretation.mainTheme, 31).map((line, index) => `<text x="74" y="${370 + index * 34}" fill="#ede9fe" font-size="20">${escapeSvgText(line)}</text>`).join('')}
+        <text x="48" y="575" fill="#e9d5ff" font-size="24" font-weight="700">牌面解读</text>
+        ${cardBlocks.join('')}
+        <text x="48" y="${y + 62}" fill="#e9d5ff" font-size="24" font-weight="700">行动指引</text>
+        <rect x="48" y="${y + 82}" width="654" height="${50 + adviceLines.length * 34}" rx="16" fill="#211844"/>
+        ${adviceLines.map((line, index) => `<text x="74" y="${y + 120 + index * 34}" fill="#f5f3ff" font-size="20">${escapeSvgText(line)}</text>`).join('')}
+        <text x="375" y="${totalHeight - 38}" text-anchor="middle" fill="#8b78aa" font-size="15">塔罗是自我反思工具 · 喵卜灵</text>
+      </svg>`;
+      const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      const image = new Image();
+      await new Promise<void>((resolve, reject) => {
+        image.onload = () => { URL.revokeObjectURL(svgUrl); resolve(); };
+        image.onerror = () => { URL.revokeObjectURL(svgUrl); reject(new Error('分享图加载失败')); };
+        image.src = svgUrl;
+      });
+      const canvas = document.createElement('canvas');
+      canvas.width = 1500;
+      canvas.height = totalHeight * 2;
+      const context = canvas.getContext('2d');
+      if (!context) throw new Error('当前设备不支持图片绘制');
+      context.fillStyle = '#100b2e';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const png = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
+      if (!png || png.size < 1000) throw new Error('分享图内容为空');
+      downloadBlob(png, `meowbuling-${readingResult.id}.png`);
       triggerToast('长图已保存，可以分享给朋友了');
     } catch (error) {
       console.error('Failed to create share image', error);
