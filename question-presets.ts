@@ -29,6 +29,26 @@ export function questionGroups(topic: string, time = readingTime(browserClock())
       { title: '🗓️ 本月与下个月', questions: [q(`这个月（${time.thisMonth}）的整体趋势如何？最值得主动争取什么？`, 'month_4'), q(`下个月（${time.nextMonth}）可能迎来哪些机会与挑战？我该提前准备什么？`, 'month_4')] },
       { title: '✨ 年度展望', questions: [q(`${time.year}年我的整体趋势如何？事业、感情和财务各有什么重点？`, 'year_ahead_6'), q(`${time.year + 1}年最值得把握的机会和需要提前规避的挑战是什么？`, 'year_ahead_6')] },
     ],
+    daily: [
+      { title: '☀️ 今日指引', questions: [q(`今天（${time.today}）最值得把握的机会和需要避开的坑是什么？`, 'today_challenge_3'), q(`今天（${time.today}）我最应该把注意力放在哪里？`, 'daily_1'), q(`今天（${time.today}）适合主动推进哪件事？`, 'mao_3')] },
+      { title: '🧭 当下行动', questions: [q('面对眼前这件事，我现在最应该完成的第一步是什么？', 'mao_3'), q('今天有什么信号值得我留意，又有什么行为应该暂缓？', 'today_challenge_3')] },
+    ],
+    money: [
+      { title: '💰 收入与财富', questions: [q('我目前财务压力的主要来源是什么？怎样逐步改善收支？', 'money_manifest_4'), q('未来三个月我的财务重点是什么？应该守住什么、争取什么？', 'money_manifest_4', 'timeline_5')] },
+      { title: '📦 副业与投资选择', questions: [q('这项副业值得投入吗？可能的收益、风险和第一步是什么？', 'risk_reward_3'), q('这笔投入的主要风险和潜在回报是什么？我该如何降低风险？', 'risk_reward_3')] },
+    ],
+    social: [
+      { title: '🤝 人际关系', questions: [q('这段友谊或同事关系目前的真实状态是什么？', 'rel_triangle'), q('对方如何看待我？我该怎样改善彼此的互动？', 'how_they_feel_4')] },
+      { title: '🧱 边界与冲突', questions: [q('这段关系反复产生摩擦的根源是什么？我该如何表达边界？', 'rel_block_5'), q('我该继续维持这段关系，还是适当拉开距离？', 'continue_or_end_4')] },
+    ],
+    home: [
+      { title: '🏠 家庭关系', questions: [q('当前家庭关系中最需要被看见的问题是什么？', 'core_issue_5'), q('我该如何改善与家人的沟通，减少反复冲突？', 'rel_block_5')] },
+      { title: '📦 搬家与生活环境', questions: [q('这次搬家或换居住环境适合我吗？最需要注意什么？', 'go_or_not_4'), q('当前居住环境对我的状态有什么影响？我该先调整哪里？', 'life_quadrants_4')] },
+    ],
+    spirit: [
+      { title: '🌌 直觉与人生课题', questions: [q('我最近反复遇到的课题，正在提醒我成长什么？', 'path_of_fate_5'), q('我该如何分辨直觉、恐惧与外界期待？', 'self_discovery_5')] },
+      { title: '🪞 内在连接', questions: [q('我目前最需要诚实面对的内在真相是什么？', 'truth_reveal_4'), q('如何更好地接纳自己的阴影与未完成课题？', 'shadow_work_6')] },
+    ],
   };
   return groups[topic] || [];
 }

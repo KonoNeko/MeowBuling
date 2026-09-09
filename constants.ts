@@ -40,12 +40,52 @@ export const TOPICS: Topic[] = [
   },
   {
     id: 'fortune',
-    label: '运势与日常',
+    label: '未来趋势',
     icon: '📅',
-    description: '每日指引、周/月运势预测',
+    description: '周月年运、阶段走向与机会',
     spreadCategories: ['Future Forecast', 'Daily Guidance', 'General Insight'],
     defaultTags: ['forecast', 'daily_simple'],
 
+  },
+  {
+    id: 'daily',
+    label: '日常指引',
+    icon: '☀️',
+    description: '今天该注意什么、如何把握当下',
+    spreadCategories: ['Daily Guidance', 'General Insight'],
+    defaultTags: ['daily_simple', 'action'],
+  },
+  {
+    id: 'money',
+    label: '财富物质',
+    icon: '💰',
+    description: '收入、储蓄、投资与副业方向',
+    spreadCategories: ['Manifestation', 'Career & Study', 'Decision-Making', 'General Insight'],
+    defaultTags: ['money', 'career_choice', 'analysis'],
+  },
+  {
+    id: 'social',
+    label: '人际社交',
+    icon: '🤝',
+    description: '朋友、同事、边界与相处模式',
+    spreadCategories: ['General Insight', 'Healing', 'Decision-Making'],
+    defaultTags: ['social', 'analysis'],
+  },
+  {
+    id: 'home',
+    label: '家庭居住',
+    icon: '🏠',
+    description: '家人关系、搬家与生活环境',
+    spreadCategories: ['General Insight', 'Decision-Making', 'Healing'],
+    defaultTags: ['family', 'decision', 'healing'],
+  },
+  {
+    id: 'spirit',
+    label: '灵性探索',
+    icon: '🌌',
+    description: '直觉、梦境、人生课题与内在连接',
+    spreadCategories: ['Healing', 'Manifestation', 'General Insight'],
+    defaultTags: ['spirit', 'self', 'deep_analysis'],
   }
 ];
 
@@ -98,6 +138,31 @@ export const SPREAD_SUBCATEGORIES: Record<string, SpreadSubcategory[]> = {
     { id: 'fortune-daily', label: '☀️ 今日与本周', tags: ['daily_simple', 'time'] },
     { id: 'fortune-cycle', label: '🗓️ 月度与阶段', tags: ['forecast', 'time'] },
     { id: 'fortune-year', label: '🌟 年度与长期', tags: ['forecast', 'deep_analysis'] },
+  ],
+  daily: [
+    { id: 'daily-all', label: '☀️ 全部日常牌阵', tags: [] },
+    { id: 'daily-focus', label: '🎯 今日重点', tags: ['daily_simple'] },
+    { id: 'daily-action', label: '🐾 今日行动', tags: ['action'] },
+  ],
+  money: [
+    { id: 'money-all', label: '💰 全部财富牌阵', tags: [] },
+    { id: 'money-income', label: '📈 收入与财富', tags: ['money'] },
+    { id: 'money-choice', label: '🧾 投资与副业', tags: ['money', 'analysis'] },
+  ],
+  social: [
+    { id: 'social-all', label: '🤝 全部人际牌阵', tags: [] },
+    { id: 'social-relationship', label: '💬 关系互动', tags: ['analysis'] },
+    { id: 'social-boundary', label: '🧱 边界与冲突', tags: ['decision', 'healing'] },
+  ],
+  home: [
+    { id: 'home-all', label: '🏠 全部家庭牌阵', tags: [] },
+    { id: 'home-family', label: '👨‍👩‍👧 家庭关系', tags: ['healing'] },
+    { id: 'home-living', label: '📦 搬家与居住', tags: ['decision', 'analysis'] },
+  ],
+  spirit: [
+    { id: 'spirit-all', label: '🌌 全部灵性牌阵', tags: [] },
+    { id: 'spirit-growth', label: '🧭 人生课题', tags: ['self', 'forecast'] },
+    { id: 'spirit-shadow', label: '🌑 阴影与直觉', tags: ['deep_analysis', 'self'] },
   ],
 };
 
