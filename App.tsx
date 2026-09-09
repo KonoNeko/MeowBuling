@@ -54,12 +54,21 @@ const App = () => {
   const [toastMessage, setToastMessage] = useState("");
   const [savingShareImage, setSavingShareImage] = useState(false);
   const shareCardRef = useRef<HTMLDivElement>(null);
+  const readingScrollRef = useRef<HTMLDivElement>(null);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
+
+  useEffect(() => {
+    if (view !== AppView.READING) return;
+    const frame = requestAnimationFrame(() => {
+      readingScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [view, readingResult?.id]);
 
   const saveShareImage = async () => {
     if (!shareCardRef.current || savingShareImage) return;
@@ -739,7 +748,7 @@ const App = () => {
 
     // 2. Result State
     return (
-      <div className="h-full overflow-y-auto pb-40 p-4 pt-20 custom-scrollbar">
+      <div ref={readingScrollRef} className="h-full overflow-y-auto pb-40 p-4 pt-20 custom-scrollbar">
 
         <div className="max-w-4xl mx-auto space-y-8 animate-fade-in-up">
           
