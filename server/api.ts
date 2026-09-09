@@ -5,7 +5,7 @@ import { modelStatus } from './config';
 import { interpret, readingInput, runAgent, clockSchema } from './agent';
 
 const importSchema = z.object({ title: z.string().trim().min(1).max(160), text: z.string().trim().min(1).max(500_000) });
-const chatSchema = z.object({ clock: clockSchema, messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().trim().min(1).max(6000) })).min(1).max(16), context: z.string().max(6000).optional(), suggestionsOnly: z.boolean().optional() });
+const chatSchema = z.object({ clock: clockSchema, messages: z.array(z.object({ role: z.enum(['user', 'assistant']), content: z.string().trim().min(1).max(6000) })).min(1).max(16), context: z.string().max(6000).optional() });
 
 async function readJson(req: IncomingMessage) {
   let length = 0;
@@ -58,7 +58,7 @@ export function createApi() {
       if (url.pathname === '/api/agent' && req.method === 'POST') {
         const input = chatSchema.parse(await readJson(req));
         if (input.messages.at(-1)?.role !== 'user') throw new Error('最后一条消息必须是你的问题。');
-        return send(200, await runAgent(store, input.messages, input.context, controller.signal, input.clock, input.suggestionsOnly));
+        return send(200, await runAgent(store, input.messages, input.context, controller.signal, input.clock));
       }
       if (url.pathname === '/api/interpret' && req.method === 'POST') return send(200, await interpret(store, readingInput.parse(await readJson(req)), controller.signal));
       return send(404, { error: '接口不存在。' });

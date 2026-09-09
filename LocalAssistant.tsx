@@ -26,6 +26,20 @@ export function Sources({ sources = [] }: { sources?: KnowledgeSource[] }) {
 }
 
 type Message = ChatMessage & { reply?: AgentReply };
+
+function readingFollowUps(reading: ReadingSession): string[] {
+  const cards = reading.interpretation?.cardReadings || [];
+  const first = cards[0];
+  const cardName = reading.cards[0]?.name_cn || '这组牌';
+  const position = first ? `第${first.positionIndex + 1}张「${cardName}」` : '这次牌面';
+  const questions = [
+    `${position}对“${reading.question}”的核心提醒是什么？`,
+    `结合“${reading.interpretation?.outcome || '这次结论'}”，我现在最该先做哪一步？`,
+    `这次牌面指出的主要阻碍，怎样用建议中的行动真正化解？`,
+  ];
+  return questions.map(question => question.length > 80 ? `${question.slice(0, 77)}…` : question);
+}
+
 export default function LocalAssistant({ reading }: { reading: ReadingSession }) {
   const [tab, setTab] = useState<'chat' | 'knowledge'>('chat');
   const [status, setStatus] = useState<LocalStatus | null>(null);
@@ -62,16 +76,7 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
     cards: reading.cards.map((c, index) => ({ position: index + 1, name: c.name_cn, reversed: c.isReversed, reading: reading.interpretation?.cardReadings?.[index]?.interpretation, advice: reading.interpretation?.cardReadings?.[index]?.advice })),
     summary: reading.interpretation?.mainTheme, outcome: reading.interpretation?.outcome, analysis: reading.interpretation?.detailedAnalysis, advice: reading.interpretation?.advice }) : '';
 
-  useEffect(() => {
-    const controller = new AbortController();
-    void localApi<AgentReply>('/api/agent', {
-      clock: browserClock(),
-      messages: [{ role: 'user', content: '请根据这次占卜的完整结果，只生成用户最可能继续追问的2到4个具体问题，不要回答问题。' }],
-      context,
-      suggestionsOnly: true,
-    }, controller.signal).then(reply => setSuggestedQuestions(reply.followUpQuestions || [])).catch(() => undefined);
-    return () => controller.abort();
-  }, [reading.id]);
+  useEffect(() => { setSuggestedQuestions(readingFollowUps(reading)); }, [reading.id]);
 
   async function send(event: React.FormEvent) {
     event.preventDefault();
