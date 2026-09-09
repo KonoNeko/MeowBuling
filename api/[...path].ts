@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createApi } from '../server/api.ts';
+import { createApi } from './server-bundle.mjs';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   await createApi()(req, res, () => {
