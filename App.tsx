@@ -11,6 +11,46 @@ import SpreadLibrary from './SpreadLibrary';
 // Helper for random ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
 
+const bytesToBase64Url = (bytes: Uint8Array) => {
+  let binary = '';
+  bytes.forEach(byte => { binary += String.fromCharCode(byte); });
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+};
+
+const base64UrlToBytes = (value: string) => {
+  const binary = atob(value.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - value.length % 4) % 4));
+  return Uint8Array.from(binary, character => character.charCodeAt(0));
+};
+
+const encodeReadingForShare = async (reading: ReadingSession) => {
+  const source = new TextEncoder().encode(JSON.stringify(reading));
+  if ('CompressionStream' in window) {
+    const stream = new CompressionStream('gzip');
+    const writer = stream.writable.getWriter();
+    await writer.write(source);
+    await writer.close();
+    return bytesToBase64Url(new Uint8Array(await new Response(stream.readable).arrayBuffer()));
+  }
+  return bytesToBase64Url(source);
+};
+
+const decodeReadingFromShare = async (value: string) => {
+  const bytes = base64UrlToBytes(value);
+  let decoded = bytes;
+  if ('DecompressionStream' in window) {
+    try {
+      const stream = new DecompressionStream('gzip');
+      const writer = stream.writable.getWriter();
+      await writer.write(bytes);
+      await writer.close();
+      decoded = new Uint8Array(await new Response(stream.readable).arrayBuffer());
+    } catch {
+      // Older fallback links may be uncompressed.
+    }
+  }
+  return JSON.parse(new TextDecoder().decode(decoded)) as ReadingSession;
+};
+
 const App = () => {
   // --- State ---
   const [view, setView] = useState<AppView>(AppView.HOME);
@@ -52,6 +92,7 @@ const App = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [savingShareImage, setSavingShareImage] = useState(false);
+  const [creatingShareLink, setCreatingShareLink] = useState(false);
   const readingScrollRef = useRef<HTMLDivElement>(null);
 
   const triggerToast = (msg: string) => {
@@ -67,6 +108,23 @@ const App = () => {
     });
     return () => cancelAnimationFrame(frame);
   }, [view, readingResult?.id]);
+
+  useEffect(() => {
+    const token = window.location.hash.match(/^#reading=([^&]+)$/)?.[1];
+    if (!token) return;
+    let cancelled = false;
+    void decodeReadingFromShare(token).then(reading => {
+      if (cancelled || !reading.interpretation || !Array.isArray(reading.cards)) return;
+      setReadingResult(reading);
+      setLoading(false);
+      setView(AppView.READING);
+      saveReading(reading);
+      triggerToast('已打开朋友分享的占卜结果');
+    }).catch(() => {
+      if (!cancelled) triggerToast('分享链接已失效，请重新生成');
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const escapeSvgText = (value: string) => value
     .replace(/&/g, '&amp;')
@@ -220,6 +278,47 @@ const App = () => {
       triggerToast('长图生成失败，请稍后重试');
     } finally {
       setSavingShareImage(false);
+    }
+  };
+
+  const createShareLink = async () => {
+    if (!readingResult || creatingShareLink) return;
+    setCreatingShareLink(true);
+    try {
+      const token = await encodeReadingForShare(readingResult);
+      const url = `${window.location.origin}${window.location.pathname}#reading=${token}`;
+      window.history.replaceState(null, '', `#reading=${token}`);
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: `${readingResult.topicLabel} · 喵卜灵占卜结果`,
+            text: '这是我在喵卜灵的占卜结果，点开一起看看：',
+            url,
+          });
+          triggerToast('分享链接已发送');
+          return;
+        } catch (error) {
+          if (error instanceof DOMException && error.name === 'AbortError') return;
+        }
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+      } else {
+        const input = document.createElement('textarea');
+        input.value = url;
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        if (!document.execCommand('copy')) throw new Error('复制链接失败');
+        input.remove();
+      }
+      triggerToast('链接已复制，发给朋友即可打开');
+    } catch (error) {
+      console.error('Failed to create share link', error);
+      triggerToast('分享链接生成失败，请稍后重试');
+    } finally {
+      setCreatingShareLink(false);
     }
   };
 
@@ -885,9 +984,15 @@ const App = () => {
             </h1>
             <p className="text-indigo-300 italic">“ {readingResult.question} ”</p>
             <p className="text-xs text-purple-300 mt-3">{readingResult.style === 'sharp' ? '😼 犀利喵评 · 猫爪划重点' : '🌙 温柔指引 · 星光轻声说'}</p>
-            <Button variant="secondary" className="mt-5 mx-auto text-sm px-5 py-2.5" onClick={() => void saveShareImage()} disabled={savingShareImage}>
-              {savingShareImage ? '正在生成长图…' : '保存结果长图'}
-            </Button>
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              <Button variant="secondary" className="text-sm px-5 py-2.5" onClick={() => void saveShareImage()} disabled={savingShareImage || creatingShareLink}>
+                {savingShareImage ? '正在生成长图…' : '保存结果长图'}
+              </Button>
+              <Button variant="primary" className="text-sm px-5 py-2.5" onClick={() => void createShareLink()} disabled={savingShareImage || creatingShareLink}>
+                {creatingShareLink ? '正在生成链接…' : '一键分享链接'}
+              </Button>
+            </div>
+            <p className="mt-2 text-xs text-indigo-400">链接包含这次占卜内容，朋友打开即可查看并继续使用喵卜灵。</p>
           </div>
 
           {interpretation.outcome && <GlassCard className="border-purple-400/30 bg-gradient-to-br from-purple-950/70 to-indigo-950/60 space-y-3 shadow-lg shadow-purple-950/20"><p className="text-xs tracking-[0.2em] text-purple-300 uppercase">先看结论</p><h2 className="text-xl text-purple-100 font-bold">{readingResult.style === 'sharp' ? '😼 喵的直球结论' : '🌙 星光里的可能走向'}</h2><p className="text-indigo-100 leading-7 whitespace-pre-line">{interpretation.outcome}</p></GlassCard>}
