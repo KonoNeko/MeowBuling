@@ -1,163 +1,226 @@
-# 喵卜灵 MeowBuling - 本地 AI 塔罗牌应用
+# 喵卜灵 MeowBuling
 
-> 当前版本使用 GPT，支持补充知识库、快速单抽与喵灵 Agent。
-> 双击 `启动喵卜灵.cmd` 启动；模型准备、资料导入及数据位置见 [LOCAL_AI.md](./LOCAL_AI.md)。
+> 一个把塔罗牌、AI 解读和自我反思放在一起的轻量 Web 应用。
+> 先选主题与问题，再选牌阵、抽牌，最后获得清晰的牌面分析与可执行建议。
 
-<div align="center">
-<img width="1200" height="475" alt="喵卜灵应用截图" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
+[在线体验](https://www.meowbuling.com/) · [GitHub](https://github.com/KonoNeko/MeowBuling)
 
-## 📖 项目简介
+## 产品定位
 
-喵卜灵是一款基于人工智能的塔罗牌占卜应用，结合了传统的塔罗牌智慧与现代 AI 技术，为用户提供个性化的塔罗牌解读体验。应用采用 React + TypeScript + Vite 构建，支持多种牌阵选择和智能解读。
+喵卜灵不是“替你预测命运”的黑盒，而是一个以塔罗为媒介的自我探索工具：
 
-## ✨ 主要功能
+- 用具体问题开始，而不是从泛泛的运势测试开始。
+- 用牌阵组织问题，用正位/逆位和位置含义提供分析框架。
+- 用 GPT 将牌面信息整理成结论、依据、风险和行动建议。
+- 用历史记录与灵魂笔记，帮助用户回看自己的选择与变化。
 
-### 🃏 智能塔罗牌解读
-- 支持多种经典塔罗牌阵型（单牌、三牌、凯尔特十字等）
-- 使用 GPT-5.5 生成详细解读，知识库仅作补充参考
-- 实时生成针对您问题的详细解读
+> 塔罗结果仅供娱乐和自我反思，不替代医疗、法律、投资或其他专业意见。
 
-### 🎯 主题选择
-- 提供多种占卜主题：爱情、事业、健康、财富等
-- 根据主题智能推荐适合的牌阵
+## User Flow
 
-### 📚 牌阵库
-- 内置多种经典塔罗牌阵
-- 支持标签筛选，快速找到心仪的牌阵
-- 牌阵预览功能
+```text
+首页
+  ↓
+选择主题
+  ↓
+选择问题（可使用预设问题，也可自定义）
+  ↓
+选择牌阵（支持主题推荐与分类筛选）
+  ↓
+抽牌
+  ↓
+AI 生成本次解读
+  ↓
+结果页：结论 → 牌阵 → 逐张牌解读 → 分析 → 行动建议
+  ↓
+围绕本次牌面继续追问 / 写下灵魂笔记
+```
 
-### 🎴 卡牌展示
-- 精美的卡牌视觉效果
-- 支持卡牌详细信息查看
-- 流畅的拖拽滚动体验
+## 核心功能
 
-### 📝 解读历史
-- 保存所有占卜记录
-- 支持添加个人反思和笔记
-- 历史记录管理
+### 1. 主题与问题
 
-### 🌙 沉浸式体验
-- 玻璃拟态设计风格
-- 流畅的动画效果
-- 响应式设计，支持移动端
+支持感情、事业、决策、自我、未来趋势、日常、财富、人际、家庭和灵性等主题。每个主题提供常见问题与相关牌阵，用户也可以直接输入自己的问题。
 
-## 🚀 快速开始
+### 2. 抽牌与牌阵
+
+- 内置 78 张塔罗牌，支持正位与逆位。
+- 支持单牌、三牌及多种专题牌阵。
+- 牌阵库支持分类、子分类、位置说明和预览。
+- 抽牌过程提供拖拽与移动端滚动交互。
+
+### 3. AI 解读
+
+AI 会结合以下信息生成结果：
+
+- 用户问题与主题
+- 牌阵及每个位置的含义
+- 每张牌的名称、正逆位和牌意
+- 卡牌之间的关系
+- 当前时间与解读风格（犀利 / 温柔）
+
+结果按“先结论、后依据、再行动”的顺序呈现，包含：
+
+- 核心主题
+- 可能走向与条件
+- 逐张牌解读
+- 关键矛盾、风险和转机
+- 可执行行动建议
+- 反思问题与个人笔记
+
+### 4. 结果页 AI 对话
+
+结果页的喵卜灵 AI 只围绕当前这次占卜回答，不重新开启无关占卜。推荐追问由当前牌面动态生成，并限制为短句，方便快速点击。
+
+### 5. 牌库与历史
+
+- 牌库支持预览图与高清图渐进加载，适合手机网络。
+- 历史记录保存在浏览器本地。
+- 每次占卜可添加个人反思，便于长期回看。
+
+### 6. 本地知识库
+
+可导入 `.txt` 和 `.md` 资料作为 AI 的补充参考。资料保存在本机数据目录，知识检索不会改变系统规则，也不会替代牌面与当前问题。
+
+## 技术架构
+
+```text
+React + TypeScript + Vite
+        │
+        ├── 前端 UI
+        │   ├── 首页 / 主题 / 问题 / 牌阵 / 抽牌 / 结果
+        │   ├── 牌库 / 牌阵库 / 历史记录
+        │   └── 结果页 AI 对话
+        │
+        ├── API 层
+        │   ├── /api/interpret 生成塔罗解读
+        │   ├── /api/agent 结果页 AI 对话
+        │   └── /api/knowledge/* 知识库管理与检索
+        │
+        ├── AI 层
+        │   ├── AI SDK ToolLoopAgent
+        │   ├── OpenAI Responses API
+        │   ├── Zod 输入 / 输出校验
+        │   └── 牌意、牌阵和本地资料工具
+        │
+        └── 数据层
+            ├── constants.ts：牌库、牌阵、主题
+            ├── localStorage：历史与对话
+            └── 本机 documents.json：导入资料
+```
+
+### 关键模块
+
+| 模块 | 作用 |
+| --- | --- |
+| `App.tsx` | 页面状态、用户流程、抽牌与结果页 |
+| `components.tsx` | 通用 UI、牌面展示、牌阵布局和导航 |
+| `constants.ts` | 78 张牌、主题、牌阵及分类数据 |
+| `question-presets.ts` | 主题与牌阵的默认问题 |
+| `LocalAssistant.tsx` | 结果页 AI 对话、本地资料管理 |
+| `server/agent.ts` | AI 解读、工具调用、上下文约束和输出校验 |
+| `server/knowledge.ts` | 本地资料切分、索引和关键词检索 |
+| `server/api.ts` | 本地 API 路由与请求校验 |
+| `api/[...path].ts` | Vercel Serverless API 入口 |
+
+## 本地运行
 
 ### 环境要求
-- Node.js 24（已验证开发启动和包含本地牌图的生产构建）
 
-塔罗牌图片随项目保存在 `public/images/tarot`，无需访问外部图片站点。
-本机 Node.js 25.2.1 在构建复制图片时出现过异常退出；如遇同样问题，请使用 Node.js 24。
+- Node.js 24（推荐）
+- OpenAI API Key
 
-### 安装步骤
+Node.js 25 在部分 Windows 环境下可能导致 Vite 构建异常；遇到构建退出码问题时，优先切换 Node.js 24。
 
-1. **克隆项目**
-   ```bash
-   git clone https://github.com/KonoNeko/MeowBuling.git
-   cd MeowBuling
-   ```
+### 安装与配置
 
-2. **安装依赖**
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/KonoNeko/MeowBuling.git
+cd MeowBuling
+npm install
+```
 
-3. **配置 GPT**
-   在 `.env.local` 中设置 `OPENAI_API_KEY`，可用 `OPENAI_MODEL` 调整模型。
-   默认使用已验证可访问的 `gpt-5.5`，无需安装本地模型。
+在项目根目录创建 `.env.local`：
 
-4. **启动应用**
-   ```bash
-   npm run dev
-   ```
+```dotenv
+OPENAI_API_KEY=你的_API_Key
+OPENAI_MODEL=gpt-5.5
+```
 
-5. **访问应用**
-   打开浏览器访问 `http://localhost:5173`
+`.env.local` 已被 Git 忽略，禁止提交到仓库。
 
-## 📱 使用指南
+### 启动开发环境
 
-### 开始占卜
-1. 在首页选择您想要占卜的主题
-2. 选择合适的牌阵类型
-3. 输入您的问题或关注点
-4. 点击"开始抽牌"进入抽牌流程
-5. 等待 AI 生成个性化解读
+```bash
+npm run dev
+```
 
-### 查看历史
-- 在历史页面查看所有过往占卜记录
-- 点击记录查看详细解读
-- 可以添加个人反思
+访问 `http://localhost:5173`。
 
-## 🛠️ 技术栈
+也可以在 Windows 双击：
 
-- **前端框架**: React 18
-- **开发工具**: Vite
-- **编程语言**: TypeScript
-- **AI 服务**: GPT + AI SDK ToolLoopAgent
-- **本地 RAG**: EmbeddingGemma 向量 + 中文 BM25 混合检索
-- **样式**: CSS Modules + 玻璃拟态设计
-- **运行**: 本地 Node.js 服务
+```text
+启动喵卜灵.cmd
+```
 
-## 📸 功能截图
+### 生产构建
 
-### 首页 - 主题选择
-![首页截图](./screenshots/home.png)
-*选择您想要占卜的主题，开启塔罗之旅*
-
-### 牌阵选择
-![牌阵选择截图](./screenshots/spreads.png)
-*浏览和选择不同的塔罗牌阵*
-
-### 抽牌过程
-![抽牌动画](./screenshots/drawing.gif)
-*沉浸式的抽牌体验*
-
-### AI 解读结果
-![解读结果](./screenshots/reading.png)
-*AI 生成的详细塔罗牌解读*
-
-### 历史记录
-![历史页面](./screenshots/history.png)
-*查看和管理您的占卜历史*
-
-## 🔧 构建和部署
-
-### 本地构建
 ```bash
 npm run build
+npm start
 ```
 
-### 预览构建结果
+生产服务会同时提供构建后的静态页面和 `/api/*` 接口。
+
+## 常用命令
+
+| 命令 | 用途 |
+| --- | --- |
+| `npm run dev` | 启动 Vite 开发服务器 |
+| `npm run build` | 构建前端生产文件 |
+| `npm run preview` | 预览 Vite 构建结果 |
+| `npm start` | 启动静态文件与 API 服务 |
+| `npm run typecheck` | TypeScript 类型检查 |
+| `npm test` | 运行服务端测试 |
+| `npm run test:gemini` | 检查 Gemini 独立连通性 |
+
+## 部署
+
+项目支持 Vercel 部署：
+
+1. 将 `OPENAI_API_KEY` 配置到 Vercel 的 Development、Preview 和 Production 环境。
+2. 推送到 GitHub `main`，或执行：
+
 ```bash
-npm run preview
+npx vercel deploy --prod --yes
 ```
 
-### 运行本地生产服务
-构建后运行 `npm start`，提供静态页面与本地知识库 API。
-需要保持本机应用服务运行并连接 GPT。仅部署静态页面无法提供完整功能。
-验证命令：`npm run typecheck`、`npm test`。
+Vercel 使用 `api/[...path].ts` 处理 API。Serverless 文件系统不可作为持久数据库，因此线上临时数据目录使用 `/tmp/meowbuling`；重要数据应放在正式持久化服务中。
 
-## 🤝 贡献指南
+## 安全与隐私
 
-欢迎提交 Issue 和 Pull Request！
+- 不要把 API Key 写入源代码、README、截图或 Git 历史。
+- `.env.local`、`.env*` 和 `.vercel` 已加入 `.gitignore`。
+- 历史记录和对话默认保存在浏览器本地。
+- 导入资料默认保存在本机数据目录。
+- AI 输入包含当前问题、牌面和必要的对话上下文，请在导入资料前确认内容适合发送给所配置的模型服务。
 
-1. Fork 本项目
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 开启 Pull Request
+## 开发与贡献
 
-## 📄 许可证
+提交修改前建议运行：
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详情
+```bash
+npm run typecheck
+npm test
+```
 
-## 🙏 致谢
+贡献流程：
 
-- 感谢 GPT 提供模型能力
-- 感谢 React 和 Vite 生态系统
-- 感谢所有贡献者和用户
+1. Fork 仓库并创建功能分支。
+2. 保持修改聚焦，并补充必要测试。
+3. 运行类型检查与测试。
+4. 提交 Pull Request，说明用户体验或技术行为的变化。
 
----
+## 许可证
 
-**注意**: 请确保遵守当地法律法规，仅将塔罗牌作为娱乐和自我反思工具使用。
+仓库当前未包含独立的 `LICENSE` 文件。若要公开分发或二次开发，建议先补充明确的开源许可证。
