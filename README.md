@@ -1,4 +1,7 @@
-# 喵卜灵 MeowBuling - AI 塔罗牌应用
+# 喵卜灵 MeowBuling - 本地 AI 塔罗牌应用
+
+> 当前版本使用 GPT，支持补充知识库、快速单抽与喵灵 Agent。
+> 双击 `启动喵卜灵.cmd` 启动；模型准备、资料导入及数据位置见 [LOCAL_AI.md](./LOCAL_AI.md)。
 
 <div align="center">
 <img width="1200" height="475" alt="喵卜灵应用截图" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
@@ -12,7 +15,7 @@
 
 ### 🃏 智能塔罗牌解读
 - 支持多种经典塔罗牌阵型（单牌、三牌、凯尔特十字等）
-- AI 驱动的个性化解读，使用 Google Gemini AI 提供深度分析
+- 使用 GPT-5.5 生成详细解读，知识库仅作补充参考
 - 实时生成针对您问题的详细解读
 
 ### 🎯 主题选择
@@ -42,7 +45,10 @@
 ## 🚀 快速开始
 
 ### 环境要求
-- Node.js (推荐版本 18+)
+- Node.js 24（已验证开发启动和包含本地牌图的生产构建）
+
+塔罗牌图片随项目保存在 `public/images/tarot`，无需访问外部图片站点。
+本机 Node.js 25.2.1 在构建复制图片时出现过异常退出；如遇同样问题，请使用 Node.js 24。
 
 ### 安装步骤
 
@@ -57,11 +63,9 @@
    npm install
    ```
 
-3. **配置环境变量**
-   在项目根目录创建 `.env` 文件，并设置您的 Gemini API 密钥：
-   ```
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
+3. **配置 GPT**
+   在 `.env.local` 中设置 `OPENAI_API_KEY`，可用 `OPENAI_MODEL` 调整模型。
+   默认使用已验证可访问的 `gpt-5.5`，无需安装本地模型。
 
 4. **启动应用**
    ```bash
@@ -90,9 +94,10 @@
 - **前端框架**: React 18
 - **开发工具**: Vite
 - **编程语言**: TypeScript
-- **AI 服务**: Google Gemini AI
+- **AI 服务**: GPT + AI SDK ToolLoopAgent
+- **本地 RAG**: EmbeddingGemma 向量 + 中文 BM25 混合检索
 - **样式**: CSS Modules + 玻璃拟态设计
-- **部署**: Vercel (推荐)
+- **运行**: 本地 Node.js 服务
 
 ## 📸 功能截图
 
@@ -128,11 +133,10 @@ npm run build
 npm run preview
 ```
 
-### 部署到 Vercel
-1. 推送代码到 GitHub
-2. 在 Vercel 中导入项目
-3. 设置环境变量 `GEMINI_API_KEY`
-4. 部署完成
+### 运行本地生产服务
+构建后运行 `npm start`，提供静态页面与本地知识库 API。
+需要保持本机应用服务运行并连接 GPT。仅部署静态页面无法提供完整功能。
+验证命令：`npm run typecheck`、`npm test`。
 
 ## 🤝 贡献指南
 
@@ -150,7 +154,7 @@ npm run preview
 
 ## 🙏 致谢
 
-- 感谢 Google Gemini AI 提供强大的 AI 能力
+- 感谢 GPT 提供模型能力
 - 感谢 React 和 Vite 生态系统
 - 感谢所有贡献者和用户
 

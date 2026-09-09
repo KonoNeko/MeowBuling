@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SpreadDefinition, TarotCard, AppView, ReadingSession } from './types';
-import { getCardEducation, SYSTEM_INSTRUCTION } from './constants';
+import { getCardEducation, getCardImage, SYSTEM_INSTRUCTION } from './constants';
 
 // --- Base Components ---
 
-export const Button = ({ children, onClick, className = "", variant = "primary", disabled = false }: any) => {
+export const Button = ({ children, onClick, className = "", variant = "primary", disabled = false, type = 'button', ...props }: any) => {
   const baseClass = "px-6 py-3 rounded-full font-bold transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2";
   const variants = {
     primary: "bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50",
@@ -14,7 +14,7 @@ export const Button = ({ children, onClick, className = "", variant = "primary",
   };
 
   return (
-    <button onClick={onClick} disabled={disabled} className={`${baseClass} ${variants[variant as keyof typeof variants]} ${className}`}>
+    <button {...props} type={type} onClick={onClick} disabled={disabled} className={`${baseClass} ${variants[variant as keyof typeof variants]} ${className}`}>
       {children}
     </button>
   );
@@ -300,6 +300,7 @@ export const BottomNav = ({
         { view: AppView.LIBRARY, label: '牌库', icon: '🎴' },
         { view: AppView.SPREAD_LIBRARY, label: '牌阵', icon: '✨' },
         { view: AppView.HISTORY, label: '历史', icon: '📜' },
+        { view: AppView.ASSISTANT, label: '喵灵助手', icon: '🐱' },
     ];
 
     return (
@@ -329,14 +330,16 @@ export const BottomNav = ({
 // --- Specific UI Components ---
 
 export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any) => {
-  const sizeClasses = size === "sm" ? "w-20 h-32 md:w-24 md:h-40" : "w-48 h-80"; 
-  const displaySize = size === "xs" ? "w-16 h-24" : sizeClasses; 
+  const sizeClasses = size === "sm" ? "w-20 md:w-24" : "w-48";
+  const displaySize = size === "library" ? "w-full max-w-32" : size === "xs" ? "w-14 md:w-16" : sizeClasses;
   
   return (
-    <div className="flex flex-col items-center gap-2 relative z-10">
-      <div 
+    <div className={`flex flex-col items-center gap-2 relative z-10 ${size === 'library' ? 'w-full' : ''}`}>
+      <button
+        type="button"
+        aria-label={revealed ? `查看${card.name_cn}${card.isReversed === undefined ? '' : card.isReversed ? '逆位' : '正位'}` : '未翻开的塔罗牌'}
         onClick={onClick}
-        className={`relative ${displaySize} cursor-pointer group`}
+        className={`relative ${displaySize} aspect-[3/5] shrink-0 cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-purple-300 rounded-xl`}
         style={{ perspective: '1000px' }}
       >
         <div 
@@ -352,7 +355,7 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
             style={{ backfaceVisibility: 'hidden' }}
           >
              {/* Back Pattern */}
-             <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+             <div className="w-full h-full opacity-40 stardust"></div>
              <div className="absolute inset-2 border border-dashed border-purple-300/20 rounded-lg"></div>
              <div className="absolute inset-0 flex items-center justify-center">
                 <span className="text-xl md:text-3xl opacity-50 filter drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">🔮</span>
@@ -370,27 +373,19 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
              {/* Image Container - Rotates if reversed, independent of text */}
              <div className={`w-full h-full transition-transform duration-0 ${card.isReversed ? 'rotate-180' : ''}`}>
                  <img 
-                   src={card.image} 
+                   src={getCardImage(card.id)}
                    alt={card.name} 
-                   className="w-full h-full object-cover"
+                   className="w-full h-full object-contain"
                    loading="lazy"
                  />
              </div>
              
-             {/* Text Overlay - Always at bottom, always upright, consistent format */}
-             <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-1 md:p-2 md:pt-6 flex flex-col items-center">
-               <div className="text-[8px] md:text-[10px] font-bold text-amber-100 tracking-wider shadow-black drop-shadow-md text-center leading-tight">
-                  {card.name_cn}
-               </div>
-               {card.isReversed !== undefined && (
-                   <div className={`text-[8px] md:text-[9px] uppercase font-bold tracking-widest mt-0.5 scale-90 ${card.isReversed ? 'text-red-300' : 'text-emerald-300'}`}>
-                      {card.isReversed ? '逆位' : '正位'}
-                   </div>
-               )}
-             </div>
+
           </div>
         </div>
-      </div>
+      </button>
+      {revealed && !label && <span className="text-[10px] text-purple-100 text-center">{card.name_cn}</span>}
+      {revealed && card.isReversed !== undefined && <span className={`text-[10px] ${card.isReversed ? 'text-red-300' : 'text-emerald-300'}`}>{card.isReversed ? '逆位' : '正位'}</span>}
       {label && (
         <span className={`text-[10px] md:text-xs font-medium text-purple-200 text-center uppercase tracking-wider bg-black/60 backdrop-blur-sm px-2 py-0.5 rounded border border-white/5 transition-opacity duration-500 max-w-[120px] ${revealed ? 'opacity-100' : 'opacity-80'}`}>
           {label}
@@ -401,6 +396,7 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
 };
 
 export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onClose: () => void }) => {
+    const dialogRef = useRef<HTMLDivElement>(null);
     // Determine initial tab based on card state
     const [activeTab, setActiveTab] = useState<'upright' | 'reversed'>('upright');
 
@@ -409,6 +405,24 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
             setActiveTab(card.isReversed ? 'reversed' : 'upright');
         }
     }, [card]);
+
+    useEffect(() => {
+        if (!card) return;
+        const previous = document.activeElement as HTMLElement | null;
+        const dialog = dialogRef.current;
+        dialog?.querySelector<HTMLButtonElement>('button')?.focus();
+        const handleKey = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') { event.preventDefault(); onClose(); }
+            if (event.key === 'Tab' && dialog) {
+                const controls = Array.from(dialog.querySelectorAll<HTMLElement>('button, [href], input, textarea, [tabindex="0"]'));
+                const first = controls[0], last = controls[controls.length - 1];
+                if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+                else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+            }
+        };
+        document.addEventListener('keydown', handleKey);
+        return () => { document.removeEventListener('keydown', handleKey); previous?.focus(); };
+    }, [card, onClose]);
 
     if (!card) return null;
 
@@ -430,7 +444,7 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
 
     return (
         // Mobile: Scroll the whole overlay. Desktop: Flex center, do not scroll overlay.
-        <div className={`fixed inset-0 z-[100] custom-scrollbar animate-fade-in md:flex md:items-center md:justify-center overflow-y-auto md:overflow-visible`}>
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-label={`${card.name_cn}卡牌详情`} className="fixed inset-0 z-[100] custom-scrollbar animate-fade-in overflow-y-auto">
             {/* Fixed Backdrop */}
             <div className="fixed inset-0 bg-black/80 backdrop-blur-md" onClick={onClose} />
             
@@ -438,10 +452,10 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
             <div 
                 className={`
                     relative z-10 
-                    min-h-full md:min-h-0
+                    min-h-full
                     flex items-center justify-center 
                     p-4 md:p-0
-                    md:w-full md:max-w-5xl md:h-auto
+                    w-full max-w-5xl mx-auto
                 `} 
                 onClick={onClose}
             >
@@ -449,28 +463,28 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                 <div 
                     className={`
                         relative w-full bg-indigo-950/90 border border-purple-500/30 rounded-3xl shadow-2xl flex flex-col md:flex-row overflow-hidden
-                        ${/* Desktop: Constrain height */ 'md:max-h-[85vh]'}
+                        my-4 md:my-8
                     `}
                     onClick={(e) => e.stopPropagation()}
                 >
                      {/* Close Button - Floats top right */}
-                     <button onClick={onClose} className="absolute top-4 right-4 z-50 text-white/70 hover:text-white bg-black/30 hover:bg-black/50 p-2 rounded-full transition-all backdrop-blur-sm">
+                     <button aria-label="关闭卡牌详情" onClick={onClose} className="absolute top-4 right-4 z-50 text-white/70 hover:text-white bg-black/30 hover:bg-black/50 p-2 rounded-full transition-all backdrop-blur-sm">
                          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                          </svg>
                      </button>
 
                      {/* Left: Big Image - Fixed height on desktop relative to container */}
-                     <div className="w-full md:w-2/5 bg-black/40 p-8 flex items-center justify-center shrink-0">
-                         <div className={`relative w-48 h-72 md:w-64 md:h-96 rounded-xl overflow-hidden shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${isUpright ? '' : 'rotate-180'}`}>
-                             <img src={card.image} alt={card.name} className="w-full h-full object-cover" />
+                     <div className="w-full md:w-2/5 bg-black/40 p-6 pt-16 md:pt-8 flex items-start justify-center shrink-0">
+                         <div className={`relative w-48 md:w-full max-w-72 aspect-[3/5] md:sticky md:top-8 shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${isUpright ? '' : 'rotate-180'}`}>
+                             <img src={getCardImage(card.id)} alt={card.name} className="w-full h-full object-contain" />
                          </div>
                      </div>
 
                      {/* Right: Info - Internal Scroll on Desktop */}
                      <div className={`
                         w-full md:w-3/5 p-6 md:p-8 flex flex-col bg-gradient-to-br from-transparent to-purple-900/20
-                        ${/* Desktop: Internal Scroll */ 'md:overflow-y-auto md:custom-scrollbar'}
+                        min-w-0
                      `}>
                          {/* Header */}
                          <div className="mb-4 pt-2">
@@ -655,7 +669,7 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
     const activeIndex = drawnCards.length;
 
     return (
-        <div className="relative w-full aspect-square md:aspect-[4/3] max-w-2xl mx-auto rounded-3xl border-2 border-dashed border-white/5 bg-white/5">
+        <div className={`spread-board relative w-full max-w-2xl mx-auto rounded-3xl border-2 border-dashed border-white/5 bg-white/5 ${isLargeSpread ? 'md:h-[760px]' : 'md:h-[520px]'}`}>
             {spread.positions.map((pos: any, index: number) => {
                 const card = drawnCards[index];
                 const isActive = !isRevealed && index === activeIndex;
@@ -664,7 +678,7 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
                 return (
                     <div 
                         key={pos.id}
-                        className={`absolute transition-all duration-500`}
+                        className={`spread-position absolute transition-all duration-500`}
                         style={{...style, animationDelay: `${index * 0.1}s`}}
                         onClick={() => !card && onDrop && onDrop(null, index)}
                         onDragOver={(e) => e.preventDefault()}
@@ -703,7 +717,7 @@ export const SpreadLayout = ({ spread, drawnCards = [], onDrop, isRevealed, onCa
                                     onClick={() => onCardClick && onCardClick(card)}
                                 />
                                 {isRevealed && (
-                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-black/50 px-2 rounded text-[10px] text-white z-50">
+                                    <div className="absolute top-full mt-1 left-1/2 -translate-x-1/2 w-28 text-center whitespace-normal bg-black/50 px-2 rounded text-[10px] text-white z-50">
                                         {pos.name}
                                     </div>
                                 )}

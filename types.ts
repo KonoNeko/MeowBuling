@@ -39,10 +39,15 @@ export enum AppView {
   READING = 'READING',
   HISTORY = 'HISTORY',
   LIBRARY = 'LIBRARY',
-  SPREAD_LIBRARY = 'SPREAD_LIBRARY'
+  SPREAD_LIBRARY = 'SPREAD_LIBRARY',
+  ASSISTANT = 'ASSISTANT'
 }
 
+export type ReadingStyle = 'gentle' | 'sharp';
+
 export interface AIInterpretation {
+  cardReadings?: { positionIndex: number; cardId: number; assessment: '有利' | '不利' | '好坏并存'; interpretation: string; advice: string }[];
+  outcome?: string;
   mainTheme: string;
   fable: string;
   detailedAnalysis: {
@@ -51,6 +56,8 @@ export interface AIInterpretation {
   }[];
   advice: string;
   reflectionQuestions: string[];
+  sources?: import('./local-types').KnowledgeSource[];
+  agentSteps?: { tool: string; detail: string }[];
 }
 
 export interface SpreadPosition {
@@ -71,6 +78,7 @@ export interface SpreadDefinition {
 }
 
 export interface ReadingSession {
+  style?: ReadingStyle;
   id: string;
   timestamp: number;
   topicId: string;

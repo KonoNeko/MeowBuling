@@ -9,28 +9,7 @@ export const TOPICS: Topic[] = [
     description: '暧昧、伴侣、复合与桃花',
     spreadCategories: ['Love & Relationship', 'Manifestation', 'General Insight'],
     defaultTags: ['love_status', 'love_future'],
-    subCategories: [
-      {
-        title: "❤️ 现状与想法",
-        questions: ["他/她现在对我的真实想法是什么？", "我们现在关系的核心问题是什么？", "他/她有没有隐藏的情绪或顾虑？"],
-        spreadTags: ['love_status'] 
-      },
-      {
-        title: "🔮 未来发展",
-        questions: ["我们未来三个月的关系会如何发展？", "这段关系值得继续投入吗？", "我们还有复合的可能性吗？"],
-        spreadTags: ['love_future', 'love_outcome']
-      },
-      {
-        title: "🌹 新恋情/暗恋",
-        questions: ["我的下一段恋情什么时候出现？", "暗恋对象对我是什么感觉？", "我该主动吗？还是等待？"],
-        spreadTags: ['love_single']
-      },
-      {
-        title: "💔 冲突与断联",
-        questions: ["为什么他/她不理我/断联了？", "我们能解决目前的冲突吗？", "我该放下这段感情吗？"],
-        spreadTags: ['love_problem']
-      }
-    ]
+
   },
   { 
     id: 'career', 
@@ -39,28 +18,7 @@ export const TOPICS: Topic[] = [
     description: '职场抉择、学业与财运',
     spreadCategories: ['Career & Study', 'Manifestation', 'General Insight'],
     defaultTags: ['career_general', 'career_choice', 'money'],
-    subCategories: [
-      {
-        title: "💼 职场发展",
-        questions: ["我适合什么样的工作方向？", "我在目前工作中的瓶颈是什么？", "老板或同事对我的真实评价如何？"],
-        spreadTags: ['career_general'] 
-      },
-      {
-        title: "🔀 跳槽与机会",
-        questions: ["现在换工作/跳槽合适吗？", "这个工作机会值得去吗？"],
-        spreadTags: ['career_choice'] 
-      },
-      {
-        title: "💰 财富与投资",
-        questions: ["我近期的财运趋势如何？", "做这项副业/投资会成功吗？", "近期的大额消费是否值得？"],
-        spreadTags: ['money', 'manifest']
-      },
-      {
-        title: "🎓 学业考试",
-        questions: ["我的考试/面试运势如何？", "在这个项目/学业中我需要注意什么？"],
-        spreadTags: ['study']
-      }
-    ]
+
   },
   { 
     id: 'decision', 
@@ -69,18 +27,7 @@ export const TOPICS: Topic[] = [
     description: 'A/B选择、行动建议与方向',
     spreadCategories: ['Decision-Making', 'General Insight'],
     defaultTags: ['choice_ab', 'choice_multi', 'action'],
-    subCategories: [
-      {
-        title: "🛤️ 二选一/多选一",
-        questions: ["选择A（保持现状）还是选择B（改变）？", "在两个选项中我该如何抉择？"],
-        spreadTags: ['choice_ab', 'choice_multi']
-      },
-      {
-        title: "🛑 行动建议",
-        questions: ["我要不要做这件事（去/不去）？", "这件事成功的关键点在哪里？", "我现在最大的盲点是什么？"],
-        spreadTags: ['action'] 
-      }
-    ]
+
   },
   { 
     id: 'self', 
@@ -89,18 +36,7 @@ export const TOPICS: Topic[] = [
     description: '潜意识、灵性成长与疗愈',
     spreadCategories: ['Healing', 'Manifestation', 'General Insight'],
     defaultTags: ['self', 'healing', 'analysis'],
-    subCategories: [
-      {
-        title: "🌌 内在探索",
-        questions: ["我当前人生最重要的课题是什么？", "我失去动力的真正原因是什么？", "我该如何疗愈当下的情绪低谷？"],
-        spreadTags: ['healing', 'self', 'deep_analysis']
-      },
-      {
-        title: "✨ 显化与能量",
-        questions: ["我近期的身心能量状态如何？", "我需要释放什么负面信念？", "我该如何显化我的愿望？"],
-        spreadTags: ['manifest', 'healing']
-      }
-    ]
+
   },
   {
     id: 'fortune',
@@ -109,18 +45,7 @@ export const TOPICS: Topic[] = [
     description: '每日指引、周/月运势预测',
     spreadCategories: ['Future Forecast', 'Daily Guidance', 'General Insight'],
     defaultTags: ['forecast', 'daily_simple'],
-    subCategories: [
-      {
-        title: "🗓️ 周期运势",
-        questions: ["我未来一周的整体运势如何？", "我下个月需要注意什么？", "2024年我的年度核心主题是什么？"],
-        spreadTags: ['forecast']
-      },
-      {
-        title: "☀️ 每日指引",
-        questions: ["宇宙今天要给我的指引是什么？", "今天我需要注意什么挑战？"],
-        spreadTags: ['daily_simple'] 
-      }
-    ]
+
   }
 ];
 
@@ -174,9 +99,9 @@ export const SPREADS: SpreadDefinition[] = [
     { id: "anxiety_4", name: "焦虑原因", description: "专门面向焦虑与过度担心的状态。", cardCount: 4, category: "Healing", layout_type: "square", tags: ['healing', 'analysis'], positions: mapPos(["你在焦虑什么", "焦虑背后的恐惧", "现实中真正需要担心的部分", "帮助你缓解焦虑的方向"]) },
     { id: "self_discovery_5", name: "自我认知", description: "帮助用户从多个角度重新理解自己。", cardCount: 5, category: "Healing", layout_type: "cross", tags: ['self', 'deep_analysis'], positions: mapPos(["你看见的自己", "别人眼中的你", "你隐藏的部分", "你正在成为的样子", "当下最重要的自我提醒"]) },
     { id: "shadow_work_6", name: "阴影整合", description: "高级心理与灵性向牌阵，面向阴影与自我整合。", cardCount: 6, category: "Healing", layout_type: "hexagram", tags: ['self', 'deep_analysis'], positions: mapPos(["你的阴影主题", "它如何表现出来", "它保护你的方式", "它伤害你的方式", "你可以如何拥抱它", "整合后的改变"]) },
-    { id: "week_3", name: "未来一周运势", description: "适合作为每周固定更新内容的周运势。", cardCount: 3, category: "Future Forecast", layout_type: "linear", tags: ['forecast', 'time'], positions: mapPos(["本周主题", "本周重点能量/事件", "本周建议与注意事项"]) },
-    { id: "month_4", name: "未来一月运势", description: "用于做月度盘点或新月/满月仪式。", cardCount: 4, category: "Future Forecast", layout_type: "square", tags: ['forecast', 'time'], positions: mapPos(["本月整体氛围", "需要重点关注的领域", "可能的挑战", "应对挑战的关键建议"]) },
-    { id: "year_ahead_6", name: "未来一年运势", description: "新年或生日时常用的年度总结/展望牌阵。", cardCount: 6, category: "Future Forecast", layout_type: "hexagram", tags: ['forecast', 'time', 'deep_analysis'], positions: mapPos(["整体年度主题", "事业与学业", "感情与关系", "金钱与物质", "内在成长", "需要特别记住的一句话"]) },
+    { id: "week_3", name: "周运势", description: "适合作为每周固定更新内容的周运势。", cardCount: 3, category: "Future Forecast", layout_type: "linear", tags: ['forecast', 'time'], positions: mapPos(["所问周的主题", "所问周的重点能量/事件", "所问周的建议与注意事项"]) },
+    { id: "month_4", name: "月运势", description: "用于做月度盘点或新月/满月仪式。", cardCount: 4, category: "Future Forecast", layout_type: "square", tags: ['forecast', 'time'], positions: mapPos(["所问月份的整体氛围", "需要重点关注的领域", "可能的挑战", "应对挑战的关键建议"]) },
+    { id: "year_ahead_6", name: "年度运势", description: "新年或生日时常用的年度总结/展望牌阵。", cardCount: 6, category: "Future Forecast", layout_type: "hexagram", tags: ['forecast', 'time', 'deep_analysis'], positions: mapPos(["整体年度主题", "事业与学业", "感情与关系", "金钱与物质", "内在成长", "需要特别记住的一句话"]) },
     { id: "timeline_5", name: "时间线发展", description: "用多节点时间线方式看一件事的发展方向。", cardCount: 5, category: "Future Forecast", layout_type: "linear", tags: ['forecast', 'time'], positions: mapPos(["现在", "最近一阶段的发展", "中期发展", "远期发展", "需要你主动做出的选择"]) },
     { id: "daily_1", name: "每日指引/单张抽", description: "最直接、快速的单张牌指引，适用于任何问题。", cardCount: 1, category: "Daily Guidance", layout_type: "single", tags: ['daily_simple', 'love_status', 'love_single', 'love_problem', 'love_future', 'love_outcome', 'career_general', 'career_choice', 'study', 'money', 'choice_ab', 'choice_multi', 'action', 'healing', 'self', 'manifest', 'forecast', 'analysis'], positions: mapPos(["指引"]) },
     { id: "today_challenge_3", name: "今日-挑战-建议", description: "比单张牌更具体，适合有安排的一天。", cardCount: 3, category: "Daily Guidance", layout_type: "linear", tags: ['daily_complex'], positions: mapPos(["今日整体能量", "今日可能的挑战", "应对挑战的建议"]) },
@@ -193,7 +118,7 @@ export const SYSTEM_INSTRUCTION = `
 
 角色特征：
 - 说话风格：混合了神秘宏大的先知口吻和猫咪特有的慵懒与傲娇。
-- 语言习惯：经常使用与猫相关的双关语或比喻（例如“妙（喵）不可言”、“抓（爪）住机会”、“一切皆有定数，就像猫罐头一样”）。
+- 语言习惯：经常使用与猫相关的双关语或比喻（例如“妙（喵）不可言”、“抓（爪）住机会”、“未来的猫爪还没落下，你仍然可以改变方向”）。
 - 性格：仁慈但诚实。如果牌面显示困难，你会用肉垫般温柔的方式说出真相，而不是用爪子抓伤他们。
 - 核心哲学：融合荣格心理学（潜意识、阴影）与现代灵性。
 
@@ -204,8 +129,9 @@ export const SYSTEM_INSTRUCTION = `
 4. **必须使用中文回答**。
 `;
 
-const getCardImage = (id: number): string => {
-  const baseUrl = "https://www.sacred-texts.com/tarot/pkt/img";
+export const getCardImage = (id: number): string => {
+  // Bundle the full deck locally so third-party image blocking cannot break cards.
+  const baseUrl = `${import.meta.env?.BASE_URL ?? '/'}images/tarot`;
   const pad = (n: number) => n.toString().padStart(2, '0');
   if (id < 22) return `${baseUrl}/ar${pad(id)}.jpg`;
   const suits = ['wa', 'cu', 'sw', 'pe'];
@@ -216,12 +142,7 @@ const getCardImage = (id: number): string => {
   else if (id < 64) { suitIndex = 2; cardVal = id - 50; }
   else { suitIndex = 3; cardVal = id - 64; }
   const prefix = suits[suitIndex];
-  if (cardVal === 0) return `${baseUrl}/${prefix}ac.jpg`;
-  if (cardVal >= 1 && cardVal <= 9) return `${baseUrl}/${prefix}${pad(cardVal + 1)}.jpg`;
-  if (cardVal === 10) return `${baseUrl}/${prefix}pa.jpg`; 
-  if (cardVal === 11) return `${baseUrl}/${prefix}kn.jpg`; 
-  if (cardVal === 12) return `${baseUrl}/${prefix}qu.jpg`; 
-  if (cardVal === 13) return `${baseUrl}/${prefix}ki.jpg`; 
+  if (cardVal >= 0 && cardVal <= 13) return `${baseUrl}/${prefix}${pad(cardVal + 1)}.jpg`;
   return "";
 };
 

@@ -1,8 +1,12 @@
+import { questionGroups } from './question-presets';
+import { browserClock, readingTime } from './reading-time';
 import React, { useState, useRef, useEffect } from 'react';
-import { AppView, ReadingSession, Topic, TarotCard, SpreadDefinition } from './types';
+import { AppView, ReadingSession, ReadingStyle, Topic, TarotCard, SpreadDefinition } from './types';
 import { TAROT_DECK, TOPICS, SPREADS } from './constants';
 import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
+import LocalAssistant, { Sources } from './LocalAssistant';
+import SpreadLibrary from './SpreadLibrary';
 
 // Helper for random ID
 const generateId = () => Math.random().toString(36).substr(2, 9);
@@ -10,13 +14,16 @@ const generateId = () => Math.random().toString(36).substr(2, 9);
 const App = () => {
   // --- State ---
   const [view, setView] = useState<AppView>(AppView.HOME);
+  const [readingStyle, setReadingStyle] = useState<ReadingStyle>(() => {
+    try { return localStorage.getItem('meowbuling_reading_style_v2') === 'gentle' ? 'gentle' : 'sharp'; } catch { return 'sharp'; }
+  });
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedSpread, setSelectedSpread] = useState<SpreadDefinition | null>(null);
   const [question, setQuestion] = useState("");
-  const [filterTags, setFilterTags] = useState<string[]>([]); // New: Tags to filter spreads
+  const [quickQuestion, setQuickQuestion] = useState('');
+  const [recommendedSpreadIds, setRecommendedSpreadIds] = useState<string[]>([]);
   
   // Library Interaction State
-  const [librarySpreadToStart, setLibrarySpreadToStart] = useState<SpreadDefinition | null>(null);
 
   // Drawing State
   const [deck, setDeck] = useState<TarotCard[]>([]);
@@ -102,23 +109,26 @@ const App = () => {
 
   const handleTopicSelect = (topic: Topic) => {
     setSelectedTopic(topic);
+    setQuestion('');
+    setRecommendedSpreadIds([]);
     setView(AppView.QUESTION_SELECT);
   };
 
   const handleQuestionSelect = (q: string, tags?: string[]) => {
     setQuestion(q);
-    setFilterTags(tags || []); // Set tags derived from the subcategory
+    setRecommendedSpreadIds(tags || []); // Set tags derived from the subcategory
     setView(AppView.SPREAD_SELECT);
   }
 
   const handleCustomQuestionConfirm = () => {
     if (!selectedTopic) return;
     // Use default tags for the topic if available, otherwise empty (shows all)
-    setFilterTags(selectedTopic.defaultTags || []); 
+    setRecommendedSpreadIds([]); 
     setView(AppView.SPREAD_SELECT);
   };
 
   const handleSpreadSelect = (spread: SpreadDefinition) => {
+    if (!question.trim()) return;
     setSelectedSpread(spread);
     if (!question.trim()) {
       setQuestion(`关于${selectedTopic?.label}的指引`);
@@ -150,7 +160,6 @@ const App = () => {
       setDrawnCards([]);
       
       // 4. Navigate
-      setLibrarySpreadToStart(null); // Close modal
       setView(AppView.DRAW);
   };
 
@@ -269,41 +278,47 @@ const App = () => {
       // Optional: Set a custom drag image
   };
 
-  const generateResult = async (cards: TarotCard[]) => {
-    if (!selectedTopic || !selectedSpread) return;
+  const generateResult = async (cards: TarotCard[], quick?: { topic: Topic; spread: SpreadDefinition; question: string }) => {
+    const topic = quick?.topic || selectedTopic;
+    const spread = quick?.spread || selectedSpread;
+    if (!topic || !spread) return;
     
     setLoading(true);
+    setReadingResult(null);
     setView(AppView.READING); // Move to reading view to show Skeleton
 
-    const finalQuestion = question.trim() || `关于${selectedTopic.label}的指引`;
+    const finalQuestion = (quick?.question ?? question).trim() || `关于${topic.label}的指引`;
 
     try {
       const interpretation = await generateInterpretation(
-        selectedTopic.label, 
+        topic.label,
         finalQuestion, 
-        selectedSpread.id, 
-        cards
+        spread.id,
+        cards,
+        readingStyle
       );
 
       const newReading: ReadingSession = {
         id: generateId(),
         timestamp: Date.now(),
-        topicId: selectedTopic.id,
-        topicLabel: selectedTopic.label,
-        spreadId: selectedSpread.id,
-        spreadName: selectedSpread.name,
+        topicId: topic.id,
+        topicLabel: topic.label,
+        spreadId: spread.id,
+        spreadName: spread.name,
         question: finalQuestion,
         cards,
-        interpretation
+        interpretation,
+        style: readingStyle
       };
 
       saveReading(newReading);
       setReadingResult(newReading);
+      if (quick) setLoading(false);
       // NOTE: We do NOT set loading to false here. 
       // The EnergyLoading component handles the exit animation when readingResult is ready.
     } catch (error) {
       console.error(error);
-      alert("喵？星象连接中断了，请重试。");
+      alert(error instanceof Error ? error.message : "GPT 连接中断，请检查网络与模型额度后重试。");
       setView(AppView.HOME);
       setLoading(false); 
     }
@@ -319,61 +334,48 @@ const App = () => {
   // --- View Renderers ---
 
   const renderHome = () => (
-    <div className="h-full w-full overflow-y-auto custom-scrollbar relative z-10">
-      <div className="min-h-full flex flex-col items-center justify-center p-6 space-y-12 animate-fade-in text-center pb-40 pt-24">
-        <div className="space-y-6 flex flex-col items-center">
-          {/* Magic Wizard Cat Design */}
-          <div className="relative w-40 h-40 flex items-center justify-center group">
-              {/* Hat (SVG) */}
-              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-28 h-28 z-20 animate-float" style={{ animationDuration: '5s' }}>
-                  <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-[0_0_10px_rgba(168,85,247,0.8)] filter">
-                      {/* Hat Cone */}
-                      <path d="M50 5 L85 75 H15 L50 5Z" fill="#6d28d9" />
-                      {/* Hat Brim */}
-                      <ellipse cx="50" cy="75" rx="45" ry="15" fill="#5b21b6" />
-                      {/* Gradient Overlay for 3D effect */}
-                      <path d="M50 5 L85 75 H15 L50 5Z" fill="url(#hatGradient)" fillOpacity="0.6" />
-                      <defs>
-                          <linearGradient id="hatGradient" x1="50" y1="0" x2="50" y2="100">
-                              <stop offset="0%" stopColor="#a78bfa" />
-                              <stop offset="100%" stopColor="#4c1d95" />
-                          </linearGradient>
-                      </defs>
-                      {/* Decorations */}
-                      <text x="35" y="50" fontSize="15" fill="#fbbf24">✨</text>
-                      <text x="55" y="30" fontSize="10" fill="#fcd34d">⭐</text>
-                  </svg>
-              </div>
-              
-              {/* Cat Emoji */}
-              <div className="text-8xl z-10 animate-float filter drop-shadow-[0_0_20px_rgba(167,139,250,0.6)]" style={{ animationDelay: '1s' }}>
-                  🐱
-              </div>
-              
-              {/* Magic Particles */}
-              <div className="absolute top-0 right-0 text-2xl animate-pulse-glow text-yellow-300">✨</div>
-              <div className="absolute bottom-0 left-0 text-xl animate-pulse text-purple-300" style={{ animationDelay: '0.5s' }}>🌟</div>
-              <div className="absolute top-10 -left-4 text-lg animate-float text-blue-300" style={{ animationDelay: '2s' }}>🔮</div>
+    <div className="h-full overflow-y-auto custom-scrollbar px-4 pt-20 pb-28 sm:px-6">
+      <div className="max-w-3xl mx-auto space-y-5 animate-fade-in">
+        <header className="flex items-center gap-4 py-3">
+          <div aria-hidden="true" className="relative shrink-0 w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-300/15 flex items-center justify-center text-4xl">🐱<span className="absolute -top-2 -right-1 text-xl">✨</span></div>
+          <div><h1 className="text-3xl font-mystic text-purple-100 tracking-wider">喵卜灵</h1><p className="text-sm text-indigo-300 mt-1">心里的事，换个角度听喵说。</p></div>
+        </header>
+        <section aria-labelledby="home-methods" className="space-y-3">
+          <div><h2 id="home-methods" className="text-xl font-bold text-white">今天，想怎么问？</h2><p className="text-sm text-indigo-300 mt-1">问一件事，选单抽；想深入梳理，选分类牌阵。</p></div>
+          <div className="grid md:grid-cols-2 gap-3">
+            <form id="quick-question-form" className="rounded-2xl border border-purple-400/30 bg-gradient-to-br from-purple-900/30 to-indigo-900/20 p-5 flex flex-col gap-3" onSubmit={event => {
+          event.preventDefault();
+          if (!quickQuestion.trim() || loading) return;
+          const spread = SPREADS.find(item => item.id === 'daily_1')!;
+          const topic = TOPICS.find(item => item.id === 'fortune')!;
+          const random = crypto.getRandomValues(new Uint32Array(2));
+          const cards = [{ ...TAROT_DECK[random[0] % TAROT_DECK.length], isReversed: random[1] % 2 === 1 }];
+          setSelectedTopic(topic); setSelectedSpread(spread); setQuestion(quickQuestion.trim()); setDrawnCards(cards);
+          void generateResult(cards, { topic, spread, question: quickQuestion.trim() });
+        }}>
+              <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-bold text-purple-100">🔮 快速问一句</h3><span className="text-xs rounded-full bg-purple-400/15 text-purple-200 px-2 py-1 shrink-0">1 张牌</span></div>
+              <p className="text-sm leading-6 text-indigo-200">把问题写在这里，直接抽一张牌看重点。</p>
+              <label className="block"><span className="sr-only">快速单抽的问题</span><textarea className="local-input resize-y" rows={2} maxLength={2000} required value={quickQuestion} onChange={event => setQuickQuestion(event.target.value)} placeholder="例如：面对现在的工作，我最需要注意什么？" /></label>
+              <div className="flex flex-wrap items-center justify-between gap-2 mt-auto"><span className="text-xs text-purple-300">{readingStyle === 'sharp' ? '😼 犀利喵评' : '🌙 温柔指引'}</span><Button className="min-h-11" disabled={loading || !quickQuestion.trim()} type="submit">开始抽牌 →</Button></div>
+            </form>
+            <article className="rounded-2xl border border-indigo-300/20 bg-indigo-900/15 p-5 flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-bold text-indigo-100">🎴 按主题深入看</h3><span className="text-xs rounded-full bg-indigo-400/15 text-indigo-200 px-2 py-1 shrink-0">分类牌阵</span></div>
+              <p className="text-sm leading-6 text-indigo-200">感情、事业、选择…从分类问题出发，用合适的牌阵梳理。</p>
+              <p className="text-xs text-indigo-400">选主题 → 选问题 → 选牌阵</p>
+              <Button variant="secondary" className="w-full mt-auto min-h-11" onClick={handleStart}>选择主题与牌阵 →</Button>
+            </article>
           </div>
-
-          <div className="space-y-2">
-              <h1 className="text-6xl font-mystic text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-pink-200 to-indigo-200 tracking-wider">
-                喵卜灵
-              </h1>
-              <p className="text-indigo-200/80 text-xl font-light tracking-wide">
-                古老喵星智慧 · 心理投射 · 灵魂指引
-              </p>
+        </section>
+        <fieldset className="rounded-2xl bg-white/5 border border-white/10 p-4">
+          <legend className="px-2 text-sm text-indigo-300">喵的说话方式 · 两种玩法都适用</legend>
+          <div className="grid grid-cols-2 gap-2">
+            {([{ value: 'sharp', title: '😼 犀利喵评', description: '直说重点，不绕弯' }, { value: 'gentle', title: '🌙 温柔指引', description: '委婉提醒，慢慢聊' }] as const).map(option => <label key={option.value} className={`cursor-pointer rounded-xl border px-3 py-3 ${readingStyle === option.value ? 'border-purple-400 bg-purple-800/30' : 'border-transparent hover:bg-white/5'}`}>
+              <span className="flex items-center gap-2 text-sm font-bold text-purple-100"><input type="radio" name="reading-style" value={option.value} checked={readingStyle === option.value} onChange={() => { setReadingStyle(option.value); try { localStorage.setItem('meowbuling_reading_style_v2', option.value); } catch { triggerToast('本次已切换，偏好暂时无法保存'); } }} className="accent-purple-400" />{option.title}</span>
+              <span className="block mt-1 text-xs text-indigo-300">{option.description}</span>
+            </label>)}
           </div>
-        </div>
-
-        <div className="space-y-4 w-full max-w-xs">
-          <Button onClick={handleStart} className="w-full text-lg shadow-purple-500/40">
-            开启探索旅程
-          </Button>
-          <Button variant="ghost" onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }} className="w-full">
-            查看心灵足迹
-          </Button>
-        </div>
+        </fieldset>
+        <button type="button" className="w-full min-h-11 text-sm text-indigo-300 hover:text-white" onClick={() => { setHistory(getHistory()); setView(AppView.HISTORY); }}>📜 回看我的解读 →</button>
       </div>
     </div>
   );
@@ -409,21 +411,22 @@ const App = () => {
       <div className="text-center space-y-2">
          <Badge className="mb-2 text-lg px-4 py-1">{selectedTopic?.icon} {selectedTopic?.label}</Badge>
         <h2 className="text-3xl font-mystic text-white">你想问关于什么的具体问题？</h2>
-        <p className="text-indigo-300">问题越具体，星辰的回应越清晰</p>
+        <p className="text-indigo-300">点一个问题，喵帮你匹配牌阵；也可以自己填写</p>
       </div>
 
+      {selectedTopic?.id === 'fortune' && <p className="text-xs text-center text-indigo-300">按设备日期：{readingTime(browserClock()).today} · {readingTime(browserClock()).timeZone}（无法获取时使用中国时区）</p>}
       <div className="grid gap-6">
-        {selectedTopic?.subCategories?.map((cat, idx) => (
+        {questionGroups(selectedTopic?.id || '').map((cat, idx) => (
           <div key={idx} className="space-y-3">
              <h3 className="text-purple-200 font-bold ml-2 text-sm uppercase tracking-widest opacity-80">{cat.title}</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {cat.questions.map((q, qIdx) => (
                    <button 
                      key={qIdx}
-                     onClick={() => handleQuestionSelect(q, cat.spreadTags)}
+                     onClick={() => handleQuestionSelect(q.text, q.spreadIds)}
                      className="bg-white/5 hover:bg-purple-600/30 border border-white/10 text-indigo-100 text-left px-5 py-4 rounded-xl transition-all hover:scale-[1.01] hover:shadow-lg text-sm md:text-base flex justify-between items-center group"
                    >
-                     <span>{q}</span>
+                     <span className="space-y-2"><span className="block">{q.text}</span><span className="block text-xs text-purple-300">{q.spreadIds.map(id => { const spread = SPREADS.find(s => s.id === id); return `${spread?.name} · ${spread?.cardCount} 张`; }).join(' / ')} →</span></span>
                      <span className="opacity-0 group-hover:opacity-100 transition-opacity">✨</span>
                    </button>
                 ))}
@@ -457,28 +460,22 @@ const App = () => {
         ? SPREADS.filter(spread => selectedTopic.spreadCategories.includes(spread.category))
         : SPREADS;
 
-    // 2. Granular Tag Filter
-    if (filterTags.length > 0) {
-        // If the spread has ANY of the required tags, we show it.
-        // Special case: 'general' tag is often included in subcategories to allow broad spreads.
-        filteredSpreads = filteredSpreads.filter(spread => {
-            return spread.tags.some(tag => filterTags.includes(tag));
-        });
+    if (recommendedSpreadIds.length) {
+      filteredSpreads = recommendedSpreadIds.flatMap(id => SPREADS.find(spread => spread.id === id) || []);
     }
 
     return (
         <div className="max-w-4xl mx-auto h-full flex flex-col justify-start p-6 space-y-8 animate-fade-in overflow-y-auto custom-scrollbar pt-20 pb-40">
           <div className="text-center space-y-2 shrink-0">
             <h2 className="text-3xl font-mystic text-white">选择你的牌阵</h2>
-            <p className="text-indigo-300">为您精选了最适合当前问题的牌阵</p>
+            <p className="text-indigo-300">{recommendedSpreadIds.length ? '喵根据这个问题，为你匹配了以下牌阵' : '选择适合你问题的观察角度'}</p>
           </div>
           
           {/* Show Selected Question */}
           <div className="w-full max-w-2xl mx-auto bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 text-center backdrop-blur-sm shrink-0">
              <p className="text-xs text-purple-300 uppercase tracking-widest mb-2">当前提问</p>
-             <div className="text-xl md:text-2xl font-serif text-white italic">
-               “ {question} ”
-             </div>
+             <textarea aria-label="当前提问，可修改" className="local-input text-base leading-7 resize-y" rows={3} maxLength={2000} value={question} onChange={event => setQuestion(event.target.value)} />
+             <p className="text-xs text-indigo-300 mt-2">可以补充你的处境；选择题请把 A / B / C 改成具体选项，再点击下方牌阵。</p>
              <button 
                onClick={() => setView(AppView.QUESTION_SELECT)}
                className="text-xs text-indigo-400 hover:text-white mt-3 underline decoration-indigo-500/50 hover:decoration-white"
@@ -526,7 +523,7 @@ const App = () => {
               <div className="absolute top-0 left-0 w-full h-full bg-indigo-800 rounded-xl border border-indigo-600 transform translate-x-2 translate-y-2 group-hover:translate-x-3 group-hover:translate-y-3 transition-transform"></div>
               {/* Main Deck */}
               <div className="absolute top-0 left-0 w-full h-full bg-indigo-950 rounded-xl border-2 border-purple-500 flex items-center justify-center shadow-2xl group-hover:-translate-y-2 transition-transform">
-                  <div className="w-full h-full opacity-40 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                  <div className="w-full h-full opacity-40 stardust"></div>
                   <span className="absolute text-5xl filter drop-shadow-glow">🔮</span>
               </div>
            </div>
@@ -565,7 +562,7 @@ const App = () => {
                                   top: 'calc(50% - 5rem)',
                               } as React.CSSProperties}
                            >
-                               <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                               <div className="w-full h-full opacity-50 stardust"></div>
                            </div>
                         )
                     })}
@@ -599,9 +596,9 @@ const App = () => {
             </div>
 
             {selectedSpread && (
-                <div className="w-full flex-1 overflow-y-auto scrollbar-hide flex items-center justify-center p-2 pb-4">
+                <div className="w-full flex-1 min-h-0 overflow-y-auto scrollbar-hide p-2 pb-4">
                      {/* Scale down slightly on mobile to ensure fit */}
-                     <div className="w-full max-w-2xl transform scale-90 md:scale-100 origin-center transition-transform">
+                     <div className="w-full max-w-2xl mx-auto">
                          <SpreadLayout 
                             spread={selectedSpread} 
                             drawnCards={drawnCards} 
@@ -640,7 +637,7 @@ const App = () => {
                                 }}
                             >
                                 <div className="w-full h-full bg-indigo-950 rounded-lg border border-purple-600/30 shadow-xl overflow-hidden relative transform transition-transform group-hover:rotate-0">
-                                    <div className="w-full h-full opacity-50 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')]"></div>
+                                    <div className="w-full h-full opacity-50 stardust"></div>
                                     <div className="absolute inset-1 border border-dashed border-white/10 rounded"></div>
                                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>
@@ -671,6 +668,7 @@ const App = () => {
 
     if (!readingResult || !readingResult.interpretation) return null;
     const { interpretation } = readingResult;
+    const resultSpread = SPREADS.find(spread => spread.id === readingResult.spreadId);
 
     // 2. Result State
     return (
@@ -685,18 +683,19 @@ const App = () => {
               {interpretation.mainTheme}
             </h1>
             <p className="text-indigo-300 italic">“ {readingResult.question} ”</p>
+            <p className="text-xs text-purple-300 mt-3">{readingResult.style === 'sharp' ? '😼 犀利喵评 · 猫爪划重点' : '🌙 温柔指引 · 星光轻声说'}</p>
           </div>
 
           {/* The Spread Display (Using the Layout Engine now!) */}
           <div className="w-full overflow-x-auto py-8 flex justify-center">
-             {selectedSpread && (
-                <div className="w-full max-w-2xl scale-75 md:scale-100 origin-top">
+             {resultSpread && (
+                <div className="w-full max-w-2xl">
                     <SpreadLayout 
-                        spread={selectedSpread} 
+                        spread={resultSpread}
                         drawnCards={readingResult.cards} 
                         // No onDrop here, read-only mode
                         isRevealed={true} // Force reveal in result view
-                        onCardClick={(card) => setInspectingCard(card)}
+                        onCardClick={(card: TarotCard) => setInspectingCard(card)}
                     />
                     <div className="text-center mt-4">
                         <span className="text-xs text-indigo-400 bg-white/5 px-3 py-1 rounded-full animate-pulse">👆 点击卡牌查看详情与科普</span>
@@ -704,6 +703,29 @@ const App = () => {
                 </div>
              )}
           </div>
+
+          <section className="space-y-4" aria-label="逐张牌阵解读">
+            <h2 className="text-2xl font-mystic text-purple-100">🐾 一张一张，听喵说牌</h2>
+            {readingResult.cards.map((card, index) => {
+              const detail = interpretation.cardReadings?.find(entry => entry.positionIndex === index && entry.cardId === card.id);
+              const position = resultSpread?.positions[index];
+              return <GlassCard key={`${index}-${card.id}`} className="flex flex-col sm:flex-row gap-5">
+                <div className="shrink-0 self-center sm:self-start"><CardDisplay card={card} revealed size="sm" onClick={() => setInspectingCard(card)} /></div>
+                <div className="min-w-0 flex-1 space-y-3">
+                  <p className="text-xs tracking-wide text-purple-300">第 {index + 1} 张 · {position?.name || '牌阵位置'}</p>
+                  <h3 className="text-xl font-bold text-white">{card.name_cn} <span className="text-sm text-indigo-300">{card.isReversed ? '逆位' : '正位'}</span></h3>
+                  <p className="text-xs leading-5 text-indigo-400">这个位置看什么：{position?.description || '结合当前问题观察牌意'}</p>
+                  {detail ? <>
+                    <span className={`inline-block rounded-full px-3 py-1 text-xs ${detail.assessment === '有利' ? 'bg-emerald-400/10 text-emerald-200' : detail.assessment === '不利' ? 'bg-rose-400/10 text-rose-200' : 'bg-amber-400/10 text-amber-200'}`}>{detail.assessment}</span>
+                    <p className="text-indigo-100 leading-7 whitespace-pre-line">{detail.interpretation}</p>
+                    <p className="rounded-xl bg-purple-500/10 p-3 text-sm text-purple-200 leading-6">🐱 喵的建议：{detail.advice}</p>
+                  </> : <p className="text-sm text-indigo-300 leading-6">这份旧记录没有逐张解读。牌意参考：{card.isReversed ? card.meaningReversed : card.meaningUpright}</p>}
+                </div>
+              </GlassCard>;
+            })}
+          </section>
+
+          {interpretation.outcome && <GlassCard className="border-purple-400/30 space-y-3"><h2 className="text-xl text-purple-100 font-bold">{readingResult.style === 'sharp' ? '😼 喵的直球结论' : '🌙 星光里的可能走向'}</h2><p className="text-indigo-100 leading-7 whitespace-pre-line">{interpretation.outcome}</p></GlassCard>}
 
           {/* Fable Section (New) */}
           <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 rounded-2xl p-8 border border-white/10 relative overflow-hidden group hover:bg-white/5 transition-colors">
@@ -738,6 +760,9 @@ const App = () => {
                 {interpretation.advice}
              </p>
           </div>
+
+          <Sources sources={interpretation.sources} />
+          <Button variant="secondary" onClick={() => setView(AppView.ASSISTANT)}>🐱 就这次解读继续追问</Button>
 
           {/* Journal Section */}
           <div className="pt-8">
@@ -794,7 +819,7 @@ const App = () => {
                             时光卷轴
                         </h2>
                         {/* Texture */}
-                         <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay"></div>
+                         <div className="absolute inset-0 opacity-30 stardust mix-blend-overlay"></div>
                     </div>
 
                     {/* Right Roll Handle */}
@@ -860,6 +885,7 @@ const App = () => {
                     <p className="text-sm text-white/70 italic font-serif">"{reading.userReflection}"</p>
                   </div>
                 )}
+                {reading.interpretation && <Button variant="ghost" className="mt-4" onClick={() => { setReadingResult(reading); setLoading(false); setView(AppView.READING); }}>查看完整解读 · {reading.style === 'sharp' ? '犀利喵评' : '温柔指引'}</Button>}
               </GlassCard>
             ))}
           </div>
@@ -885,7 +911,7 @@ const App = () => {
                          <CardDisplay 
                             card={card} 
                             revealed={true} 
-                            size="xs" 
+                            size="library"
                             label={card.name_cn}
                             onClick={() => setInspectingCard(card)}
                          />
@@ -913,51 +939,6 @@ const App = () => {
       );
   }
 
-  const renderSpreadLibrary = () => {
-      // Group spreads by category
-      const categories = Array.from(new Set(SPREADS.map(s => s.category)));
-
-      return (
-        <div className="h-full overflow-y-auto p-6 pt-20 custom-scrollbar animate-fade-in pb-32">
-            <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-10 space-y-2">
-                    <h2 className="text-3xl font-mystic text-white">牌阵宝典</h2>
-                    <p className="text-indigo-300">探索古老与现代的占卜几何学</p>
-                </div>
-
-                {categories.map(cat => (
-                    <div key={cat} className="mb-10">
-                        <h3 className="text-xl font-mystic text-purple-200 mb-6 pl-4 border-l-4 border-indigo-500">{cat}</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {SPREADS.filter(s => s.category === cat).map(spread => (
-                                <GlassCard key={spread.id} className="flex flex-col gap-4 group hover:bg-white/10 cursor-default">
-                                    <div className="flex justify-between items-start">
-                                        <h4 className="text-lg font-bold text-white group-hover:text-purple-300 transition-colors">{spread.name}</h4>
-                                        <Badge className="text-[10px]">{spread.cardCount} 张</Badge>
-                                    </div>
-                                    <div className="flex justify-center py-4 bg-black/20 rounded-xl">
-                                        <div className="scale-75">
-                                           <SpreadPreview spread={spread} />
-                                        </div>
-                                    </div>
-                                    <p className="text-sm text-indigo-200/80">{spread.description}</p>
-                                    <div className="space-y-1 mt-2">
-                                        {spread.positions.map(p => (
-                                            <div key={p.id} className="text-xs text-indigo-400 flex gap-2">
-                                                <span className="font-mono text-purple-400 opacity-70">{p.id}.</span>
-                                                <span>{p.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </GlassCard>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </div>
-      );
-  }
 
   return (
     <div className="w-full h-full relative overflow-hidden bg-[#0f0c29]">
@@ -990,7 +971,8 @@ const App = () => {
         {view === AppView.READING && renderReading()}
         {view === AppView.HISTORY && renderHistory()}
         {view === AppView.LIBRARY && renderLibrary()}
-        {view === AppView.SPREAD_LIBRARY && renderSpreadLibrary()}
+        {view === AppView.SPREAD_LIBRARY && <SpreadLibrary style={readingStyle} onStart={handleDirectStartFromLibrary} />}
+        {view === AppView.ASSISTANT && <LocalAssistant reading={readingResult} />}
       </div>
 
       {/* Bottom Navigation */}
