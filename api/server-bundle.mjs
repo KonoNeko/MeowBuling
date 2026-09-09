@@ -593,7 +593,20 @@ var instructions = `${SYSTEM_INSTRUCTION}
 \u4EC5\u5F15\u7528\u5DE5\u5177\u771F\u5B9E\u8FD4\u56DE\u7684\u8D44\u6599\uFF0C\u4F7F\u7528 [S1] \u8FD9\u6837\u7684\u6765\u6E90\u7F16\u53F7\uFF1B\u4E0D\u8981\u865A\u6784\u6765\u6E90\u6216\u65AD\u8A00\u4ED6\u4EBA\u7684\u60F3\u6CD5\u3002
 \u628A\u5854\u7F57\u4F5C\u4E3A\u81EA\u6211\u53CD\u601D\u65B9\u5F0F\uFF0C\u4E0D\u505A\u786E\u5B9A\u6027\u9884\u6D4B\uFF0C\u4E0D\u4EE5\u724C\u610F\u4EE3\u66FF\u533B\u7597\u3001\u6CD5\u5F8B\u6216\u6295\u8D44\u4E13\u4E1A\u610F\u89C1\u3002
 \u7528\u4E2D\u6587\u5145\u5206\u89E3\u91CA\uFF0C\u590D\u6742\u95EE\u9898\u901A\u5E38600\u81F31000\u5B57\uFF1A\u5148\u7ED9\u660E\u786E\u5224\u65AD\uFF0C\u518D\u5C55\u5F00\u724C\u610F\u4F9D\u636E\u3001\u5177\u4F53\u60C5\u5883\u3001\u5229\u5F0A\u548C\u53EF\u80FD\u53D8\u5316\uFF0C\u6700\u540E\u7ED93\u6761\u53EF\u6267\u884C\u884C\u52A8\u3002\u7B80\u5355\u95EE\u5019\u6216\u7528\u6237\u8981\u6C42\u7B80\u77ED\u65F6\u9002\u5F53\u7F29\u77ED\u3002\u4E0D\u590D\u8BFB\u8D44\u6599\u3001\u4E0D\u5806\u780C\u5957\u8BDD\uFF1B\u6CA1\u6709\u4F9D\u636E\u7684\u4E8B\u5B9E\u660E\u786E\u8868\u793A\u4E0D\u786E\u5B9A\u3002`;
-async function runAgent(store, messages, context = "", signal, clock) {
+var followUpMarker = /\n?<!--FOLLOW_UP_QUESTIONS:([\s\S]*?)-->\s*$/;
+function extractFollowUpQuestions(text) {
+  const match = text.match(followUpMarker);
+  if (!match) return { text: text.trim(), questions: [] };
+  let questions = [];
+  try {
+    const parsed = JSON.parse(match[1]);
+    if (Array.isArray(parsed)) questions = parsed.filter((item) => typeof item === "string").map((item) => item.trim()).filter(Boolean).slice(0, 4);
+  } catch {
+    questions = [];
+  }
+  return { text: text.replace(followUpMarker, "").trim(), questions };
+}
+async function runAgent(store, messages, context = "", signal, clock, suggestionsOnly = false) {
   const sources = [];
   const steps = [];
   const remember = (found) => found.map((source) => {
@@ -611,13 +624,15 @@ ${previousQuestion.slice(0, 800)}
 ${context.slice(0, 1800)}`, 5, signal);
   const initialSources = remember(retrieved.sources);
   steps.push({ tool: "\u68C0\u7D22\u77E5\u8BC6\u5E93", detail: `${retrieved.mode} \xB7 ${initialSources.length} \u6761\u8D44\u6599` });
+  const followUpInstruction = `
+\u56DE\u7B54\u7ED3\u5C3E\u5FC5\u987B\u8FFD\u52A0\u4E00\u884C\u673A\u5668\u6807\u8BB0\uFF0C\u4E0D\u80FD\u7701\u7565\uFF1A<!--FOLLOW_UP_QUESTIONS:["\u95EE\u98981","\u95EE\u98982","\u95EE\u98983"]-->\u3002\u95EE\u9898\u5FC5\u987B\u662F\u7528\u6237\u57FA\u4E8E\u672C\u6B21\u724C\u9762\u7ED3\u679C\u81EA\u7136\u4F1A\u7EE7\u7EED\u8FFD\u95EE\u7684\u5177\u4F53\u95EE\u9898\uFF0C\u5FC5\u987B\u5F15\u7528\u5F53\u524D\u95EE\u9898\u3001\u724C\u9635\u4F4D\u7F6E\u3001\u724C\u540D\u3001\u7ED3\u8BBA\u6216\u884C\u52A8\u5EFA\u8BAE\u4E2D\u7684\u81F3\u5C11\u4E00\u4E2A\uFF0C\u4E0D\u5F97\u6CDB\u6CDB\u8BE2\u95EE\u5854\u7F57\u77E5\u8BC6\u3001\u5176\u4ED6\u724C\u9635\u6216\u65E0\u5173\u4EBA\u751F\u8BDD\u9898\u3002\u53EA\u8F93\u51FA2\u52304\u4E2A\u95EE\u9898\u3002`;
   const agent = new ToolLoopAgent({
     model: assistantModel(),
     instructions: `${instructions}
 ${timeInstructions}
 \u65F6\u95F4\u53C2\u8003\uFF1A${JSON.stringify(readingTime(clock))}${context ? `
 \u5F53\u524D\u5BF9\u8BDD\u80CC\u666F\uFF1A\u8FD9\u662F\u7528\u6237\u521A\u5B8C\u6210\u7684\u4E00\u6B21\u5360\u535C\u3002\u56DE\u7B54\u5FC5\u987B\u4F18\u5148\u4F9D\u636E\u4E0B\u9762\u8FD9\u6B21\u5360\u535C\u7684\u724C\u9762\u4E0E\u89E3\u8BFB\uFF0C\u5E2E\u7528\u6237\u628A\u590D\u6742\u5185\u5BB9\u6D53\u7F29\u6210\u76F4\u63A5\u3001\u6E05\u6670\u3001\u53EF\u6267\u884C\u7684\u56DE\u7B54\uFF1B\u4E0D\u8981\u628A\u7528\u6237\u8F6C\u53BB\u5176\u4ED6\u52A9\u624B\uFF0C\u4E5F\u4E0D\u8981\u91CD\u65B0\u5F00\u59CB\u4E00\u5957\u6CDB\u6CDB\u7684\u5360\u535C\u3002
-\u672C\u6B21\u5360\u535C\u8D44\u6599\uFF1A${context}` : "\n\u5F53\u524D\u5BF9\u8BDD\u80CC\u666F\uFF1A\u7528\u6237\u8FD8\u6CA1\u6709\u5B8C\u6210\u5360\u535C\u3002\u4F60\u662F\u5360\u535C\u524D\u7684\u63D0\u95EE\u5BA2\u670D\uFF0C\u5E2E\u52A9\u7528\u6237\u628A\u6A21\u7CCA\u70E6\u607C\u6574\u7406\u6210\u4E00\u4E2A\u5177\u4F53\u3001\u503C\u5F97\u62BD\u724C\u7684\u95EE\u9898\uFF0C\u5E76\u5728\u5FC5\u8981\u65F6\u63A8\u8350\u4E3B\u9898\u4E0E\u724C\u9635\u3002\u4E0D\u8981\u5047\u88C5\u66FF\u7528\u6237\u9884\u6D4B\u7ED3\u679C\u3002"}`,
+\u672C\u6B21\u5360\u535C\u8D44\u6599\uFF1A${context}${followUpInstruction}` : "\n\u5F53\u524D\u5BF9\u8BDD\u80CC\u666F\uFF1A\u7528\u6237\u8FD8\u6CA1\u6709\u5B8C\u6210\u5360\u535C\u3002\u4F60\u662F\u5360\u535C\u524D\u7684\u63D0\u95EE\u5BA2\u670D\uFF0C\u5E2E\u52A9\u7528\u6237\u628A\u6A21\u7CCA\u70E6\u607C\u6574\u7406\u6210\u4E00\u4E2A\u5177\u4F53\u3001\u503C\u5F97\u62BD\u724C\u7684\u95EE\u9898\uFF0C\u5E76\u5728\u5FC5\u8981\u65F6\u63A8\u8350\u4E3B\u9898\u4E0E\u724C\u9635\u3002\u4E0D\u8981\u5047\u88C5\u66FF\u7528\u6237\u9884\u6D4B\u7ED3\u679C\u3002"}`,
     maxOutputTokens: 1e4,
     maxRetries: 0,
     stopWhen: isStepCount(5),
@@ -671,7 +686,8 @@ ${timeInstructions}
     abortSignal: signal || AbortSignal.timeout(18e4)
   });
   if (!result.text.trim()) throw new Error("GPT \u672A\u5B8C\u6210\u56DE\u7B54\uFF0C\u8BF7\u7F29\u77ED\u95EE\u9898\u540E\u91CD\u8BD5\u3002");
-  return { text: result.text.replace(/<think>[\s\S]*?<\/think>/g, "").trim(), sources, steps };
+  const parsed = extractFollowUpQuestions(result.text.replace(/<think>[\s\S]*?<\/think>/g, "").trim());
+  return { text: suggestionsOnly ? "" : parsed.text, followUpQuestions: parsed.questions, sources, steps };
 }
 var styleInstructions = {
   gentle: "\u6E29\u67D4\u6307\u5F15\uFF1A\u50CF\u62AB\u7740\u661F\u5149\u7684\u732B\u54AA\u5148\u77E5\uFF0C\u59D4\u5A49\u3001\u542B\u84C4\u3001\u6709\u5854\u7F57\u610F\u8C61\uFF0C\u7528\u4E5F\u8BB8\u3001\u50CF\u662F\u3001\u503C\u5F97\u7559\u610F\u8868\u8FBE\u3002\u6E29\u67D4\u4F46\u4E0D\u80FD\u9690\u85CF\u4E0D\u5229\u4FE1\u606F\uFF0C\u884C\u52A8\u5EFA\u8BAE\u4ECD\u987B\u5177\u4F53\u3002\u8BED\u6C14\u793A\u4F8B\uFF1A\u55B5\uFF0C\u4F60\u4F3C\u4E4E\u8FD8\u5728\u95E8\u8FB9\u8BD5\u63A2\uFF0C\u4E5F\u8BB8\u5148\u8FC8\u51FA\u4E00\u5C0F\u6B65\uFF0C\u8DEF\u5C31\u4F1A\u6162\u6162\u4EAE\u8D77\u6765\u3002",
@@ -721,7 +737,7 @@ async function interpret(store, input, signal) {
 
 // server/api.ts
 var importSchema = z2.object({ title: z2.string().trim().min(1).max(160), text: z2.string().trim().min(1).max(5e5) });
-var chatSchema = z2.object({ clock: clockSchema, messages: z2.array(z2.object({ role: z2.enum(["user", "assistant"]), content: z2.string().trim().min(1).max(6e3) })).min(1).max(16), context: z2.string().max(6e3).optional() });
+var chatSchema = z2.object({ clock: clockSchema, messages: z2.array(z2.object({ role: z2.enum(["user", "assistant"]), content: z2.string().trim().min(1).max(6e3) })).min(1).max(16), context: z2.string().max(6e3).optional(), suggestionsOnly: z2.boolean().optional() });
 async function readJson(req) {
   let length = 0;
   const chunks = [];
@@ -772,7 +788,7 @@ function createApi() {
       if (url.pathname === "/api/agent" && req.method === "POST") {
         const input = chatSchema.parse(await readJson(req));
         if (input.messages.at(-1)?.role !== "user") throw new Error("\u6700\u540E\u4E00\u6761\u6D88\u606F\u5FC5\u987B\u662F\u4F60\u7684\u95EE\u9898\u3002");
-        return send(200, await runAgent(store, input.messages, input.context, controller.signal, input.clock));
+        return send(200, await runAgent(store, input.messages, input.context, controller.signal, input.clock, input.suggestionsOnly));
       }
       if (url.pathname === "/api/interpret" && req.method === "POST") return send(200, await interpret(store, readingInput.parse(await readJson(req)), controller.signal));
       return send(404, { error: "\u63A5\u53E3\u4E0D\u5B58\u5728\u3002" });

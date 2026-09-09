@@ -14,6 +14,7 @@ export interface KnowledgeDocument {
 }
 export interface AgentReply {
   text: string;
+  followUpQuestions?: string[];
   sources: KnowledgeSource[];
   steps: { tool: string; detail: string }[];
 }

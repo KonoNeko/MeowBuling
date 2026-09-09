@@ -35,12 +35,14 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
   const [busy, setBusy] = useState(false);
   const [working, setWorking] = useState(false);
   const [useReading] = useState(true);
+  const chatStorageKey = `meowbuling_agent_chat_${reading.id}`;
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
-      const saved: unknown = JSON.parse(localStorage.getItem('meowbuling_agent_chat') || '[]');
+      const saved: unknown = JSON.parse(localStorage.getItem(chatStorageKey) || '[]');
       return Array.isArray(saved) ? saved.filter(m => ['user', 'assistant'].includes(m?.role) && typeof m.content === 'string').slice(-24) : [];
     } catch { return []; }
   });
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   const [title, setTitle] = useState('');
   const [text, setText] = useState('');
   const [query, setQuery] = useState('');
@@ -51,7 +53,7 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
   async function refresh() { setStatus(await localApi<LocalStatus>('/api/status')); }
   useEffect(() => { void refresh().catch(e => setError(e.message)); return () => controller.current?.abort(); }, []);
   useEffect(() => {
-    try { localStorage.setItem('meowbuling_agent_chat', JSON.stringify(messages.slice(-24))); }
+    try { localStorage.setItem(chatStorageKey, JSON.stringify(messages.slice(-24))); }
     catch { setError('本地对话保存失败，浏览器存储空间可能不足。'); }
     end.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }, [messages]);
@@ -59,6 +61,17 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
   const context = useReading && reading ? JSON.stringify({ question: reading.question, topic: reading.topicLabel, spread: reading.spreadName, style: reading.style === 'sharp' ? '犀利喵评，直接说明利弊与行动' : '温柔指引，委婉有同理心',
     cards: reading.cards.map((c, index) => ({ position: index + 1, name: c.name_cn, reversed: c.isReversed, reading: reading.interpretation?.cardReadings?.[index]?.interpretation, advice: reading.interpretation?.cardReadings?.[index]?.advice })),
     summary: reading.interpretation?.mainTheme, outcome: reading.interpretation?.outcome, analysis: reading.interpretation?.detailedAnalysis, advice: reading.interpretation?.advice }) : '';
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void localApi<AgentReply>('/api/agent', {
+      clock: browserClock(),
+      messages: [{ role: 'user', content: '请根据这次占卜的完整结果，只生成用户最可能继续追问的2到4个具体问题，不要回答问题。' }],
+      context,
+      suggestionsOnly: true,
+    }, controller.signal).then(reply => setSuggestedQuestions(reply.followUpQuestions || [])).catch(() => undefined);
+    return () => controller.abort();
+  }, [reading.id]);
 
   async function send(event: React.FormEvent) {
     event.preventDefault();
@@ -70,6 +83,7 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
     try {
       const reply = await localApi<AgentReply>('/api/agent', { clock: browserClock(), messages: next.slice(-12).map(({ role, content }) => ({ role, content: content.slice(0, 6000) })), context }, controller.current.signal);
       setMessages([...next, { role: 'assistant', content: reply.text, reply }]);
+      setSuggestedQuestions(reply.followUpQuestions || []);
     } catch (error) {
       setMessages(messages); setInput(message.content);
       setError((error as Error).name === 'AbortError' ? '已停止，可以修改问题后再次发送。' : (error as Error).message);
@@ -114,12 +128,13 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
           <button disabled={busy} onClick={() => setMessages([])} className="text-purple-300 disabled:opacity-40">清空对话</button>
         </div>
         <div className="rounded-2xl border border-white/10 bg-black/15 p-4 md:p-6 space-y-5 min-h-64 max-h-[55dvh] overflow-y-auto">
-          {!messages.length && <div className="py-8 text-center"><div className="text-4xl mb-4">🐱</div><p className="text-indigo-100">喵，今天想探索什么？</p><div className="flex flex-wrap justify-center gap-2 mt-5">{['愚者正位和逆位有什么区别？', '我想梳理职业选择，适合什么牌阵？', '如何把牌意变成实际行动？'].map(q => <button key={q} onClick={() => setInput(q)} className="rounded-xl border border-purple-400/20 p-3 text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
+          {!messages.length && <div className="py-8 text-center"><div className="text-4xl mb-4">🐱</div><p className="text-indigo-100">喵，想继续拆解这次结果的哪一层？</p><div className="flex flex-wrap justify-center gap-2 mt-5">{suggestedQuestions.map(q => <button key={q} onClick={() => setInput(q)} className="rounded-xl border border-purple-400/20 p-3 text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
           {messages.map((message, i) => <article key={i} className={`rounded-2xl p-4 ${message.role === 'user' ? 'bg-purple-600/20 ml-4 md:ml-16' : 'bg-white/5 mr-0 md:mr-8'}`}>
             <p className="text-xs text-purple-300 mb-2">{message.role === 'user' ? '你' : '喵灵 · GPT Agent'}</p>
             {message.role === 'assistant' ? <div className="assistant-prose break-words leading-7 text-sm text-indigo-100"><ReactMarkdown>{message.content}</ReactMarkdown></div> : <p className="whitespace-pre-wrap break-words leading-7 text-sm text-indigo-100">{message.content}</p>}
             {message.reply && <><details className="mt-3 text-xs text-indigo-400"><summary className="cursor-pointer">查看工具调用 · {message.reply.steps.length} 次</summary><ul className="space-y-2 mt-2">{message.reply.steps.map((step, j) => <li key={j}>{step.tool}：{step.detail}</li>)}</ul></details><Sources sources={message.reply.sources} /></>}
           </article>)}
+          {messages.length > 0 && suggestedQuestions.length > 0 && <div className="rounded-xl border border-purple-400/20 bg-purple-500/5 p-3"><p className="text-xs text-purple-300 mb-2">继续追问这次结果：</p><div className="flex flex-wrap gap-2">{suggestedQuestions.map(q => <button key={q} type="button" onClick={() => setInput(q)} className="rounded-lg border border-purple-400/20 px-3 py-2 text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
           {busy && <p role="status" className="text-sm text-purple-300 animate-pulse">喵灵正在检索本地资料，由 GPT 组织回答…</p>}
           <div ref={end} />
         </div>

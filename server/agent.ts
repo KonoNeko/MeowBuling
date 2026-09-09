@@ -37,7 +37,22 @@ const instructions = `${SYSTEM_INSTRUCTION}
 把塔罗作为自我反思方式，不做确定性预测，不以牌意代替医疗、法律或投资专业意见。
 用中文充分解释，复杂问题通常600至1000字：先给明确判断，再展开牌意依据、具体情境、利弊和可能变化，最后给3条可执行行动。简单问候或用户要求简短时适当缩短。不复读资料、不堆砌套话；没有依据的事实明确表示不确定。`;
 
-export async function runAgent(store: KnowledgeStore, messages: ChatMessage[], context = '', signal?: AbortSignal, clock?: Partial<ReadingClock>): Promise<AgentReply> {
+const followUpMarker = /\n?<!--FOLLOW_UP_QUESTIONS:([\s\S]*?)-->\s*$/;
+
+function extractFollowUpQuestions(text: string): { text: string; questions: string[] } {
+  const match = text.match(followUpMarker);
+  if (!match) return { text: text.trim(), questions: [] };
+  let questions: string[] = [];
+  try {
+    const parsed: unknown = JSON.parse(match[1]);
+    if (Array.isArray(parsed)) questions = parsed.filter((item): item is string => typeof item === 'string').map(item => item.trim()).filter(Boolean).slice(0, 4);
+  } catch {
+    questions = [];
+  }
+  return { text: text.replace(followUpMarker, '').trim(), questions };
+}
+
+export async function runAgent(store: KnowledgeStore, messages: ChatMessage[], context = '', signal?: AbortSignal, clock?: Partial<ReadingClock>, suggestionsOnly = false): Promise<AgentReply> {
   const sources: KnowledgeSource[] = [];
   const steps: AgentReply['steps'] = [];
   const remember = (found: KnowledgeSource[]) => found.map(source => {
@@ -50,8 +65,9 @@ export async function runAgent(store: KnowledgeStore, messages: ChatMessage[], c
   const retrieved = await store.search(`${lastQuestion}\n${previousQuestion.slice(0, 800)}\n${context.slice(0, 1800)}`, 5, signal);
   const initialSources = remember(retrieved.sources);
   steps.push({ tool: '检索知识库', detail: `${retrieved.mode} · ${initialSources.length} 条资料` });
+  const followUpInstruction = `\n回答结尾必须追加一行机器标记，不能省略：<!--FOLLOW_UP_QUESTIONS:["问题1","问题2","问题3"]-->。问题必须是用户基于本次牌面结果自然会继续追问的具体问题，必须引用当前问题、牌阵位置、牌名、结论或行动建议中的至少一个，不得泛泛询问塔罗知识、其他牌阵或无关人生话题。只输出2到4个问题。`;
   const agent = new ToolLoopAgent({
-    model: assistantModel(), instructions: `${instructions}\n${timeInstructions}\n时间参考：${JSON.stringify(readingTime(clock))}${context ? `\n当前对话背景：这是用户刚完成的一次占卜。回答必须优先依据下面这次占卜的牌面与解读，帮用户把复杂内容浓缩成直接、清晰、可执行的回答；不要把用户转去其他助手，也不要重新开始一套泛泛的占卜。\n本次占卜资料：${context}` : '\n当前对话背景：用户还没有完成占卜。你是占卜前的提问客服，帮助用户把模糊烦恼整理成一个具体、值得抽牌的问题，并在必要时推荐主题与牌阵。不要假装替用户预测结果。'}`,
+    model: assistantModel(), instructions: `${instructions}\n${timeInstructions}\n时间参考：${JSON.stringify(readingTime(clock))}${context ? `\n当前对话背景：这是用户刚完成的一次占卜。回答必须优先依据下面这次占卜的牌面与解读，帮用户把复杂内容浓缩成直接、清晰、可执行的回答；不要把用户转去其他助手，也不要重新开始一套泛泛的占卜。\n本次占卜资料：${context}${followUpInstruction}` : '\n当前对话背景：用户还没有完成占卜。你是占卜前的提问客服，帮助用户把模糊烦恼整理成一个具体、值得抽牌的问题，并在必要时推荐主题与牌阵。不要假装替用户预测结果。'}`,
     maxOutputTokens: 10000, maxRetries: 0,
     stopWhen: isStepCount(5),
     prepareStep: ({ stepNumber }) => stepNumber >= 2 ? { toolChoice: 'none' as const } : {},
@@ -102,7 +118,8 @@ export async function runAgent(store: KnowledgeStore, messages: ChatMessage[], c
     abortSignal: signal || AbortSignal.timeout(180_000),
   });
   if (!result.text.trim()) throw new Error('GPT 未完成回答，请缩短问题后重试。');
-  return { text: result.text.replace(/<think>[\s\S]*?<\/think>/g, '').trim(), sources, steps };
+  const parsed = extractFollowUpQuestions(result.text.replace(/<think>[\s\S]*?<\/think>/g, '').trim());
+  return { text: suggestionsOnly ? '' : parsed.text, followUpQuestions: parsed.questions, sources, steps };
 }
 
 export const styleInstructions = {
