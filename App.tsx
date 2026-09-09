@@ -52,7 +52,6 @@ const App = () => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [savingShareImage, setSavingShareImage] = useState(false);
-  const shareCardRef = useRef<HTMLDivElement>(null);
   const readingScrollRef = useRef<HTMLDivElement>(null);
 
   const triggerToast = (msg: string) => {
@@ -142,8 +141,37 @@ const App = () => {
         `);
         y += blockHeight + 24;
       });
+      const analysisY = y;
+      const analysisBlocks = interpretation.detailedAnalysis.map(section => {
+        const lines = wrapShareText(section.content, 31);
+        const blockHeight = 88 + lines.length * 34;
+        const block = `
+          <rect x="48" y="${y}" width="654" height="${blockHeight}" rx="18" fill="#211844" stroke="#4c3575"/>
+          <text x="74" y="${y + 42}" fill="#f5d0fe" font-size="23" font-weight="700">${escapeSvgText(section.title)}</text>
+          ${lines.map((line, index) => `<text x="74" y="${y + 80 + index * 34}" fill="#ede9fe" font-size="19">${escapeSvgText(line)}</text>`).join('')}
+        `;
+        y += blockHeight + 24;
+        return block;
+      });
+      const fableLines = wrapShareText(interpretation.fable, 31);
+      const fableHeight = 100 + fableLines.length * 34;
+      const fableBlock = `
+        <rect x="48" y="${y}" width="654" height="${fableHeight}" rx="18" fill="#211844" stroke="#4c3575"/>
+        <text x="74" y="${y + 42}" fill="#f5d0fe" font-size="23" font-weight="700">📜 命运寓言</text>
+        ${fableLines.map((line, index) => `<text x="74" y="${y + 82 + index * 34}" fill="#ede9fe" font-size="19">${escapeSvgText(line)}</text>`).join('')}
+      `;
+      y += fableHeight + 24;
       const adviceLines = wrapShareText(interpretation.advice, 31);
-      const totalHeight = y + 170 + adviceLines.length * 34;
+      const adviceHeight = 100 + adviceLines.length * 34;
+      const adviceY = y;
+      y += adviceHeight + 24;
+      const reflectionLines = interpretation.reflectionQuestions.flatMap(question => wrapShareText(`• ${question}`, 31));
+      const reflectionHeight = 100 + reflectionLines.length * 34;
+      const reflectionY = y;
+      y += reflectionHeight + (readingResult.userReflection ? 24 : 0);
+      const noteLines = readingResult.userReflection ? wrapShareText(readingResult.userReflection, 31) : [];
+      const noteHeight = readingResult.userReflection ? 100 + noteLines.length * 34 : 0;
+      const totalHeight = y + noteHeight + 100;
       const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="${totalHeight}" viewBox="0 0 750 ${totalHeight}">
         <rect width="750" height="${totalHeight}" fill="#100b2e"/>
         <text x="48" y="70" fill="#c4b5fd" font-size="18" letter-spacing="2">MEOWBULING · 喵卜灵</text>
@@ -155,9 +183,16 @@ const App = () => {
         ${wrapShareText(interpretation.outcome || interpretation.mainTheme, 31).map((line, index) => `<text x="74" y="${370 + index * 34}" fill="#ede9fe" font-size="20">${escapeSvgText(line)}</text>`).join('')}
         <text x="48" y="575" fill="#e9d5ff" font-size="24" font-weight="700">牌面解读</text>
         ${cardBlocks.join('')}
-        <text x="48" y="${y + 62}" fill="#e9d5ff" font-size="24" font-weight="700">行动指引</text>
-        <rect x="48" y="${y + 82}" width="654" height="${50 + adviceLines.length * 34}" rx="16" fill="#211844"/>
-        ${adviceLines.map((line, index) => `<text x="74" y="${y + 120 + index * 34}" fill="#f5f3ff" font-size="20">${escapeSvgText(line)}</text>`).join('')}
+        <text x="48" y="${analysisY - 20}" fill="#e9d5ff" font-size="24" font-weight="700">深度分析</text>
+        ${analysisBlocks.join('')}
+        ${fableBlock}
+        <text x="48" y="${adviceY - 20}" fill="#e9d5ff" font-size="24" font-weight="700">行动指引</text>
+        <rect x="48" y="${adviceY}" width="654" height="${adviceHeight}" rx="16" fill="#211844"/>
+        ${adviceLines.map((line, index) => `<text x="74" y="${adviceY + 42 + index * 34}" fill="#f5f3ff" font-size="20">${escapeSvgText(line)}</text>`).join('')}
+        <text x="48" y="${reflectionY - 20}" fill="#e9d5ff" font-size="24" font-weight="700">灵魂笔记 · 反思问题</text>
+        <rect x="48" y="${reflectionY}" width="654" height="${reflectionHeight}" rx="16" fill="#211844"/>
+        ${reflectionLines.map((line, index) => `<text x="74" y="${reflectionY + 42 + index * 34}" fill="#f5f3ff" font-size="20">${escapeSvgText(line)}</text>`).join('')}
+        ${readingResult.userReflection ? `<text x="48" y="${reflectionY + reflectionHeight + 4 + 20}" fill="#e9d5ff" font-size="22" font-weight="700">我的记录</text><rect x="48" y="${reflectionY + reflectionHeight + 28}" width="654" height="${noteHeight}" rx="16" fill="#211844"/><text x="74" y="${reflectionY + reflectionHeight + 70}" fill="#f5f3ff" font-size="20">${noteLines.map((line, index) => `<tspan x="74" dy="${index === 0 ? 0 : 34}">${escapeSvgText(line)}</tspan>`).join('')}</text>` : ''}
         <text x="375" y="${totalHeight - 38}" text-anchor="middle" fill="#8b78aa" font-size="15">塔罗是自我反思工具 · 喵卜灵</text>
       </svg>`;
       const svgBlob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
@@ -931,36 +966,6 @@ const App = () => {
           </div>
 
           <LocalAssistant reading={readingResult} />
-
-          <div ref={shareCardRef} aria-hidden="true" style={{ position: 'absolute', left: '-10000px', top: 0, width: 750, zIndex: 1, background: '#100b2e', color: '#f5f3ff', padding: '56px 48px', fontFamily: 'Arial, "Microsoft YaHei", sans-serif' }}>
-            <div style={{ borderBottom: '1px solid #4c3575', paddingBottom: 28, marginBottom: 28 }}>
-              <div style={{ color: '#c4b5fd', fontSize: 18, letterSpacing: 2 }}>MEOWBULING · 喵卜灵</div>
-              <div style={{ color: '#f5d0fe', fontSize: 30, fontWeight: 700, marginTop: 18 }}>{readingResult.topicLabel} · {readingResult.spreadName}</div>
-              <div style={{ color: '#c4b5fd', fontSize: 20, lineHeight: 1.6, marginTop: 12 }}>“{readingResult.question}”</div>
-            </div>
-            <div style={{ background: '#25164b', border: '1px solid #7955ad', borderRadius: 20, padding: 26, marginBottom: 30 }}>
-              <div style={{ color: '#c4b5fd', fontSize: 16, letterSpacing: 3 }}>先看结论</div>
-              <div style={{ color: '#fff', fontSize: 27, fontWeight: 700, margin: '12px 0' }}>{interpretation.mainTheme}</div>
-              <div style={{ color: '#ede9fe', fontSize: 20, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{interpretation.outcome}</div>
-            </div>
-            <div style={{ color: '#e9d5ff', fontSize: 24, fontWeight: 700, marginBottom: 18 }}>牌面解读</div>
-            {readingResult.cards.map((card, index) => {
-              const detail = interpretation.cardReadings?.find(entry => entry.positionIndex === index && entry.cardId === card.id);
-              const position = resultSpread?.positions[index];
-              return <div key={`${index}-${card.id}`} style={{ display: 'flex', gap: 20, borderTop: '1px solid #38265b', padding: '24px 0' }}>
-                <img src={getCardImage(card.id)} alt="" style={{ width: 108, height: 184, objectFit: 'cover', borderRadius: 10, transform: card.isReversed ? 'rotate(180deg)' : undefined }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ color: '#c4b5fd', fontSize: 15 }}>第 {index + 1} 张 · {position?.name || '牌阵位置'}</div>
-                  <div style={{ color: '#fff', fontSize: 23, fontWeight: 700, margin: '8px 0' }}>{card.name_cn} · {card.isReversed ? '逆位' : '正位'}</div>
-                  <div style={{ color: '#e0d7f5', fontSize: 17, lineHeight: 1.7 }}>{detail?.interpretation || (card.isReversed ? card.meaningReversed : card.meaningUpright)}</div>
-                  {detail?.advice && <div style={{ color: '#e9d5ff', fontSize: 16, lineHeight: 1.6, marginTop: 10 }}>喵的建议：{detail.advice}</div>}
-                </div>
-              </div>;
-            })}
-            <div style={{ color: '#e9d5ff', fontSize: 24, fontWeight: 700, margin: '26px 0 14px' }}>行动指引</div>
-            <div style={{ background: '#211844', borderRadius: 16, padding: 24, color: '#f5f3ff', fontSize: 20, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{interpretation.advice}</div>
-            <div style={{ color: '#8b78aa', fontSize: 15, textAlign: 'center', marginTop: 42 }}>塔罗是自我反思工具 · 喵卜灵</div>
-          </div>
 
           {/* Journal Section */}
           <div className="pt-8">
