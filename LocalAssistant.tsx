@@ -13,18 +13,6 @@ export async function localApi<T>(path: string, body?: unknown, signal?: AbortSi
   return data as T;
 }
 
-export function Sources({ sources = [] }: { sources?: KnowledgeSource[] }) {
-  if (!sources.length) return null;
-  return <div className="space-y-2 mt-4">
-    <p className="text-xs text-purple-300">本次检索资料 · 点击查看原文</p>
-    {sources.map((source, i) => <details key={source.id} className="source-detail rounded-xl border border-white/10 bg-black/20 p-3">
-      <summary className="cursor-pointer text-sm text-indigo-200">[{source.citation || `S${i + 1}`}] {source.title}</summary>
-      <p className="whitespace-pre-wrap text-xs leading-6 text-indigo-200/80 mt-3">{source.text}</p>
-      <p className="text-[10px] text-indigo-400 mt-2">{source.documentId.startsWith('card-') || source.documentId.startsWith('spread-') ? '内置资料 · 项目牌意与牌阵' : '本机导入资料'} · 片段 {source.id.split('-').at(-1)}</p>
-    </details>)}
-  </div>;
-}
-
 type Message = ChatMessage & { reply?: AgentReply };
 
 function readingFollowUps(reading: ReadingSession): string[] {
@@ -134,7 +122,7 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
           {messages.map((message, i) => <article key={i} className={`rounded-2xl p-4 ${message.role === 'user' ? 'bg-purple-600/20 ml-4 md:ml-16' : 'bg-white/5 mr-0 md:mr-8'}`}>
             <p className="text-xs text-purple-300 mb-2">{message.role === 'user' ? '你' : '喵灵 · GPT Agent'}</p>
             {message.role === 'assistant' ? <div className="assistant-prose break-words leading-7 text-sm text-indigo-100"><ReactMarkdown>{message.content}</ReactMarkdown></div> : <p className="whitespace-pre-wrap break-words leading-7 text-sm text-indigo-100">{message.content}</p>}
-            {message.reply && <><details className="mt-3 text-xs text-indigo-400"><summary className="cursor-pointer">查看工具调用 · {message.reply.steps.length} 次</summary><ul className="space-y-2 mt-2">{message.reply.steps.map((step, j) => <li key={j}>{step.tool}：{step.detail}</li>)}</ul></details><Sources sources={message.reply.sources} /></>}
+            {message.reply && <details className="mt-3 text-xs text-indigo-400"><summary className="cursor-pointer">查看工具调用 · {message.reply.steps.length} 次</summary><ul className="space-y-2 mt-2">{message.reply.steps.map((step, j) => <li key={j}>{step.tool}：{step.detail}</li>)}</ul></details>}
           </article>)}
           {messages.length > 0 && suggestedQuestions.length > 0 && <div className="rounded-xl border border-purple-400/20 bg-purple-500/5 p-3"><p className="text-xs text-purple-300 mb-2">继续追问：</p><div className="flex flex-wrap gap-2">{suggestedQuestions.map(q => <button key={q} title={q} type="button" onClick={() => setInput(q)} className="max-w-[16rem] truncate rounded-lg border border-purple-400/20 px-3 py-2 text-left text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
           {busy && <p role="status" className="text-sm text-purple-300 animate-pulse">喵灵正在检索本地资料，由 GPT 组织回答…</p>}
@@ -158,7 +146,7 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
           <div className="rounded-2xl bg-white/5 border border-white/10 p-5 space-y-3">
             <h3 className="text-lg text-white">查找知识</h3>
             <form onSubmit={e => { e.preventDefault(); void operate(async () => setResults(await localApi('/api/knowledge/search', { query }))); }} className="flex gap-2"><input aria-label="搜索知识库" className="local-input min-w-0" value={query} maxLength={1000} onChange={e => setQuery(e.target.value)} placeholder="例如：关系中的边界" required /><button disabled={working} className="local-button shrink-0">搜索</button></form>
-            {results && <><p className="text-xs text-purple-300">{results.mode} · {results.sources.length} 条结果</p><Sources sources={results.sources} />{!results.sources.length && <p className="text-sm text-indigo-300">没有找到相关资料，请换个关键词或导入更多内容。</p>}</>}
+            {results && <><p className="text-xs text-purple-300">{results.mode} · {results.sources.length} 条结果</p>{!results.sources.length && <p className="text-sm text-indigo-300">没有找到相关资料，请换个关键词或导入更多内容。</p>}</>}
           </div>
         </div>
         <div className="rounded-2xl border border-white/10 p-5"><h3 className="text-lg text-white mb-3">资料目录</h3>
