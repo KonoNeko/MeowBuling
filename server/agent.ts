@@ -38,6 +38,14 @@ const instructions = `${SYSTEM_INSTRUCTION}
 用中文充分解释，复杂问题通常600至1000字：先给明确判断，再展开牌意依据、具体情境、利弊和可能变化，最后给3条可执行行动。简单问候或用户要求简短时适当缩短。不复读资料、不堆砌套话；没有依据的事实明确表示不确定。`;
 
 const followUpMarker = /\n?<!--FOLLOW_UP_QUESTIONS:([\s\S]*?)-->\s*$/;
+const maxFollowUpLength = 28;
+
+function compactFollowUpQuestion(value: string): string {
+  const normalized = value.replace(/^\s*(?:[-*•]|\d+[.)])\s*/, '').replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxFollowUpLength) return normalized;
+  const boundary = normalized.slice(0, maxFollowUpLength - 1).search(/[，。！？；：、]/);
+  return `${normalized.slice(0, boundary > 8 ? boundary : maxFollowUpLength - 1)}…`;
+}
 
 function extractFollowUpQuestions(text: string): { text: string; questions: string[] } {
   const match = text.match(followUpMarker);
@@ -45,7 +53,13 @@ function extractFollowUpQuestions(text: string): { text: string; questions: stri
   let questions: string[] = [];
   try {
     const parsed: unknown = JSON.parse(match[1]);
-    if (Array.isArray(parsed)) questions = parsed.filter((item): item is string => typeof item === 'string').map(item => item.trim()).filter(Boolean).slice(0, 4);
+    if (Array.isArray(parsed)) {
+      questions = [...new Set(parsed
+        .filter((item): item is string => typeof item === 'string')
+        .map(compactFollowUpQuestion)
+        .filter(item => item.length >= 4))]
+        .slice(0, 4);
+    }
   } catch {
     questions = [];
   }
@@ -68,7 +82,7 @@ export async function runAgent(store: KnowledgeStore, messages: ChatMessage[], c
     initialSources.push(...remember(retrieved.sources));
     steps.push({ tool: '检索知识库', detail: `${retrieved.mode} · ${initialSources.length} 条资料` });
   }
-  const followUpInstruction = `\n回答结尾必须追加一行机器标记，不能省略：<!--FOLLOW_UP_QUESTIONS:["问题1","问题2","问题3"]-->。问题必须是用户基于本次牌面结果自然会继续追问的具体问题，必须引用当前问题、牌阵位置、牌名、结论或行动建议中的至少一个，不得泛泛询问塔罗知识、其他牌阵或无关人生话题。只输出2到4个问题。`;
+  const followUpInstruction = `\n回答结尾必须追加一行机器标记，不能省略：<!--FOLLOW_UP_QUESTIONS:["问题1","问题2","问题3"]-->。问题必须是用户基于本次牌面结果自然会继续追问的具体问题，必须引用当前问题、牌阵位置、牌名、结论或行动建议中的至少一个，不得泛泛询问塔罗知识、其他牌阵或无关人生话题。只输出2到4个问题；每个问题不超过28个字，只保留一个意图，使用短句，不要解释、转折或多个分句。`;
   const agent = new ToolLoopAgent({
     model: assistantModel(), instructions: `${instructions}${context ? followUpInstruction : ''}`,
     maxOutputTokens: 3500, maxRetries: 0,

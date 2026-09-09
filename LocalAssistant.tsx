@@ -28,16 +28,13 @@ export function Sources({ sources = [] }: { sources?: KnowledgeSource[] }) {
 type Message = ChatMessage & { reply?: AgentReply };
 
 function readingFollowUps(reading: ReadingSession): string[] {
-  const cards = reading.interpretation?.cardReadings || [];
-  const first = cards[0];
   const cardName = reading.cards[0]?.name_cn || '这组牌';
-  const position = first ? `第${first.positionIndex + 1}张「${cardName}」` : '这次牌面';
   const questions = [
-    `${position}对“${reading.question}”的核心提醒是什么？`,
-    `结合“${reading.interpretation?.outcome || '这次结论'}”，我现在最该先做哪一步？`,
-    `这次牌面指出的主要阻碍，怎样用建议中的行动真正化解？`,
+    `${cardName}在这里提醒什么？`,
+    '这次结论，我该先做什么？',
+    '主要阻碍怎么破？',
   ];
-  return questions.map(question => question.length > 80 ? `${question.slice(0, 77)}…` : question);
+  return questions.map(question => question.length > 28 ? `${question.slice(0, 27)}…` : question);
 }
 
 export default function LocalAssistant({ reading }: { reading: ReadingSession }) {
@@ -133,13 +130,13 @@ export default function LocalAssistant({ reading }: { reading: ReadingSession })
           <button disabled={busy} onClick={() => setMessages([])} className="text-purple-300 disabled:opacity-40">清空对话</button>
         </div>
         <div className="rounded-2xl border border-white/10 bg-black/15 p-4 md:p-6 space-y-5 min-h-64 max-h-[55dvh] overflow-y-auto">
-          {!messages.length && <div className="py-8 text-center"><div className="text-4xl mb-4">🐱</div><p className="text-indigo-100">喵，想继续拆解这次结果的哪一层？</p><div className="flex flex-wrap justify-center gap-2 mt-5">{suggestedQuestions.map(q => <button key={q} onClick={() => setInput(q)} className="rounded-xl border border-purple-400/20 p-3 text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
+          {!messages.length && <div className="py-8 text-center"><div className="text-4xl mb-4">🐱</div><p className="text-indigo-100">喵，想继续拆解这次结果的哪一层？</p><div className="flex flex-wrap justify-center gap-2 mt-5">{suggestedQuestions.map(q => <button key={q} title={q} onClick={() => setInput(q)} className="max-w-[16rem] truncate rounded-xl border border-purple-400/20 px-3 py-2.5 text-left text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
           {messages.map((message, i) => <article key={i} className={`rounded-2xl p-4 ${message.role === 'user' ? 'bg-purple-600/20 ml-4 md:ml-16' : 'bg-white/5 mr-0 md:mr-8'}`}>
             <p className="text-xs text-purple-300 mb-2">{message.role === 'user' ? '你' : '喵灵 · GPT Agent'}</p>
             {message.role === 'assistant' ? <div className="assistant-prose break-words leading-7 text-sm text-indigo-100"><ReactMarkdown>{message.content}</ReactMarkdown></div> : <p className="whitespace-pre-wrap break-words leading-7 text-sm text-indigo-100">{message.content}</p>}
             {message.reply && <><details className="mt-3 text-xs text-indigo-400"><summary className="cursor-pointer">查看工具调用 · {message.reply.steps.length} 次</summary><ul className="space-y-2 mt-2">{message.reply.steps.map((step, j) => <li key={j}>{step.tool}：{step.detail}</li>)}</ul></details><Sources sources={message.reply.sources} /></>}
           </article>)}
-          {messages.length > 0 && suggestedQuestions.length > 0 && <div className="rounded-xl border border-purple-400/20 bg-purple-500/5 p-3"><p className="text-xs text-purple-300 mb-2">继续追问这次结果：</p><div className="flex flex-wrap gap-2">{suggestedQuestions.map(q => <button key={q} type="button" onClick={() => setInput(q)} className="rounded-lg border border-purple-400/20 px-3 py-2 text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
+          {messages.length > 0 && suggestedQuestions.length > 0 && <div className="rounded-xl border border-purple-400/20 bg-purple-500/5 p-3"><p className="text-xs text-purple-300 mb-2">继续追问：</p><div className="flex flex-wrap gap-2">{suggestedQuestions.map(q => <button key={q} title={q} type="button" onClick={() => setInput(q)} className="max-w-[16rem] truncate rounded-lg border border-purple-400/20 px-3 py-2 text-left text-xs text-purple-200 hover:bg-purple-900/30">{q}</button>)}</div></div>}
           {busy && <p role="status" className="text-sm text-purple-300 animate-pulse">喵灵正在检索本地资料，由 GPT 组织回答…</p>}
           <div ref={end} />
         </div>
