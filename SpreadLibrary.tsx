@@ -1,15 +1,10 @@
 import { spreadQuestions } from './question-presets';
 import React, { useRef, useState } from 'react';
-import { SPREADS } from './constants';
+import { SPREADS, SPREAD_CATEGORY_LABELS } from './constants';
 import { Button, SpreadPreview } from './components';
 import type { ReadingStyle, SpreadDefinition } from './types';
 
-const categoryLabels: Record<string, string> = {
-  'General Insight': '🔮 综合洞察', 'Love & Relationship': '💕 感情关系',
-  'Career & Study': '🚀 事业学业', 'Decision-Making': '⚖️ 选择决策',
-  Healing: '🌿 自我疗愈', 'Future Forecast': '✨ 未来趋势',
-  'Daily Guidance': '☀️ 日常指引', Manifestation: '🌙 心愿探索',
-};
+const categoryLabels: Record<string, string> = SPREAD_CATEGORY_LABELS;
 const categories = [...new Set(SPREADS.map(spread => spread.category))];
 
 export default function SpreadLibrary({ style, onStart }: {

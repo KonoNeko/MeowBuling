@@ -2,7 +2,7 @@ import { questionGroups } from './question-presets';
 import { browserClock, readingTime } from './reading-time';
 import React, { useState, useRef, useEffect } from 'react';
 import { AppView, ReadingSession, ReadingStyle, Topic, TarotCard, SpreadDefinition } from './types';
-import { TAROT_DECK, TOPICS, SPREADS } from './constants';
+import { TAROT_DECK, TOPICS, SPREADS, SPREAD_CATEGORY_LABELS, SPREAD_SUBCATEGORIES } from './constants';
 import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 import LocalAssistant, { Sources } from './LocalAssistant';
@@ -22,6 +22,7 @@ const App = () => {
   const [question, setQuestion] = useState("");
   const [quickQuestion, setQuickQuestion] = useState('');
   const [recommendedSpreadIds, setRecommendedSpreadIds] = useState<string[]>([]);
+  const [spreadFilter, setSpreadFilter] = useState('all');
   
   // Library Interaction State
 
@@ -111,12 +112,14 @@ const App = () => {
     setSelectedTopic(topic);
     setQuestion('');
     setRecommendedSpreadIds([]);
+    setSpreadFilter('all');
     setView(AppView.QUESTION_SELECT);
   };
 
   const handleQuestionSelect = (q: string, tags?: string[]) => {
     setQuestion(q);
     setRecommendedSpreadIds(tags || []); // Set tags derived from the subcategory
+    setSpreadFilter('all');
     setView(AppView.SPREAD_SELECT);
   }
 
@@ -124,6 +127,7 @@ const App = () => {
     if (!selectedTopic) return;
     // Use default tags for the topic if available, otherwise empty (shows all)
     setRecommendedSpreadIds([]); 
+    setSpreadFilter('all');
     setView(AppView.SPREAD_SELECT);
   };
 
@@ -462,7 +466,13 @@ const App = () => {
 
     if (recommendedSpreadIds.length) {
       filteredSpreads = recommendedSpreadIds.flatMap(id => SPREADS.find(spread => spread.id === id) || []);
+    } else if (spreadFilter !== 'all') {
+      const subcategory = (SPREAD_SUBCATEGORIES[selectedTopic?.id || ''] || []).find(item => item.id === spreadFilter);
+      if (subcategory?.tags.length) {
+        filteredSpreads = filteredSpreads.filter(spread => spread.tags.some(tag => subcategory.tags.includes(tag)));
+      }
     }
+    const subcategories = SPREAD_SUBCATEGORIES[selectedTopic?.id || ''] || [];
 
     return (
         <div className="max-w-4xl mx-auto h-full flex flex-col justify-start p-6 space-y-8 animate-fade-in overflow-y-auto custom-scrollbar pt-20 pb-40">
@@ -470,6 +480,22 @@ const App = () => {
             <h2 className="text-3xl font-mystic text-white">选择你的牌阵</h2>
             <p className="text-indigo-300">{recommendedSpreadIds.length ? '喵根据这个问题，为你匹配了以下牌阵' : '选择适合你问题的观察角度'}</p>
           </div>
+
+          {!recommendedSpreadIds.length && subcategories.length > 0 && (
+            <nav aria-label="牌阵细分类别" className="flex gap-2 overflow-x-auto pb-2 -mx-2 px-2 shrink-0 snap-x">
+              {subcategories.map(subcategory => (
+                <button
+                  key={subcategory.id}
+                  type="button"
+                  aria-pressed={spreadFilter === subcategory.id || (spreadFilter === 'all' && subcategory.tags.length === 0)}
+                  onClick={() => setSpreadFilter(subcategory.id)}
+                  className={`min-h-10 shrink-0 snap-start rounded-full px-4 text-xs sm:text-sm transition-colors focus-visible:outline focus-visible:outline-purple-300 ${spreadFilter === subcategory.id || (spreadFilter === 'all' && subcategory.tags.length === 0) ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20' : 'bg-white/5 text-indigo-200 hover:bg-white/10'}`}
+                >
+                  {subcategory.label}
+                </button>
+              ))}
+            </nav>
+          )}
           
           {/* Show Selected Question */}
           <div className="w-full max-w-2xl mx-auto bg-purple-900/20 border border-purple-500/30 rounded-xl p-6 text-center backdrop-blur-sm shrink-0">
@@ -482,9 +508,19 @@ const App = () => {
              >
                修改问题
              </button>
+             {recommendedSpreadIds.length > 0 && (
+               <button
+                 type="button"
+                 onClick={() => { setRecommendedSpreadIds([]); setSpreadFilter('all'); }}
+                 className="block mx-auto text-xs text-purple-300 hover:text-white mt-2 underline decoration-purple-500/50 hover:decoration-white"
+               >
+                 浏览全部分类牌阵
+               </button>
+             )}
           </div>
     
           {/* Spread Grid */}
+          <p role="status" className="text-xs text-indigo-400 -mb-4">{filteredSpreads.length ? `找到 ${filteredSpreads.length} 个适合这个方向的牌阵` : '这个分类暂时没有匹配牌阵，换个分类试试。'}</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-4">
             {filteredSpreads.map(spread => (
               <GlassCard 
@@ -494,7 +530,7 @@ const App = () => {
               >
                 <div className="w-full flex-1">
                   <div className="flex justify-between items-center mb-2">
-                     <Badge className="text-[10px]">{spread.category}</Badge>
+                     <Badge className="text-[10px]">{SPREAD_CATEGORY_LABELS[spread.category] || spread.category}</Badge>
                      <span className="text-xs text-purple-400 font-mono">{spread.cardCount} Cards</span>
                   </div>
                   <h3 className="text-lg font-bold text-white mb-2 group-hover:text-purple-200">{spread.name}</h3>

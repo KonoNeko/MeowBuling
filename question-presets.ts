@@ -6,17 +6,18 @@ const q = (text: string, ...spreadIds: string[]): QuestionPreset => ({ text, spr
 export function questionGroups(topic: string, time = readingTime(browserClock())): { title: string; questions: QuestionPreset[] }[] {
   const groups: Record<string, { title: string; questions: QuestionPreset[] }[]> = {
     love: [
-      { title: '💕 暧昧与对方态度', questions: [q('对方现在如何看待我？接下来会主动推进这段关系吗？', 'how_they_feel_4'), q('这段暧昧有机会发展成正式关系吗？我该如何把握分寸？', 'situationship_5')] },
-      { title: '🌹 单身与遇见爱情', questions: [q('未来三到六个月，我有机会遇到适合交往的对象吗？关键机会在哪里？', 'love_future_3', 'love_manifest_4'), q('我目前脱单最大的阻碍是什么？怎样调整更容易遇见合适的人？', 'soulmate_6'), q('下一段感情更可能通过什么场景或方式开始？', 'love_future_3')] },
-      { title: '💔 关系走向与复合', questions: [q('我们还有复合的可能吗？重新开始前最需要解决什么？', 'reunion_4'), q('对方突然冷淡或断联的核心原因是什么？我该如何回应？', 'no_contact_5'), q('这段关系值得继续投入吗？我现在最该做出什么选择？', 'continue_or_end_4'), q('我们反复争吵的根源是什么？怎样才能真正改善相处？', 'rel_block_5'), q('我们适合走向长期承诺或婚姻吗？还缺少哪些现实基础？', 'marriage_5')] },
+      { title: '💕 暧昧与关系状态', questions: [q('对方现在如何看待我？接下来会主动推进这段关系吗？', 'how_they_feel_4'), q('这段暧昧有机会发展成正式关系吗？我该如何把握分寸？', 'situationship_5'), q('我们目前的关系卡在哪里？双方最真实的期待是什么？', 'rel_triangle', 'rel_block_5')] },
+      { title: '🌹 单身、桃花与新关系', questions: [q('未来三到六个月，我有机会遇到适合交往的对象吗？关键机会在哪里？', 'love_future_3', 'love_manifest_4'), q('我目前脱单最大的阻碍是什么？怎样调整更容易遇见合适的人？', 'soulmate_6'), q('下一段感情更可能通过什么场景或方式开始？', 'love_future_3'), q('我该如何识别适合自己的对象，避免重复过去的模式？', 'soulmate_6', 'love_future_3')] },
+      { title: '💔 复合、冲突与关系走向', questions: [q('我们还有复合的可能吗？重新开始前最需要解决什么？', 'reunion_4'), q('对方突然冷淡或断联的核心原因是什么？我该如何回应？', 'no_contact_5'), q('这段关系值得继续投入吗？我现在最该做出什么选择？', 'continue_or_end_4'), q('我们反复争吵的根源是什么？怎样才能真正改善相处？', 'rel_block_5'), q('我们适合走向长期承诺或婚姻吗？还缺少哪些现实基础？', 'marriage_5')] },
     ],
     career: [
-      { title: '💼 工作与机会', questions: [q('我目前事业发展的主要瓶颈是什么？下一步突破口在哪里？', 'career_5'), q('我该继续留在现在的工作，还是准备跳槽？两条路分别会怎样发展？', 'career_change_5'), q('这个工作机会适合我吗？最值得争取和警惕的地方是什么？', 'job_opportunity_4'), q('这次面试的结果倾向如何？我还能做哪些准备来提高机会？', 'interview_3')] },
+      { title: '💼 工作发展与机会', questions: [q('我目前事业发展的主要瓶颈是什么？下一步突破口在哪里？', 'career_5'), q('这个工作机会适合我吗？最值得争取和警惕的地方是什么？', 'job_opportunity_4'), q('这次面试的结果倾向如何？我还能做哪些准备来提高机会？', 'interview_3')] },
+      { title: '🔀 跳槽、转行与职业选择', questions: [q('我该继续留在现在的工作，还是准备跳槽？两条路分别会怎样发展？', 'career_change_5'), q('现在转行是合适的时机吗？我需要先补足什么能力？', 'career_change_5', 'career_5')] },
       { title: '🎓 学业与考试', questions: [q('这次考试通过的可能性如何？我最该优先补强哪一部分？', 'exam_outcome_3'), q('我学习效率不高的根本原因是什么？怎样制定更有效的计划？', 'study_insight_4')] },
       { title: '💰 金钱与副业', questions: [q('我目前财务压力的主要来源是什么？怎样逐步改善收支？', 'money_manifest_4'), q('这项副业值得投入吗？可能的收益、风险和第一步是什么？', 'risk_reward_3')] },
     ],
     decision: [
-      { title: '⚖️ 选哪个方向', questions: [q('保持现状和主动改变，哪个选择更适合我？各自的代价与机会是什么？', 'decision_ab'), q('A、B、C三个方案分别会怎样发展？哪个最符合我当前的优先级？', 'multi_option_4')] },
+      { title: '⚖️ A/B 与多选项', questions: [q('保持现状和主动改变，哪个选择更适合我？各自的代价与机会是什么？', 'decision_ab'), q('A、B、C三个方案分别会怎样发展？哪个最符合我当前的优先级？', 'multi_option_4'), q('留下、跳槽或转行，哪条路更符合我现在的长期目标？', 'multi_option_4')] },
       { title: '🐾 要不要行动', questions: [q('这次邀约值得去吗？我需要提前留意什么？', 'go_or_not_4'), q('这个项目该继续投入，还是及时止损？判断依据是什么？', 'continue_or_end_4'), q('这次尝试的主要收益和风险是什么？我能如何降低风险？', 'risk_reward_3'), q('为了推进这件事，我现在最应该完成的第一步是什么？', 'mao_3')] },
     ],
     self: [

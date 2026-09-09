@@ -49,6 +49,58 @@ export const TOPICS: Topic[] = [
   }
 ];
 
+export const SPREAD_CATEGORY_LABELS: Record<string, string> = {
+  'General Insight': '🔮 综合洞察',
+  'Love & Relationship': '💕 感情关系',
+  'Career & Study': '🚀 事业学业',
+  'Decision-Making': '⚖️ 选择决策',
+  Healing: '🌿 自我疗愈',
+  'Future Forecast': '✨ 未来趋势',
+  'Daily Guidance': '☀️ 日常指引',
+  Manifestation: '🌙 心愿探索',
+};
+
+export interface SpreadSubcategory {
+  id: string;
+  label: string;
+  tags: string[];
+}
+
+export const SPREAD_SUBCATEGORIES: Record<string, SpreadSubcategory[]> = {
+  love: [
+    { id: 'love-all', label: '💕 全部感情牌阵', tags: [] },
+    { id: 'love-single', label: '🌹 单身与桃花', tags: ['love_single'] },
+    { id: 'love-status', label: '💞 暧昧与关系', tags: ['love_status'] },
+    { id: 'love-problem', label: '💔 阻碍与复合', tags: ['love_problem', 'love_outcome'] },
+    { id: 'love-future', label: '💍 长期与未来', tags: ['love_future'] },
+  ],
+  career: [
+    { id: 'career-all', label: '🚀 全部事业牌阵', tags: [] },
+    { id: 'career-growth', label: '📈 发展与规划', tags: ['career_general', 'forecast'] },
+    { id: 'career-opportunity', label: '💼 工作与机会', tags: ['career_choice'] },
+    { id: 'career-study', label: '🎓 学业与考试', tags: ['study'] },
+    { id: 'career-money', label: '💰 金钱与副业', tags: ['money'] },
+  ],
+  decision: [
+    { id: 'decision-all', label: '⚖️ 全部决策牌阵', tags: [] },
+    { id: 'decision-choice', label: '🔀 A/B 与多选', tags: ['choice_ab', 'choice_multi'] },
+    { id: 'decision-action', label: '🐾 行动与取舍', tags: ['action'] },
+    { id: 'decision-risk', label: '🧭 风险与收益', tags: ['analysis'] },
+  ],
+  self: [
+    { id: 'self-all', label: '🌿 全部自我牌阵', tags: [] },
+    { id: 'self-emotion', label: '🌧️ 情绪与疗愈', tags: ['healing'] },
+    { id: 'self-discovery', label: '🪞 自我探索', tags: ['self'] },
+    { id: 'self-deep', label: '🌌 深层课题', tags: ['deep_analysis'] },
+  ],
+  fortune: [
+    { id: 'fortune-all', label: '✨ 全部运势牌阵', tags: [] },
+    { id: 'fortune-daily', label: '☀️ 今日与本周', tags: ['daily_simple', 'time'] },
+    { id: 'fortune-cycle', label: '🗓️ 月度与阶段', tags: ['forecast', 'time'] },
+    { id: 'fortune-year', label: '🌟 年度与长期', tags: ['forecast', 'deep_analysis'] },
+  ],
+};
+
 const mapPos = (positions: string[]) => positions.map((p, i) => ({ id: i + 1, name: p, description: p }));
 
 export const SPREADS: SpreadDefinition[] = [
