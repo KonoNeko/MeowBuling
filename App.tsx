@@ -338,10 +338,10 @@ const App = () => {
       <div className="max-w-3xl mx-auto space-y-5 animate-fade-in">
         <header className="flex items-center gap-4 py-3">
           <div aria-hidden="true" className="relative shrink-0 w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-300/15 flex items-center justify-center text-4xl">🐱<span className="absolute -top-2 -right-1 text-xl">✨</span></div>
-          <div><h1 className="text-3xl font-mystic text-purple-100 tracking-wider">喵卜灵</h1><p className="text-sm text-indigo-300 mt-1">心里的事，换个角度听喵说。</p></div>
+          <div><h1 className="text-3xl font-mystic text-purple-100 tracking-wider">喵卜灵</h1><p className="text-sm text-indigo-300 mt-1">塔罗牌不绕弯，喵卜灵帮你看清心里的事。</p></div>
         </header>
         <section aria-labelledby="home-methods" className="space-y-3">
-          <div><h2 id="home-methods" className="text-xl font-bold text-white">今天，想怎么问？</h2><p className="text-sm text-indigo-300 mt-1">问一件事，选单抽；想深入梳理，选分类牌阵。</p></div>
+          <div><h2 id="home-methods" className="text-xl font-bold text-white">今天，想让哪张塔罗牌替你说重点？</h2><p className="text-sm text-indigo-300 mt-1">选一张牌快速问；或选主题、挑牌阵，把问题拆开看。</p></div>
           <div className="grid md:grid-cols-2 gap-3">
             <form id="quick-question-form" className="rounded-2xl border border-purple-400/30 bg-gradient-to-br from-purple-900/30 to-indigo-900/20 p-5 flex flex-col gap-3" onSubmit={event => {
           event.preventDefault();
@@ -353,21 +353,21 @@ const App = () => {
           setSelectedTopic(topic); setSelectedSpread(spread); setQuestion(quickQuestion.trim()); setDrawnCards(cards);
           void generateResult(cards, { topic, spread, question: quickQuestion.trim() });
         }}>
-              <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-bold text-purple-100">🔮 快速问一句</h3><span className="text-xs rounded-full bg-purple-400/15 text-purple-200 px-2 py-1 shrink-0">1 张牌</span></div>
-              <p className="text-sm leading-6 text-indigo-200">把问题写在这里，直接抽一张牌看重点。</p>
+              <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-bold text-purple-100">🔮 快速塔罗单抽</h3><span className="text-xs rounded-full bg-purple-400/15 text-purple-200 px-2 py-1 shrink-0">1 张牌</span></div>
+              <p className="text-sm leading-6 text-indigo-200">把问题丢给喵卜灵，抽一张牌，直接看重点。</p>
               <label className="block"><span className="sr-only">快速单抽的问题</span><textarea className="local-input resize-y" rows={2} maxLength={2000} required value={quickQuestion} onChange={event => setQuickQuestion(event.target.value)} placeholder="例如：面对现在的工作，我最需要注意什么？" /></label>
               <div className="flex flex-wrap items-center justify-between gap-2 mt-auto"><span className="text-xs text-purple-300">{readingStyle === 'sharp' ? '😼 犀利喵评' : '🌙 温柔指引'}</span><Button className="min-h-11" disabled={loading || !quickQuestion.trim()} type="submit">开始抽牌 →</Button></div>
             </form>
             <article className="rounded-2xl border border-indigo-300/20 bg-indigo-900/15 p-5 flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-bold text-indigo-100">🎴 按主题深入看</h3><span className="text-xs rounded-full bg-indigo-400/15 text-indigo-200 px-2 py-1 shrink-0">分类牌阵</span></div>
-              <p className="text-sm leading-6 text-indigo-200">感情、事业、选择…从分类问题出发，用合适的牌阵梳理。</p>
+              <div className="flex items-center justify-between gap-2"><h3 className="text-lg font-bold text-indigo-100">🎴 选主题与牌阵</h3><span className="text-xs rounded-full bg-indigo-400/15 text-indigo-200 px-2 py-1 shrink-0">分类牌阵</span></div>
+              <p className="text-sm leading-6 text-indigo-200">感情、事业、选择……先选主题，再选问题和牌阵，问得更准。</p>
               <p className="text-xs text-indigo-400">选主题 → 选问题 → 选牌阵</p>
-              <Button variant="secondary" className="w-full mt-auto min-h-11" onClick={handleStart}>选择主题与牌阵 →</Button>
+              <Button variant="secondary" className="w-full mt-auto min-h-11" onClick={handleStart}>开始选牌阵 →</Button>
             </article>
           </div>
         </section>
         <fieldset className="rounded-2xl bg-white/5 border border-white/10 p-4">
-          <legend className="px-2 text-sm text-indigo-300">喵的说话方式 · 两种玩法都适用</legend>
+          <legend className="px-2 text-sm text-indigo-300">喵卜灵的说话方式 · 两种玩法都适用</legend>
           <div className="grid grid-cols-2 gap-2">
             {([{ value: 'sharp', title: '😼 犀利喵评', description: '直说重点，不绕弯' }, { value: 'gentle', title: '🌙 温柔指引', description: '委婉提醒，慢慢聊' }] as const).map(option => <label key={option.value} className={`cursor-pointer rounded-xl border px-3 py-3 ${readingStyle === option.value ? 'border-purple-400 bg-purple-800/30' : 'border-transparent hover:bg-white/5'}`}>
               <span className="flex items-center gap-2 text-sm font-bold text-purple-100"><input type="radio" name="reading-style" value={option.value} checked={readingStyle === option.value} onChange={() => { setReadingStyle(option.value); try { localStorage.setItem('meowbuling_reading_style_v2', option.value); } catch { triggerToast('本次已切换，偏好暂时无法保存'); } }} className="accent-purple-400" />{option.title}</span>
