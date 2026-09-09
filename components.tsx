@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { SpreadDefinition, TarotCard, AppView, ReadingSession } from './types';
-import { getCardEducation, getCardImage, SYSTEM_INSTRUCTION } from './constants';
+import { getCardEducation, getCardImage, getCardPreviewImage, SYSTEM_INSTRUCTION } from './constants';
 
 // --- Base Components ---
 
@@ -328,7 +328,7 @@ export const BottomNav = ({
 
 // --- Specific UI Components ---
 
-export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any) => {
+export const CardDisplay = ({ card, revealed, size = "md", label, onClick, preview = false }: any) => {
   const sizeClasses = size === "sm" ? "w-20 md:w-24" : "w-48";
   const displaySize = size === "library" ? "w-full max-w-32" : size === "xs" ? "w-14 md:w-16" : sizeClasses;
   
@@ -371,8 +371,8 @@ export const CardDisplay = ({ card, revealed, size = "md", label, onClick }: any
           >
              {/* Image Container - Rotates if reversed, independent of text */}
              <div className={`w-full h-full transition-transform duration-0 ${card.isReversed ? 'rotate-180' : ''}`}>
-                 <img 
-                   src={getCardImage(card.id)}
+                 <img
+                   src={preview ? getCardPreviewImage(card.id) : getCardImage(card.id)}
                    alt={card.name} 
                    className="w-full h-full object-contain"
                    loading="lazy"
@@ -398,10 +398,12 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
     const dialogRef = useRef<HTMLDivElement>(null);
     // Determine initial tab based on card state
     const [activeTab, setActiveTab] = useState<'upright' | 'reversed'>('upright');
+    const [fullImageLoaded, setFullImageLoaded] = useState(false);
 
     useEffect(() => {
         if (card) {
             setActiveTab(card.isReversed ? 'reversed' : 'upright');
+            setFullImageLoaded(false);
         }
     }, [card]);
 
@@ -476,7 +478,19 @@ export const CardDetailModal = ({ card, onClose }: { card: TarotCard | null, onC
                      {/* Left: Big Image - Fixed height on desktop relative to container */}
                      <div className="w-full md:w-2/5 bg-black/40 p-6 pt-16 md:pt-8 flex items-start justify-center shrink-0">
                          <div className={`relative w-48 md:w-full max-w-72 aspect-[3/5] md:sticky md:top-8 shadow-[0_0_30px_rgba(168,85,247,0.4)] transition-transform duration-500 ${isUpright ? '' : 'rotate-180'}`}>
-                             <img src={getCardImage(card.id)} alt={card.name} className="w-full h-full object-contain" />
+                             <img
+                                 src={getCardPreviewImage(card.id)}
+                                 alt=""
+                                 aria-hidden="true"
+                                 className={`absolute inset-0 w-full h-full object-contain blur-sm scale-105 transition-opacity duration-500 ${fullImageLoaded ? 'opacity-0' : 'opacity-100'}`}
+                             />
+                             {!fullImageLoaded && <div className="absolute inset-0 flex items-end justify-center pb-3 pointer-events-none"><span className="rounded-full bg-black/50 px-3 py-1 text-[10px] text-purple-100 backdrop-blur-sm">清晰牌面加载中…</span></div>}
+                             <img
+                                 src={getCardImage(card.id)}
+                                 alt={card.name}
+                                 onLoad={() => setFullImageLoaded(true)}
+                                 className={`relative w-full h-full object-contain transition-opacity duration-500 ${fullImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+                             />
                          </div>
                      </div>
 

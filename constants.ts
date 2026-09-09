@@ -146,6 +146,11 @@ export const getCardImage = (id: number): string => {
   return "";
 };
 
+export const getCardPreviewImage = (id: number): string => {
+  const image = getCardImage(id);
+  return image ? image.replace('/tarot/', '/tarot/previews/') : image;
+};
+
 export const getCardEducation = (id: number): { archetype: string, element: string, description: string } => {
     if (id < 22) {
         return {

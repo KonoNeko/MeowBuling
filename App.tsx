@@ -912,6 +912,7 @@ const App = () => {
                             card={card} 
                             revealed={true} 
                             size="library"
+                            preview
                             label={card.name_cn}
                             onClick={() => setInspectingCard(card)}
                          />
