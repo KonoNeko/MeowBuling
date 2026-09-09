@@ -20,6 +20,7 @@ const App = () => {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedSpread, setSelectedSpread] = useState<SpreadDefinition | null>(null);
   const [question, setQuestion] = useState("");
+  const [prefilledQuestion, setPrefilledQuestion] = useState('');
   const [quickQuestion, setQuickQuestion] = useState('');
   const [recommendedSpreadIds, setRecommendedSpreadIds] = useState<string[]>([]);
   
@@ -109,7 +110,8 @@ const App = () => {
 
   const handleTopicSelect = (topic: Topic) => {
     setSelectedTopic(topic);
-    setQuestion('');
+    setQuestion(prefilledQuestion);
+    setPrefilledQuestion('');
     setRecommendedSpreadIds([]);
     setView(AppView.QUESTION_SELECT);
   };
@@ -762,7 +764,7 @@ const App = () => {
           </div>
 
           <Sources sources={interpretation.sources} />
-          <Button variant="secondary" onClick={() => setView(AppView.ASSISTANT)}>🐱 就这次解读继续追问</Button>
+          <LocalAssistant reading={readingResult} mode="reading" />
 
           {/* Journal Section */}
           <div className="pt-8">
@@ -972,7 +974,7 @@ const App = () => {
         {view === AppView.HISTORY && renderHistory()}
         {view === AppView.LIBRARY && renderLibrary()}
         {view === AppView.SPREAD_LIBRARY && <SpreadLibrary style={readingStyle} onStart={handleDirectStartFromLibrary} />}
-        {view === AppView.ASSISTANT && <LocalAssistant reading={readingResult} />}
+        {view === AppView.ASSISTANT && <LocalAssistant reading={null} mode="question" onQuestionReady={value => { setPrefilledQuestion(value); setView(AppView.TOPIC_SELECT); }} />}
       </div>
 
       {/* Bottom Navigation */}

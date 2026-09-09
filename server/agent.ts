@@ -51,7 +51,7 @@ export async function runAgent(store: KnowledgeStore, messages: ChatMessage[], c
   const initialSources = remember(retrieved.sources);
   steps.push({ tool: '检索知识库', detail: `${retrieved.mode} · ${initialSources.length} 条资料` });
   const agent = new ToolLoopAgent({
-    model: assistantModel(), instructions: `${instructions}\n${timeInstructions}\n时间参考：${JSON.stringify(readingTime(clock))}`,
+    model: assistantModel(), instructions: `${instructions}\n${timeInstructions}\n时间参考：${JSON.stringify(readingTime(clock))}${context ? `\n当前对话背景：这是用户刚完成的一次占卜。回答必须优先依据下面这次占卜的牌面与解读，帮用户把复杂内容浓缩成直接、清晰、可执行的回答；不要把用户转去其他助手，也不要重新开始一套泛泛的占卜。\n本次占卜资料：${context}` : '\n当前对话背景：用户还没有完成占卜。你是占卜前的提问客服，帮助用户把模糊烦恼整理成一个具体、值得抽牌的问题，并在必要时推荐主题与牌阵。不要假装替用户预测结果。'}`,
     maxOutputTokens: 10000, maxRetries: 0,
     stopWhen: isStepCount(5),
     prepareStep: ({ stepNumber }) => stepNumber >= 2 ? { toolChoice: 'none' as const } : {},
