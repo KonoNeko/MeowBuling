@@ -40,7 +40,6 @@ export enum AppView {
   HISTORY = 'HISTORY',
   LIBRARY = 'LIBRARY',
   SPREAD_LIBRARY = 'SPREAD_LIBRARY',
-  ASSISTANT = 'ASSISTANT'
 }
 
 export type ReadingStyle = 'gentle' | 'sharp';

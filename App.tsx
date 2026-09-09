@@ -20,7 +20,6 @@ const App = () => {
   const [selectedTopic, setSelectedTopic] = useState<Topic | null>(null);
   const [selectedSpread, setSelectedSpread] = useState<SpreadDefinition | null>(null);
   const [question, setQuestion] = useState("");
-  const [prefilledQuestion, setPrefilledQuestion] = useState('');
   const [quickQuestion, setQuickQuestion] = useState('');
   const [recommendedSpreadIds, setRecommendedSpreadIds] = useState<string[]>([]);
   
@@ -110,8 +109,7 @@ const App = () => {
 
   const handleTopicSelect = (topic: Topic) => {
     setSelectedTopic(topic);
-    setQuestion(prefilledQuestion);
-    setPrefilledQuestion('');
+    setQuestion('');
     setRecommendedSpreadIds([]);
     setView(AppView.QUESTION_SELECT);
   };
@@ -764,7 +762,7 @@ const App = () => {
           </div>
 
           <Sources sources={interpretation.sources} />
-          <LocalAssistant reading={readingResult} mode="reading" />
+          <LocalAssistant reading={readingResult} />
 
           {/* Journal Section */}
           <div className="pt-8">
@@ -974,7 +972,6 @@ const App = () => {
         {view === AppView.HISTORY && renderHistory()}
         {view === AppView.LIBRARY && renderLibrary()}
         {view === AppView.SPREAD_LIBRARY && <SpreadLibrary style={readingStyle} onStart={handleDirectStartFromLibrary} />}
-        {view === AppView.ASSISTANT && <LocalAssistant reading={null} mode="question" onQuestionReady={value => { setPrefilledQuestion(value); setView(AppView.TOPIC_SELECT); }} />}
       </div>
 
       {/* Bottom Navigation */}

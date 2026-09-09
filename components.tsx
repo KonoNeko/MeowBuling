@@ -300,7 +300,6 @@ export const BottomNav = ({
         { view: AppView.LIBRARY, label: '牌库', icon: '🎴' },
         { view: AppView.SPREAD_LIBRARY, label: '牌阵', icon: '✨' },
         { view: AppView.HISTORY, label: '历史', icon: '📜' },
-        { view: AppView.ASSISTANT, label: '找问题', icon: '🐱' },
     ];
 
     return (
