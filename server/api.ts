@@ -32,10 +32,11 @@ export function createApi() {
     };
     // Local-only API: reject remote hosts and cross-site mutations.
     const host = req.headers.host?.split(':')[0];
-    if (!host || !['localhost', '127.0.0.1'].includes(host)) return send(403, { error: '仅允许本机访问。' });
+    const isVercel = process.env.VERCEL === '1';
+    if (!isVercel && (!host || !['localhost', '127.0.0.1'].includes(host))) return send(403, { error: '仅允许本机访问。' });
     const origin = req.headers.origin;
-    if (origin && origin !== `http://${req.headers.host}`) return send(403, { error: '不允许跨站访问本地知识库。' });
-    if (req.headers['sec-fetch-site'] === 'cross-site') return send(403, { error: '不允许跨站访问。' });
+    if (!isVercel && origin && origin !== `http://${req.headers.host}`) return send(403, { error: '不允许跨站访问本地知识库。' });
+    if (!isVercel && req.headers['sec-fetch-site'] === 'cross-site') return send(403, { error: '不允许跨站访问。' });
     const controller = new AbortController();
     res.on('close', () => { if (!res.writableEnded) controller.abort(); });
     const timer = setTimeout(() => controller.abort(), 240_000);
