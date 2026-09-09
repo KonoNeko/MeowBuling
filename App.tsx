@@ -1,8 +1,9 @@
 import { questionGroups } from './question-presets';
 import { browserClock, readingTime } from './reading-time';
 import React, { useState, useRef, useEffect } from 'react';
+import { toPng } from 'html-to-image';
 import { AppView, ReadingSession, ReadingStyle, Topic, TarotCard, SpreadDefinition } from './types';
-import { TAROT_DECK, TOPICS, SPREADS, SPREAD_CATEGORY_LABELS, SPREAD_SUBCATEGORIES } from './constants';
+import { TAROT_DECK, TOPICS, SPREADS, SPREAD_CATEGORY_LABELS, SPREAD_SUBCATEGORIES, getCardImage } from './constants';
 import { Button, GlassCard, CardDisplay, Badge, LoadingSkeleton, Toast, SpreadLayout, SpreadPreview, CardDetailModal, Header, BottomNav, EnergyLoading } from './components';
 import { generateInterpretation, saveReading, getHistory, updateReadingReflection } from './utils';
 import LocalAssistant from './LocalAssistant';
@@ -51,11 +52,36 @@ const App = () => {
   // UI Feedback
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
+  const [savingShareImage, setSavingShareImage] = useState(false);
+  const shareCardRef = useRef<HTMLDivElement>(null);
 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const saveShareImage = async () => {
+    if (!shareCardRef.current || savingShareImage) return;
+    setSavingShareImage(true);
+    try {
+      const dataUrl = await toPng(shareCardRef.current, {
+        cacheBust: true,
+        backgroundColor: '#100b2e',
+        pixelRatio: 2,
+        width: 750,
+      });
+      const link = document.createElement('a');
+      link.download = `meowbuling-${readingResult?.id || 'reading'}.png`;
+      link.href = dataUrl;
+      link.click();
+      triggerToast('长图已保存，可以分享给朋友了');
+    } catch (error) {
+      console.error('Failed to create share image', error);
+      triggerToast('长图生成失败，请稍后重试');
+    } finally {
+      setSavingShareImage(false);
+    }
   };
 
   // --- Effects ---
@@ -720,6 +746,9 @@ const App = () => {
             </h1>
             <p className="text-indigo-300 italic">“ {readingResult.question} ”</p>
             <p className="text-xs text-purple-300 mt-3">{readingResult.style === 'sharp' ? '😼 犀利喵评 · 猫爪划重点' : '🌙 温柔指引 · 星光轻声说'}</p>
+            <Button variant="secondary" className="mt-5 mx-auto text-sm px-5 py-2.5" onClick={() => void saveShareImage()} disabled={savingShareImage}>
+              {savingShareImage ? '正在生成长图…' : '保存结果长图'}
+            </Button>
           </div>
 
           {interpretation.outcome && <GlassCard className="border-purple-400/30 bg-gradient-to-br from-purple-950/70 to-indigo-950/60 space-y-3 shadow-lg shadow-purple-950/20"><p className="text-xs tracking-[0.2em] text-purple-300 uppercase">先看结论</p><h2 className="text-xl text-purple-100 font-bold">{readingResult.style === 'sharp' ? '😼 喵的直球结论' : '🌙 星光里的可能走向'}</h2><p className="text-indigo-100 leading-7 whitespace-pre-line">{interpretation.outcome}</p></GlassCard>}
@@ -798,6 +827,36 @@ const App = () => {
           </div>
 
           <LocalAssistant reading={readingResult} />
+
+          <div ref={shareCardRef} aria-hidden="true" style={{ position: 'fixed', left: '-10000px', top: 0, width: 750, zIndex: -1, background: '#100b2e', color: '#f5f3ff', padding: '56px 48px', fontFamily: 'Arial, "Microsoft YaHei", sans-serif' }}>
+            <div style={{ borderBottom: '1px solid #4c3575', paddingBottom: 28, marginBottom: 28 }}>
+              <div style={{ color: '#c4b5fd', fontSize: 18, letterSpacing: 2 }}>MEOWBULING · 喵卜灵</div>
+              <div style={{ color: '#f5d0fe', fontSize: 30, fontWeight: 700, marginTop: 18 }}>{readingResult.topicLabel} · {readingResult.spreadName}</div>
+              <div style={{ color: '#c4b5fd', fontSize: 20, lineHeight: 1.6, marginTop: 12 }}>“{readingResult.question}”</div>
+            </div>
+            <div style={{ background: '#25164b', border: '1px solid #7955ad', borderRadius: 20, padding: 26, marginBottom: 30 }}>
+              <div style={{ color: '#c4b5fd', fontSize: 16, letterSpacing: 3 }}>先看结论</div>
+              <div style={{ color: '#fff', fontSize: 27, fontWeight: 700, margin: '12px 0' }}>{interpretation.mainTheme}</div>
+              <div style={{ color: '#ede9fe', fontSize: 20, lineHeight: 1.75, whiteSpace: 'pre-wrap' }}>{interpretation.outcome}</div>
+            </div>
+            <div style={{ color: '#e9d5ff', fontSize: 24, fontWeight: 700, marginBottom: 18 }}>牌面解读</div>
+            {readingResult.cards.map((card, index) => {
+              const detail = interpretation.cardReadings?.find(entry => entry.positionIndex === index && entry.cardId === card.id);
+              const position = resultSpread?.positions[index];
+              return <div key={`${index}-${card.id}`} style={{ display: 'flex', gap: 20, borderTop: '1px solid #38265b', padding: '24px 0' }}>
+                <img src={getCardImage(card.id)} alt="" style={{ width: 108, height: 184, objectFit: 'cover', borderRadius: 10, transform: card.isReversed ? 'rotate(180deg)' : undefined }} />
+                <div style={{ flex: 1 }}>
+                  <div style={{ color: '#c4b5fd', fontSize: 15 }}>第 {index + 1} 张 · {position?.name || '牌阵位置'}</div>
+                  <div style={{ color: '#fff', fontSize: 23, fontWeight: 700, margin: '8px 0' }}>{card.name_cn} · {card.isReversed ? '逆位' : '正位'}</div>
+                  <div style={{ color: '#e0d7f5', fontSize: 17, lineHeight: 1.7 }}>{detail?.interpretation || (card.isReversed ? card.meaningReversed : card.meaningUpright)}</div>
+                  {detail?.advice && <div style={{ color: '#e9d5ff', fontSize: 16, lineHeight: 1.6, marginTop: 10 }}>喵的建议：{detail.advice}</div>}
+                </div>
+              </div>;
+            })}
+            <div style={{ color: '#e9d5ff', fontSize: 24, fontWeight: 700, margin: '26px 0 14px' }}>行动指引</div>
+            <div style={{ background: '#211844', borderRadius: 16, padding: 24, color: '#f5f3ff', fontSize: 20, lineHeight: 1.8, whiteSpace: 'pre-wrap' }}>{interpretation.advice}</div>
+            <div style={{ color: '#8b78aa', fontSize: 15, textAlign: 'center', marginTop: 42 }}>塔罗是自我反思工具 · 喵卜灵</div>
+          </div>
 
           {/* Journal Section */}
           <div className="pt-8">
